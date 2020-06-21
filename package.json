@@ -1,0 +1,14 @@
+{
+  "name": "lib-tools",
+  "version": "0.0.0",
+  "author": "DagonMetric",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DagonMetric/lib-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DagonMetric/lib-tools/issues"
+  },
+  "homepage": "https://github.com/DagonMetric/lib-tools"
+}
