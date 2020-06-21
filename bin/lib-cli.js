@@ -15,8 +15,12 @@ const statAsync = util.promisify(fs.stat);
 
 const resolveAsync = (id, opts) => {
     return new Promise((res) => {
-        resolve(id, opts, (error, resolvedPath) => {
-            error ? res(null) : res(resolvedPath);
+        resolve(id, opts, (err, resolvedPath) => {
+            if (err) {
+                res(null);
+            } else {
+                res(resolvedPath);
+            }
         });
     });
 };
@@ -61,7 +65,7 @@ async function main() {
     try {
         const packageJsonFileStat = await statAsync(path.resolve(tempCliPath, './package.json'));
         if (packageJsonFileStat.isFile()) {
-            const nodeModulesStat = await statAsync(path.resolve(tempCliPath, 'node_modules'))
+            const nodeModulesStat = await statAsync(path.resolve(tempCliPath, 'node_modules'));
             if (nodeModulesStat.isDirectory()) {
                 packageJsonPath = path.resolve(tempCliPath, './package.json');
             }
@@ -89,7 +93,7 @@ async function main() {
     }
 
     const packageJson = require(packageJsonPath);
-    const cliVersion = packageJson['version'];
+    const cliVersion = packageJson.version;
     let cli;
 
     if (localCli) {
@@ -116,11 +120,11 @@ async function main() {
     }
 
     const cliParams = {
-        cliVersion: cliVersion,
-        cliIsGlobal: cliIsGlobal,
-        cliIsLink: cliIsLink,
+        cliVersion,
+        cliIsGlobal,
+        cliIsLink,
         cliRootPath: path.dirname(packageJsonPath),
-        startTime: startTime
+        startTime
     };
 
     if ('default' in cli) {
@@ -136,4 +140,4 @@ async function main() {
     }
 }
 
-main();
+void main();
