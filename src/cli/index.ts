@@ -2,8 +2,12 @@ import * as yargs from 'yargs';
 
 import { colorize } from '../utils/colorize';
 
+import { getBuildCommandModule } from './build/build-command-module';
+
+import { CliParams } from './cli-params';
+
 function initYargs(cliVersion: string, args?: string[]): yargs.Argv {
-    const cliUsage = `\n${colorize(`lib-tools ${cliVersion}`, 'white')}\n
+    const cliUsage = `${colorize(`lib-tools ${cliVersion}`, 'white')}\n
 Usage:
   lib [options...]`;
 
@@ -26,31 +30,30 @@ Usage:
             describe: 'Show version',
             type: 'boolean',
             global: false
-        });
+        })
+        .command(getBuildCommandModule(cliVersion));
 
     return yargsInstance;
 }
 
-export default async function (cliParams: {
-    cliVersion: string;
-    cliIsGlobal?: boolean;
-    cliRootPath?: string;
-    startTime?: number;
-    cliIsLink?: boolean;
-}): Promise<number> {
-    const args = process.argv.slice(2);
+export default async function (cliParams: CliParams): Promise<number> {
+    let args = process.argv.slice(2);
+    let isHelpCommand = false;
+    if (args.includes('help')) {
+        isHelpCommand = true;
+        args = args.filter((p: string) => p !== 'help');
+        args.push('-h');
+    } else if (args.includes('--help')) {
+        isHelpCommand = true;
+        args = args.filter((p: string) => p !== '--help');
+        args.push('-h');
+    }
+
     const yargsInstance = initYargs(cliParams.cliVersion, args);
-    const commandOptions = yargsInstance.argv;
+    const command = yargsInstance.argv._[0] ? yargsInstance.argv._[0].toLowerCase() : undefined;
+    const commandArgv = yargsInstance.argv;
 
-    if (commandOptions.version) {
-        // console.log(cliParams.cliVersion);
-
-        return 0;
-    } else if (commandOptions.help) {
-        // yargsInstance.showHelp();
-
-        return 0;
-    } else {
+    if (command === 'build') {
         // eslint-disable-next-line no-console
         console.log(
             `${colorize(
@@ -61,11 +64,26 @@ export default async function (cliParams: {
             )}\n`
         );
 
-        return Promise.resolve(0);
-        // Dynamic require
-        // const cliPackModule = await import('./cli-pack');
-        // const cliPack = cliPackModule.cliPack;
+        const cliBuildModule = await import('./build/cli-build');
+        const cliBuild = cliBuildModule.cliBuild;
 
-        // return cliPack();
+        return cliBuild(cliParams);
     }
+
+    if (commandArgv.version) {
+        // eslint-disable-next-line no-console
+        console.log(cliParams.cliVersion);
+
+        return 0;
+    }
+
+    if (command === 'help' || commandArgv.help || isHelpCommand) {
+        yargsInstance.showHelp();
+
+        return 0;
+    }
+
+    yargsInstance.showHelp();
+
+    return 0;
 }
