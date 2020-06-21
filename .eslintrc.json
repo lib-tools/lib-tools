@@ -216,7 +216,7 @@
 
     // "no-null/no-null": "error",
 
-    "prefer-arrow/prefer-arrow-functions": "error",
+    // "prefer-arrow/prefer-arrow-functions": "error",
 
     "prettier/prettier": [
       "error",
