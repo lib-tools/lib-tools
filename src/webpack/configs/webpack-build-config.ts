@@ -20,6 +20,7 @@ export async function getWebpackBuildConfig(
     const outputPath = projectConfig._outputPath;
 
     const plugins: Plugin[] = [
+        // Info
         new BuildInfoWebpackPlugin({
             projectConfig,
             buildOptions,
@@ -27,7 +28,7 @@ export async function getWebpackBuildConfig(
         })
     ];
 
-    // clean
+    // Clean
     let shouldClean = projectConfig.clean || projectConfig.clean !== false;
     if (projectConfig.clean === false) {
         shouldClean = false;
@@ -54,6 +55,7 @@ export async function getWebpackBuildConfig(
         );
     }
 
+    // Bundle
     plugins.push(
         new LibBundleWebpackPlugin({
             projectConfig,
@@ -62,7 +64,7 @@ export async function getWebpackBuildConfig(
         })
     );
 
-    // copy assets
+    // Copy assets
     if (projectConfig.copy && Array.isArray(projectConfig.copy) && projectConfig.copy.length > 0) {
         plugins.push(
             new CopyWebpackPlugin({
