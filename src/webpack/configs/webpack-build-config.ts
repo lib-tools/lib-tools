@@ -2,89 +2,97 @@ import * as path from 'path';
 
 import { Configuration, Plugin } from 'webpack';
 
+import { BuildContextWebpackPlugin } from '../plugins/build-context-webpack-plugin';
 import { CleanWebpackPlugin } from '../plugins/clean-webpack-plugin';
 import { CopyWebpackPlugin } from '../plugins/copy-webpack-plugin';
 import { LibBundleWebpackPlugin } from '../plugins/lib-bundle-webpack-plugin';
 
-import { prepareCleanOptions } from '../../helpers';
 import { InternalError } from '../../models/errors';
 import { BuildOptionsInternal, LibProjectConfigInternal } from '../../models/internals';
+import { prepareCleanOptions } from '../../helpers';
+import { LoggerBase } from '../../utils';
 
 export async function getWebpackBuildConfig(
-    libConfig: LibProjectConfigInternal,
-    buildOptions: BuildOptionsInternal
+    projectConfig: LibProjectConfigInternal,
+    buildOptions: BuildOptionsInternal,
+    logger: LoggerBase
 ): Promise<Configuration> {
-    if (!libConfig._projectRoot) {
-        throw new InternalError("The 'libConfig._projectRoot' is not set.");
+    if (!projectConfig._projectRoot) {
+        throw new InternalError("The 'projectConfig._projectRoot' is not set.");
     }
 
-    if (!libConfig._outputPath) {
-        throw new InternalError("The 'libConfig._outputPath' is not set.");
+    if (!projectConfig._outputPath) {
+        throw new InternalError("The 'projectConfig._outputPath' is not set.");
     }
 
-    const logLevel = buildOptions.logLevel;
-    const projectRoot = libConfig._projectRoot;
-    const outputPath = libConfig._outputPath;
+    const projectRoot = projectConfig._projectRoot;
+    const outputPath = projectConfig._outputPath;
 
-    const plugins: Plugin[] = [new AngularBuildContextWebpackPlugin(angularBuildContext)];
+    const plugins: Plugin[] = [];
+
+    plugins.push(
+        new BuildContextWebpackPlugin({
+            projectConfig,
+            buildOptions,
+            logger
+        })
+    );
 
     // clean
-    let shouldClean = libConfig.clean || libConfig.clean !== false;
-    if (libConfig.clean === false) {
+    let shouldClean = projectConfig.clean || projectConfig.clean !== false;
+    if (projectConfig.clean === false) {
         shouldClean = false;
     }
     if (shouldClean) {
         let cleanOutputPath = outputPath;
-        if (libConfig._isNestedPackage) {
-            if (!libConfig._packageNameWithoutScope) {
-                throw new InternalError("The 'libConfig._packageNameWithoutScope' is not set.");
+        if (projectConfig._isNestedPackage) {
+            if (!projectConfig._packageNameWithoutScope) {
+                throw new InternalError("The 'projectConfig._packageNameWithoutScope' is not set.");
             }
 
-            const nestedPackageStartIndex = libConfig._packageNameWithoutScope.indexOf('/') + 1;
-            const nestedPackageSuffix = libConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
+            const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
+            const nestedPackageSuffix = projectConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
             cleanOutputPath = path.resolve(cleanOutputPath, nestedPackageSuffix);
         }
 
-        const cleanOptions = prepareCleanOptions(libConfig);
+        const cleanOptions = prepareCleanOptions(projectConfig);
         const cacheDirs: string[] = [];
 
         plugins.push(
             new CleanWebpackPlugin({
                 ...cleanOptions,
-                workspaceRoot: AngularBuildContext.workspaceRoot,
+                workspaceRoot: projectConfig._workspaceRoot,
                 outputPath: cleanOutputPath,
                 cacheDirectries: cacheDirs,
-                // tslint:disable-next-line: no-unsafe-any
-                host: angularBuildContext.host,
-                logLevel
+                logLevel: buildOptions.logLevel
             })
         );
     }
 
-    // styles, ngc, bundle, packager
     plugins.push(
         new LibBundleWebpackPlugin({
-            angularBuildContext
+            projectConfig,
+            buildOptions,
+            logger
         })
     );
 
     // copy assets
-    if (libConfig.copy && Array.isArray(libConfig.copy) && libConfig.copy.length > 0) {
+    if (projectConfig.copy && Array.isArray(projectConfig.copy) && projectConfig.copy.length > 0) {
         plugins.push(
             new CopyWebpackPlugin({
-                assets: libConfig.copy,
+                assets: projectConfig.copy,
                 baseDir: projectRoot,
                 outputPath,
                 allowCopyOutsideOutputPath: true,
                 forceWriteToDisk: true,
-                logLevel
+                logLevel: buildOptions.logLevel
             })
         );
     }
 
-    // tslint:disable-next-line:no-unnecessary-local-variable
     const webpackConfig: Configuration = {
-        name: libConfig.name,
+        name: projectConfig.name,
         entry: () => ({}),
         output: {
             path: outputPath,
