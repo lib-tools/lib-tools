@@ -5,7 +5,7 @@ export function stripComments(content: string): string {
      * Third matches block comments
      * Fourth matches line comments
      */
-    const regexp = /("(?:[^\\\"]*(?:\\.)?)*")|('(?:[^\\\']*(?:\\.)?)*')|(\/\*(?:\r?\n|.)*?\*\/)|(\/{2,}.*?(?:(?:\r?\n)|$))/g;
+    const regexp = /("(?:[^\\"]*(?:\\.)?)*")|('(?:[^\\']*(?:\\.)?)*')|(\/\*(?:\r?\n|.)*?\*\/)|(\/{2,}.*?(?:(?:\r?\n)|$))/g;
     const result = content.replace(regexp, (match, _0, _1, m3: string, m4: string) => {
         // Only one of m1, m2, m3, m4 matches
         if (m3) {
