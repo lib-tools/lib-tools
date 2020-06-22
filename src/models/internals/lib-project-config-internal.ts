@@ -11,21 +11,23 @@ export interface LibProjectConfigInternal extends LibProjectConfig {
 
     _configPath?: string;
     _nodeModulesPath?: string | null;
+
     _projectRoot?: string;
     _outputPath?: string;
 
     _index: number;
 
     _bannerText?: string;
-    _packageConfigPath?: string;
+
+    _packageConfigPath: string;
     _rootPackageConfigPath?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _packageJson?: { [key: string]: any };
+    _packageJson: { [key: string]: any };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _rootPackageJson?: { [key: string]: any };
 
-    _projectName?: string;
-    _packageNameWithoutScope?: string;
+    _packageName: string;
+    _packageNameWithoutScope: string;
 
     _projectVersion?: string;
     _projectDescription?: string;
