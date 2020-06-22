@@ -7,7 +7,6 @@ import { CleanWebpackPlugin } from '../plugins/clean-webpack-plugin';
 import { CopyWebpackPlugin } from '../plugins/copy-webpack-plugin';
 import { LibBundleWebpackPlugin } from '../plugins/lib-bundle-webpack-plugin';
 
-import { InternalError } from '../../models/errors';
 import { BuildOptionsInternal, LibProjectConfigInternal } from '../../models/internals';
 import { prepareCleanOptions } from '../../helpers';
 import { LoggerBase } from '../../utils';
@@ -17,26 +16,16 @@ export async function getWebpackBuildConfig(
     buildOptions: BuildOptionsInternal,
     logger: LoggerBase
 ): Promise<Configuration> {
-    if (!projectConfig._projectRoot) {
-        throw new InternalError("The 'projectConfig._projectRoot' is not set.");
-    }
-
-    if (!projectConfig._outputPath) {
-        throw new InternalError("The 'projectConfig._outputPath' is not set.");
-    }
-
     const projectRoot = projectConfig._projectRoot;
     const outputPath = projectConfig._outputPath;
 
-    const plugins: Plugin[] = [];
-
-    plugins.push(
+    const plugins: Plugin[] = [
         new BuildInfoWebpackPlugin({
             projectConfig,
             buildOptions,
             logger
         })
-    );
+    ];
 
     // clean
     let shouldClean = projectConfig.clean || projectConfig.clean !== false;
@@ -46,10 +35,6 @@ export async function getWebpackBuildConfig(
     if (shouldClean) {
         let cleanOutputPath = outputPath;
         if (projectConfig._isNestedPackage) {
-            if (!projectConfig._packageNameWithoutScope) {
-                throw new InternalError("The 'projectConfig._packageNameWithoutScope' is not set.");
-            }
-
             const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
             const nestedPackageSuffix = projectConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
             cleanOutputPath = path.resolve(cleanOutputPath, nestedPackageSuffix);
