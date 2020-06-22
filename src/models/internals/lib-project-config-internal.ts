@@ -7,9 +7,9 @@ import { PackageEntrypoints } from './package-entrypoints';
 import { TsTranspilationOptionsInternal } from './ts-transpilation-options-internal';
 
 export interface LibProjectConfigInternal extends LibProjectConfig {
-    _configPath?: string;
+    _workspaceRoot: string;
 
-    _workspaceRoot?: string;
+    _configPath?: string;
     _nodeModulesPath?: string | null;
     _projectRoot?: string;
     _outputPath?: string;
