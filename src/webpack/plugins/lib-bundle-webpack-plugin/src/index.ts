@@ -1,6 +1,6 @@
 import * as webpack from 'webpack';
 
-import { LibProjectConfigInternal } from '../../../../models/internals';
+import { BuildOptionsInternal, LibProjectConfigInternal } from '../../../../models/internals';
 import { LoggerBase } from '../../../../utils';
 
 import { performLibBundles } from './perform-lib-bundles';
@@ -10,7 +10,8 @@ import { performTsTranspile } from './perform-ts-transpile';
 // import { processStyles } from './process-styles';
 
 export interface LibBundleWebpackPluginOptions {
-    libConfig: LibProjectConfigInternal;
+    projectConfig: LibProjectConfigInternal;
+    buildOptions: BuildOptionsInternal;
     logger: LoggerBase;
 }
 
@@ -28,23 +29,23 @@ export class LibBundleWebpackPlugin {
     }
 
     private async performBundleTask(): Promise<void> {
-        const libConfig = this.options.libConfig;
+        const projectConfig = this.options.projectConfig;
         const logger = this.options.logger;
 
-        if (libConfig.tsTranspilations) {
-            await performTsTranspile(libConfig, logger);
+        if (projectConfig.tsTranspilations) {
+            await performTsTranspile(projectConfig, logger);
         }
 
-        // if (libConfig.styles) {
-        //     await processStyles(libConfig, logger);
+        // if (projectConfig.styles) {
+        //     await processStyles(projectConfig, logger);
         // }
 
-        if (libConfig.bundles) {
-            await performLibBundles(libConfig, logger);
+        if (projectConfig.bundles) {
+            await performLibBundles(projectConfig, logger);
         }
 
-        if (libConfig.packageJsonCopy) {
-            await performPackageJsonCopy(libConfig, logger);
+        if (projectConfig.packageJsonCopy) {
+            await performPackageJsonCopy(projectConfig, logger);
         }
     }
 }
