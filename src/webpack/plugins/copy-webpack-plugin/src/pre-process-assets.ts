@@ -9,7 +9,6 @@ import { isGlob } from '../../../../utils';
 
 export interface PreProcessedAssetEntry {
     context: string;
-    // tslint:disable-next-line:no-reserved-keywords
     from:
         | {
               glob: string;
@@ -26,7 +25,6 @@ export interface PreProcessedAssetEntry {
 // https://www.debuggex.com/r/VH2yS2mvJOitiyr3
 const isTemplateLike = /(\[ext\])|(\[name\])|(\[path\])|(\[folder\])|(\[emoji(:\d+)?\])|(\[(\w+:)?hash(:\w+)?(:\d+)?\])|(\[\d+\])/;
 
-// tslint:disable-next-line:max-func-body-length
 export async function preProcessAssets(
     baseDir: string,
     assetEntries: string | (string | { from: string; to?: string })[],
@@ -121,7 +119,6 @@ export async function preProcessAssets(
             } else if (
                 typeof asset === 'object' &&
                 (asset as {
-                    // tslint:disable-next-line:no-reserved-keywords
                     from:
                         | string
                         | {
@@ -143,7 +140,6 @@ export async function preProcessAssets(
                     }
                 }
 
-                // tslint:disable-next-line:no-reserved-keywords
                 const from = (asset as { from: string; to?: string }).from;
                 const isGlobPattern = from.lastIndexOf('*') > -1 || isGlob(from);
                 let fromIsDir = false;
