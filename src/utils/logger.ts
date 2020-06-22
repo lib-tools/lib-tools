@@ -23,12 +23,12 @@ export interface LoggerOptions {
 }
 
 export interface LoggerBase {
-    log(level: LogLevel | LogLevelString, message: string, optionalParams?: any): void;
-    debug(message: string, optionalParams?: any): void;
-    info(message: string, optionalParams?: any): void;
-    warn(message: string, optionalParams?: any): void;
-    error(message: string, optionalParams?: any): void;
-    fatal(message: string, optionalParams?: any): void;
+    log(level: LogLevel | LogLevelString, message: string, optionalParams?: unknown): void;
+    debug(message: string, optionalParams?: unknown): void;
+    info(message: string, optionalParams?: unknown): void;
+    warn(message: string, optionalParams?: unknown): void;
+    error(message: string, optionalParams?: unknown): void;
+    fatal(message: string, optionalParams?: unknown): void;
 }
 
 export class Logger implements LoggerBase {
@@ -49,7 +49,7 @@ export class Logger implements LoggerBase {
         }
     }
 
-    log(level: LogLevel | LogLevelString, message: string, optionalParams?: any): void {
+    log(level: LogLevel | LogLevelString, message: string, optionalParams?: unknown): void {
         const logLevel = typeof level === 'string' ? this.toLogLevel(level) : level;
 
         if (this._minLogLevel < logLevel || !message) {
@@ -70,34 +70,36 @@ export class Logger implements LoggerBase {
             if (logLevel === LogLevel.Warn) {
                 console.warn(logMsg, optionalParams);
             } else {
+                // eslint-disable-next-line no-console
                 console.log(logMsg, optionalParams);
             }
         } else {
             if (logLevel === LogLevel.Warn) {
                 console.warn(logMsg);
             } else {
+                // eslint-disable-next-line no-console
                 console.log(logMsg);
             }
         }
     }
 
-    debug(message: string, optionalParams?: any): void {
+    debug(message: string, optionalParams?: unknown): void {
         this.log(LogLevel.Debug, message, optionalParams);
     }
 
-    info(message: string, optionalParams?: any): void {
+    info(message: string, optionalParams?: unknown): void {
         this.log(LogLevel.Info, message, optionalParams);
     }
 
-    warn(message: string, optionalParams?: any): void {
+    warn(message: string, optionalParams?: unknown): void {
         this.log(LogLevel.Warn, message, optionalParams);
     }
 
-    error(message: string, optionalParams?: any): void {
+    error(message: string, optionalParams?: unknown): void {
         this.log(LogLevel.Error, message, optionalParams);
     }
 
-    fatal(message: string, optionalParams?: any): void {
+    fatal(message: string, optionalParams?: unknown): void {
         this.log(LogLevel.Fatal, message, optionalParams);
     }
 
