@@ -12,8 +12,8 @@ export interface LibProjectConfigInternal extends LibProjectConfig {
     _configPath?: string;
     _nodeModulesPath?: string | null;
 
-    _projectRoot?: string;
-    _outputPath?: string;
+    _projectRoot: string;
+    _outputPath: string;
 
     _index: number;
 
