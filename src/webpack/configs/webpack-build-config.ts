@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { Configuration, Plugin } from 'webpack';
 
-import { BuildContextWebpackPlugin } from '../plugins/build-context-webpack-plugin';
+import { BuildInfoWebpackPlugin } from '../plugins/build-info-webpack-plugin';
 import { CleanWebpackPlugin } from '../plugins/clean-webpack-plugin';
 import { CopyWebpackPlugin } from '../plugins/copy-webpack-plugin';
 import { LibBundleWebpackPlugin } from '../plugins/lib-bundle-webpack-plugin';
@@ -31,7 +31,7 @@ export async function getWebpackBuildConfig(
     const plugins: Plugin[] = [];
 
     plugins.push(
-        new BuildContextWebpackPlugin({
+        new BuildInfoWebpackPlugin({
             projectConfig,
             buildOptions,
             logger
