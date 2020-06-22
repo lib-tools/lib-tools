@@ -71,7 +71,6 @@ export async function processAssets(
                 }
             }
 
-            // tslint:disable:max-func-body-length
             await Promise.all(
                 relativeFromPaths.map(async (relativeFrom) => {
                     const absoluteFrom = path.resolve(assetEntry.context, relativeFrom);
