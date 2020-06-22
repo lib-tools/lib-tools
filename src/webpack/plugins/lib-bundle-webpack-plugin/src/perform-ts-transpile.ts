@@ -88,7 +88,6 @@ export async function performTsTranspile(libConfig: LibProjectConfigInternal, lo
     }
 }
 
-// tslint:disable:max-func-body-length
 async function afterTsTranspileTask(
     tsTranspilation: TsTranspilationOptionsInternal,
     libConfig: LibProjectConfigInternal,
