@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { readFile } from 'fs';
 
 import { stripComments } from './strip-comments';
