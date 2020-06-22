@@ -130,7 +130,8 @@
     // "no-trailing-spaces": "error",
 
     "no-undef-init": "error",
-    "no-underscore-dangle": "error",
+    // "no-underscore-dangle": "error",
+    "no-underscore-dangle": "off",
     "no-unsafe-finally": "error",
     "no-unused-expressions": "off",
     "no-unused-labels": "error",
@@ -212,6 +213,8 @@
 
     "@typescript-eslint/unified-signatures": "error",
 
+    "@typescript-eslint/restrict-template-expressions": "off",
+
     // TODO: To review if necessary?
     "import/no-deprecated": "warn",
     "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
@@ -236,8 +239,7 @@
         "@typescript-eslint/no-var-requires": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
         "@typescript-eslint/no-unsafe-call": "off",
-        "@typescript-eslint/no-unsafe-member-access": "off",
-        "@typescript-eslint/restrict-template-expressions": "off"
+        "@typescript-eslint/no-unsafe-member-access": "off"
       }
     }
   ],
