@@ -19,11 +19,11 @@ export function getRollupConfig(
 } {
     // const isTsEntry = /\.tsx?$/i.test(currentBundle._entryFilePath);
     let moduleName = libConfig.libraryName;
-    if (!moduleName && libConfig._projectName) {
-        if (libConfig._projectName.startsWith('@')) {
-            moduleName = libConfig._projectName.substring(1).split('/').join('.');
+    if (!moduleName && libConfig._packageName) {
+        if (libConfig._packageName.startsWith('@')) {
+            moduleName = libConfig._packageName.substring(1).split('/').join('.');
         } else {
-            moduleName = libConfig._projectName.split('/').join('.');
+            moduleName = libConfig._packageName.split('/').join('.');
         }
         moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -32,8 +32,8 @@ export function getRollupConfig(
     }
 
     let amdId: { [key: string]: string } | undefined;
-    if (libConfig._projectName) {
-        amdId = { id: libConfig._projectName };
+    if (libConfig._packageName) {
+        amdId = { id: libConfig._packageName };
     }
 
     // library target

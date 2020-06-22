@@ -212,7 +212,7 @@ async function afterTsTranspileTask(
         // const flatModuleId =
         //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleId
         //         ? tsTranspilation._angularCompilerOptions.flatModuleId
-        //         : libConfig._projectName;
+        //         : libConfig._packageName;
 
         // const metadataJson = {
         //     __symbolic: 'module',
