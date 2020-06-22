@@ -39,7 +39,6 @@ export class CleanWebpackPlugin {
         });
     }
 
-    // tslint:disable-next-line:max-func-body-length
     apply(compiler: Compiler): void {
         let outputPath = this._options.outputPath;
         if (!outputPath && compiler.options.output && compiler.options.output.path) {
@@ -171,7 +170,6 @@ export class CleanWebpackPlugin {
         });
     }
 
-    // tslint:disable:max-func-body-length
     private async cleanTask(
         cleanOptions: BeforeBuildCleanOptions | AfterEmitCleanOptions,
         isBeforeBuildClean: boolean,
