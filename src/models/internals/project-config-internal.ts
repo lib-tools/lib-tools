@@ -1,6 +1,6 @@
 import { ParsedCommandLine } from 'typescript';
 
-import { LibProjectConfig } from '../project-config';
+import { ProjectConfig } from '../project-config';
 
 import { GlobalScriptStyleParsedEntry } from './global-script-style-parsed-entry';
 import { LibBundleOptionsInternal } from './lib-bundle-options-internal';
@@ -8,7 +8,7 @@ import { PackageEntrypoints } from './package-entrypoints';
 
 import { TsTranspilationOptionsInternal } from './ts-transpilation-options-internal';
 
-export interface LibProjectConfigInternal extends LibProjectConfig {
+export interface LibProjectConfigInternal extends ProjectConfig {
     _workspaceRoot: string;
 
     _configPath?: string;

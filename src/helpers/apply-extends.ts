@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pathExists } from 'fs-extra';
 
 import { readProjectConfigSchema, readSchema } from '../helpers';
-import { LibConfig, LibProjectConfig, ProjectConfigBase } from '../models';
+import { LibConfig, ProjectConfig, ProjectConfigBase } from '../models';
 import { InvalidConfigError } from '../models/errors';
 import { LibProjectConfigInternal } from '../models/internals';
 import { findUp, formatValidationError, normalizeRelativePath, readJson, validateSchema } from '../utils';
@@ -146,7 +146,7 @@ export async function getBaseProjectConfigForFileExtends(
     projectConfig: LibProjectConfigInternal,
     workspaceRoot: string
 ): Promise<LibProjectConfigInternal | null> {
-    let baseProjectConfig: LibProjectConfig | null = null;
+    let baseProjectConfig: ProjectConfig | null = null;
     const errPrefix = 'Error in extending options';
     const errSuffix = projectConfig._configPath
         ? `, config file: ${path.relative(workspaceRoot, projectConfig._configPath)}.`

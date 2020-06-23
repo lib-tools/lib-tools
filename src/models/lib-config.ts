@@ -1,4 +1,4 @@
-import { LibProjectConfig } from './project-config';
+import { ProjectConfig } from './project-config';
 
 /**
  * @additionalProperties true
@@ -11,5 +11,5 @@ export interface LibConfig {
     /**
      * The library project configurations.
      */
-    projects: LibProjectConfig[];
+    projects: ProjectConfig[];
 }

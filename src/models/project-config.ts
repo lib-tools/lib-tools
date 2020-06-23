@@ -311,7 +311,7 @@ export interface LibEnvOverridesOptions {
 /**
  * @additionalProperties false
  */
-export interface LibProjectConfig extends ProjectConfigBase {
+export interface ProjectConfig extends ProjectConfigBase {
     /**
      * Link to schema.
      */
