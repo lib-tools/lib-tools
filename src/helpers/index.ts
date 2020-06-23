@@ -12,6 +12,7 @@ export * from './prepare-clean-options';
 export * from './read-schema';
 export * from './resolve-loader-path';
 export * from './run-webpack';
+export * from './to-lib-config-internal';
 export * from './to-ts-script-target';
 export * from './validate-output-path';
 export * from './webpack-to-string-stats-options';
