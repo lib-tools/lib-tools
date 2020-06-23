@@ -1,5 +1,6 @@
 export * from './colorize';
 export * from './find-up';
+export * from './format-ts-diagnostics';
 export * from './glob-copy-files';
 export * from './is-glob';
 export * from './is-url';
