@@ -1,6 +1,6 @@
 import { ParsedCommandLine } from 'typescript';
 
-import { LibProjectConfig } from '../lib-project-config';
+import { LibProjectConfig } from '../project-config';
 
 import { GlobalScriptStyleParsedEntry } from './global-script-style-parsed-entry';
 import { LibBundleOptionsInternal } from './lib-bundle-options-internal';

@@ -1,6 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { LibBundleOptions } from '../lib-project-config';
+import { LibBundleOptions } from '../project-config';
 
 export interface LibBundleOptionsInternal extends LibBundleOptions {
     _index: number;

@@ -1,4 +1,4 @@
-import { LibProjectConfig } from './lib-project-config';
+import { LibProjectConfig } from './project-config';
 
 /**
  * @additionalProperties true

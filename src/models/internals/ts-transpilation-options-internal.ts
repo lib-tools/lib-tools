@@ -1,6 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { TsTranspilationOptions } from '../lib-project-config';
+import { TsTranspilationOptions } from '../project-config';
 
 export interface TsTranspilationOptionsInternal extends TsTranspilationOptions {
     _index: number;
