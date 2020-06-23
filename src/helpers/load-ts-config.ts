@@ -2,32 +2,33 @@ import * as path from 'path';
 
 import * as ts from 'typescript';
 
-import { JsonObject } from '../models';
 import { InvalidConfigError } from '../models/errors';
-import { AppProjectConfigInternal, LibProjectConfigInternal } from '../models/internals';
+import { LibProjectConfigInternal } from '../models/internals';
 import { formatTsDiagnostics } from '../utils';
 
-export function loadTsConfig(tsConfigPath: string,
+export function loadTsConfig(
+    tsConfigPath: string,
     config: {
         _tsConfigPath?: string;
-        _tsConfigJson?: JsonObject;
+        _tsConfigJson?: { [key: string]: unknown };
         _tsCompilerConfig?: ts.ParsedCommandLine;
-        _angularCompilerOptions?: JsonObject;
+        // _angularCompilerOptions?: JsonObject;
     },
-    projectConfig: AppProjectConfigInternal | LibProjectConfigInternal): void {
+    projectConfig: LibProjectConfigInternal
+): void {
     config._tsConfigPath = tsConfigPath;
     if (!config._tsConfigJson || !config._tsCompilerConfig) {
-        const sameAsProjectTsConfig = projectConfig.tsConfig &&
-            projectConfig._tsConfigPath &&
-            tsConfigPath === projectConfig._tsConfigPath;
+        const sameAsProjectTsConfig =
+            projectConfig.tsConfig && projectConfig._tsConfigPath && tsConfigPath === projectConfig._tsConfigPath;
 
         if (sameAsProjectTsConfig && projectConfig._tsConfigJson && projectConfig._tsCompilerConfig) {
             config._tsConfigJson = projectConfig._tsConfigJson;
             config._tsCompilerConfig = projectConfig._tsCompilerConfig;
-            config._angularCompilerOptions = projectConfig._angularCompilerOptions;
+            // config._angularCompilerOptions = projectConfig._angularCompilerOptions;
         } else {
             const jsonConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
             if (jsonConfigFile.error && jsonConfigFile.error.length) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const formattedMsg = formatTsDiagnostics(jsonConfigFile.error);
                 if (formattedMsg) {
                     throw new InvalidConfigError(formattedMsg);
@@ -35,7 +36,8 @@ export function loadTsConfig(tsConfigPath: string,
             }
 
             // _tsConfigJson
-            config._tsConfigJson = jsonConfigFile.config as JsonObject;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            config._tsConfigJson = jsonConfigFile.config;
             if (sameAsProjectTsConfig && !projectConfig._tsConfigJson) {
                 // tslint:disable-next-line: no-unsafe-any
                 projectConfig._tsConfigJson = config._tsConfigJson;
@@ -47,18 +49,18 @@ export function loadTsConfig(tsConfigPath: string,
                 ts.sys,
                 path.dirname(tsConfigPath),
                 undefined,
-                tsConfigPath);
+                tsConfigPath
+            );
 
             if (sameAsProjectTsConfig && !projectConfig._tsCompilerConfig) {
                 projectConfig._tsCompilerConfig = config._tsCompilerConfig;
             }
 
             // _angularCompilerOptions
-            config._angularCompilerOptions =
-                config._tsConfigJson.angularCompilerOptions as JsonObject;
-            if (sameAsProjectTsConfig && config._angularCompilerOptions && !projectConfig._angularCompilerOptions) {
-                projectConfig._angularCompilerOptions = config._angularCompilerOptions;
-            }
+            // config._angularCompilerOptions = config._tsConfigJson.angularCompilerOptions as JsonObject;
+            // if (sameAsProjectTsConfig && config._angularCompilerOptions && !projectConfig._angularCompilerOptions) {
+            //     projectConfig._angularCompilerOptions = config._angularCompilerOptions;
+            // }
         }
     }
 }
