@@ -14,65 +14,65 @@ import { initTsTranspilationOptions } from './init-ts-transpilation-options';
 import { loadTsConfig } from './load-ts-config';
 import { parseScriptStyleEntries } from './parse-script-style-entries';
 
-export async function initLibProjectConfig(libConfig: LibProjectConfigInternal): Promise<void> {
-    if (!libConfig._workspaceRoot) {
-        throw new InternalError("The 'libConfig._workspaceRoot' is not set.");
+export async function initLibProjectConfig(projectConfig: LibProjectConfigInternal): Promise<void> {
+    if (!projectConfig._workspaceRoot) {
+        throw new InternalError("The 'projectConfig._workspaceRoot' is not set.");
     }
 
-    if (!libConfig._projectRoot) {
-        throw new InternalError("The 'libConfig._projectRoot' is not set.");
+    if (!projectConfig._projectRoot) {
+        throw new InternalError("The 'projectConfig._projectRoot' is not set.");
     }
 
-    if (!libConfig._outputPath) {
-        throw new InternalError("The 'libConfig._outputPath' is not set.");
+    if (!projectConfig._outputPath) {
+        throw new InternalError("The 'projectConfig._outputPath' is not set.");
     }
 
-    const workspaceRoot = libConfig._workspaceRoot;
-    const nodeModulesPath = libConfig._nodeModulesPath;
-    const projectRoot = libConfig._projectRoot;
-    const outputPath = libConfig._outputPath;
+    const workspaceRoot = projectConfig._workspaceRoot;
+    const nodeModulesPath = projectConfig._nodeModulesPath;
+    const projectRoot = projectConfig._projectRoot;
+    const outputPath = projectConfig._outputPath;
 
     if (
-        libConfig._projectName &&
-        (libConfig._projectName.split('/').length > 2 ||
-            (!libConfig._projectName.startsWith('@') && libConfig._projectName.split('/').length >= 2))
+        projectConfig._packageName &&
+        (projectConfig._packageName.split('/').length > 2 ||
+            (!projectConfig._packageName.startsWith('@') && projectConfig._packageName.split('/').length >= 2))
     ) {
-        libConfig._isNestedPackage = true;
+        projectConfig._isNestedPackage = true;
     }
 
     // package.json
-    if (libConfig.packageJsonOutDir) {
-        libConfig._packageJsonOutDir = path.resolve(outputPath, libConfig.packageJsonOutDir);
+    if (projectConfig.packageJsonOutDir) {
+        projectConfig._packageJsonOutDir = path.resolve(outputPath, projectConfig.packageJsonOutDir);
     } else if (outputPath) {
-        if (libConfig._isNestedPackage) {
-            if (!libConfig._packageNameWithoutScope) {
-                throw new InternalError("The 'libConfig._packageNameWithoutScope' is not set.");
+        if (projectConfig._isNestedPackage) {
+            if (!projectConfig._packageNameWithoutScope) {
+                throw new InternalError("The 'projectConfig._packageNameWithoutScope' is not set.");
             }
-            const nestedPath = libConfig._packageNameWithoutScope.substr(
-                libConfig._packageNameWithoutScope.indexOf('/') + 1
+            const nestedPath = projectConfig._packageNameWithoutScope.substr(
+                projectConfig._packageNameWithoutScope.indexOf('/') + 1
             );
 
-            libConfig._packageJsonOutDir = path.resolve(outputPath, nestedPath);
+            projectConfig._packageJsonOutDir = path.resolve(outputPath, nestedPath);
         } else {
-            libConfig._packageJsonOutDir = outputPath;
+            projectConfig._packageJsonOutDir = outputPath;
         }
     }
 
     // tsConfig
-    if (libConfig.tsConfig) {
-        const tsConfigPath = path.resolve(projectRoot, libConfig.tsConfig);
-        loadTsConfig(tsConfigPath, libConfig, libConfig);
+    if (projectConfig.tsConfig) {
+        const tsConfigPath = path.resolve(projectRoot, projectConfig.tsConfig);
+        loadTsConfig(tsConfigPath, projectConfig, projectConfig);
     }
 
-    await initTsTranspilationsInternal(libConfig);
+    await initTsTranspilationsInternal(projectConfig);
 
     // bundles
-    initBundleOptionsInternal(libConfig);
+    initBundleOptionsInternal(projectConfig);
 
     // parsed result
-    if (libConfig.styles && Array.isArray(libConfig.styles) && libConfig.styles.length > 0) {
-        libConfig._styleParsedEntries = await parseScriptStyleEntries(
-            libConfig.styles,
+    if (projectConfig.styles && Array.isArray(projectConfig.styles) && projectConfig.styles.length > 0) {
+        projectConfig._styleParsedEntries = await parseScriptStyleEntries(
+            projectConfig.styles,
             'styles',
             workspaceRoot,
             nodeModulesPath,
@@ -81,29 +81,29 @@ export async function initLibProjectConfig(libConfig: LibProjectConfigInternal):
     }
 }
 
-async function initTsTranspilationsInternal(libConfig: LibProjectConfigInternal): Promise<void> {
-    if (!libConfig._workspaceRoot) {
-        throw new InternalError("The 'libConfig._workspaceRoot' is not set.");
+async function initTsTranspilationsInternal(projectConfig: LibProjectConfigInternal): Promise<void> {
+    if (!projectConfig._workspaceRoot) {
+        throw new InternalError("The 'projectConfig._workspaceRoot' is not set.");
     }
 
-    if (!libConfig._projectRoot) {
-        throw new InternalError("The 'libConfig._projectRoot' is not set.");
+    if (!projectConfig._projectRoot) {
+        throw new InternalError("The 'projectConfig._projectRoot' is not set.");
     }
 
-    const workspaceRoot = libConfig._workspaceRoot;
-    const projectRoot = libConfig._projectRoot;
+    const workspaceRoot = projectConfig._workspaceRoot;
+    const projectRoot = projectConfig._projectRoot;
 
     const tsTranspilationInternals: TsTranspilationOptionsInternal[] = [];
-    if (libConfig.tsTranspilations && Array.isArray(libConfig.tsTranspilations)) {
-        const tsTranspilations = libConfig.tsTranspilations;
+    if (projectConfig.tsTranspilations && Array.isArray(projectConfig.tsTranspilations)) {
+        const tsTranspilations = projectConfig.tsTranspilations;
         for (let i = 0; i < tsTranspilations.length; i++) {
             const tsTranspilationPartial = tsTranspilations[i] as Partial<TsTranspilationOptionsInternal>;
             let tsConfigPath = '';
             if (tsTranspilationPartial.tsConfig) {
                 tsConfigPath = path.resolve(projectRoot, tsTranspilationPartial.tsConfig);
             } else {
-                if (libConfig.tsConfig && libConfig._tsConfigPath) {
-                    tsConfigPath = libConfig._tsConfigPath;
+                if (projectConfig.tsConfig && projectConfig._tsConfigPath) {
+                    tsConfigPath = projectConfig._tsConfigPath;
                 } else if (i > 0 && tsTranspilationInternals[i - 1]._tsConfigPath) {
                     tsConfigPath = tsTranspilationInternals[i - 1]._tsConfigPath;
                 } else if (i === 0) {
@@ -117,7 +117,7 @@ async function initTsTranspilationsInternal(libConfig: LibProjectConfigInternal)
             if (!tsConfigPath) {
                 throw new InvalidConfigError(
                     `The 'projects[${
-                        libConfig.name || libConfig._index
+                        projectConfig.name || projectConfig._index
                     }].ngcTranspilations[${i}].tsConfig' value is required.`
                 );
             }
@@ -126,29 +126,29 @@ async function initTsTranspilationsInternal(libConfig: LibProjectConfigInternal)
                 tsTranspilationPartial._tsConfigPath = tsTranspilationInternals[i - 1]._tsConfigPath;
                 tsTranspilationPartial._tsConfigJson = tsTranspilationInternals[i - 1]._tsConfigJson;
                 tsTranspilationPartial._tsCompilerConfig = tsTranspilationInternals[i - 1]._tsCompilerConfig;
-                tsTranspilationPartial._angularCompilerOptions =
-                    tsTranspilationInternals[i - 1]._angularCompilerOptions;
+                // tsTranspilationPartial._angularCompilerOptions =
+                //     tsTranspilationInternals[i - 1]._angularCompilerOptions;
             }
 
             const tsTranspilation = await initTsTranspilationOptions(
                 tsConfigPath,
                 tsTranspilationPartial,
                 1,
-                libConfig
+                projectConfig
             );
             tsTranspilationInternals.push(tsTranspilation);
         }
-    } else if (libConfig.tsTranspilations) {
+    } else if (projectConfig.tsTranspilations) {
         let tsConfigPath: string | null = null;
-        if (libConfig.tsConfig && libConfig._tsConfigPath) {
-            tsConfigPath = libConfig._tsConfigPath;
+        if (projectConfig.tsConfig && projectConfig._tsConfigPath) {
+            tsConfigPath = projectConfig._tsConfigPath;
         } else {
             tsConfigPath = await detectTsConfigPathForLib(workspaceRoot, projectRoot);
         }
 
         if (!tsConfigPath) {
             throw new InvalidConfigError(
-                `Could not detect tsconfig file for 'projects[${libConfig.name || libConfig._index}].`
+                `Could not detect tsconfig file for 'projects[${projectConfig.name || projectConfig._index}].`
             );
         }
 
@@ -160,7 +160,7 @@ async function initTsTranspilationsInternal(libConfig: LibProjectConfigInternal)
             tsConfigPath,
             esm2015TranspilationPartial,
             0,
-            libConfig
+            projectConfig
         );
         tsTranspilationInternals.push(esm2015Transpilation);
 
@@ -173,29 +173,29 @@ async function initTsTranspilationsInternal(libConfig: LibProjectConfigInternal)
             tsConfigPath,
             esm5TranspilationPartial,
             1,
-            libConfig
+            projectConfig
         );
         tsTranspilationInternals.push(esm5Transpilation);
     }
-    libConfig._tsTranspilations = tsTranspilationInternals;
+    projectConfig._tsTranspilations = tsTranspilationInternals;
 }
 
-function initBundleOptionsInternal(libConfig: LibProjectConfigInternal): void {
+function initBundleOptionsInternal(projectConfig: LibProjectConfigInternal): void {
     const bundleInternals: LibBundleOptionsInternal[] = [];
-    if (libConfig.bundles && Array.isArray(libConfig.bundles)) {
-        const bundles = libConfig.bundles;
+    if (projectConfig.bundles && Array.isArray(projectConfig.bundles)) {
+        const bundles = projectConfig.bundles;
         for (let i = 0; i < bundles.length; i++) {
             const bundlePartial = bundles[i] as Partial<LibBundleOptionsInternal>;
-            bundleInternals.push(initLibBundleTarget(bundleInternals, bundlePartial, i, libConfig));
+            bundleInternals.push(initLibBundleTarget(bundleInternals, bundlePartial, i, projectConfig));
         }
-    } else if (libConfig.bundles) {
-        let shouldBundlesDefault = libConfig.tsTranspilations === true;
+    } else if (projectConfig.bundles) {
+        let shouldBundlesDefault = projectConfig.tsTranspilations === true;
         if (
             !shouldBundlesDefault &&
-            libConfig._tsTranspilations &&
-            libConfig._tsTranspilations.length >= 2 &&
-            libConfig._tsTranspilations[0].target === 'es2015' &&
-            libConfig._tsTranspilations[1].target === 'es5'
+            projectConfig._tsTranspilations &&
+            projectConfig._tsTranspilations.length >= 2 &&
+            projectConfig._tsTranspilations[0].target === 'es2015' &&
+            projectConfig._tsTranspilations[1].target === 'es5'
         ) {
             shouldBundlesDefault = true;
         }
@@ -207,7 +207,7 @@ function initBundleOptionsInternal(libConfig: LibProjectConfigInternal): void {
                 tsTranspilationIndex: 0
             };
 
-            const es2015BundleInternal = initLibBundleTarget(bundleInternals, es2015BundlePartial, 0, libConfig);
+            const es2015BundleInternal = initLibBundleTarget(bundleInternals, es2015BundlePartial, 0, projectConfig);
             bundleInternals.push(es2015BundleInternal);
 
             const es5BundlePartial: Partial<LibBundleOptionsInternal> = {
@@ -216,24 +216,24 @@ function initBundleOptionsInternal(libConfig: LibProjectConfigInternal): void {
                 tsTranspilationIndex: 1
             };
 
-            const es5BundleInternal = initLibBundleTarget(bundleInternals, es5BundlePartial, 1, libConfig);
+            const es5BundleInternal = initLibBundleTarget(bundleInternals, es5BundlePartial, 1, projectConfig);
             bundleInternals.push(es5BundleInternal);
 
             const umdBundlePartial: Partial<LibBundleOptionsInternal> = {
                 libraryTarget: 'umd',
                 entryRoot: 'prevBundleOutput'
             };
-            const umdBundleInternal = initLibBundleTarget(bundleInternals, umdBundlePartial, 2, libConfig);
+            const umdBundleInternal = initLibBundleTarget(bundleInternals, umdBundlePartial, 2, projectConfig);
             bundleInternals.push(umdBundleInternal);
         } else {
             throw new InvalidConfigError(
                 `Counld not detect to bunlde automatically, please correct option in 'projects[${
-                    libConfig.name || libConfig._index
+                    projectConfig.name || projectConfig._index
                 }].bundles'.`
             );
         }
     }
-    libConfig._bundles = bundleInternals;
+    projectConfig._bundles = bundleInternals;
 }
 
 async function detectTsConfigPathForLib(workspaceRoot: string, projectRoot: string): Promise<string | null> {
