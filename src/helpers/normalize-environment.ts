@@ -1,6 +1,7 @@
 export function normalizeEnvironment(
     rawEnvironment: string | { [key: string]: boolean | string } | null,
-    prod?: boolean): { [key: string]: boolean | string } {
+    prod?: boolean
+): { [key: string]: boolean | string } {
     if (!rawEnvironment) {
         return {};
     }
@@ -82,8 +83,7 @@ export function normalizeEnvironment(
             delete environment.development;
         }
     } else {
-        if (environment.dev == null &&
-            environment.development == null) {
+        if (environment.dev == null && environment.development == null) {
             environment.dev = true;
             environment.development = true;
         } else if (environment.dev != null) {
