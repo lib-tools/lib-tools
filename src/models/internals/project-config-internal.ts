@@ -1,12 +1,55 @@
-import { ParsedCommandLine } from 'typescript';
+import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { ProjectConfig } from '../project-config';
+import { BundleOptions, ProjectConfig, TsTranspilationOptions } from '../project-config';
 
-import { GlobalScriptStyleParsedEntry } from './global-script-style-parsed-entry';
-import { LibBundleOptionsInternal } from './lib-bundle-options-internal';
-import { PackageEntrypoints } from './package-entrypoints';
+export interface GlobalScriptStyleParsedEntry {
+    paths: string[];
+    entry: string;
+    lazy?: boolean;
+}
 
-import { TsTranspilationOptionsInternal } from './ts-transpilation-options-internal';
+export interface TsTranspilationOptionsInternal extends TsTranspilationOptions {
+    _index: number;
+    _tsConfigPath: string;
+    _tsConfigJson: { [key: string]: unknown };
+    _tsCompilerConfig: ParsedCommandLine;
+    _declaration: boolean;
+    _scriptTarget: ScriptTarget;
+    _tsOutDirRootResolved: string;
+
+    _detectedEntryName?: string;
+    _typingsOutDir?: string;
+    _customTsOutDir?: string;
+}
+
+export interface LibBundleOptionsInternal extends BundleOptions {
+    _index: number;
+    _entryFilePath: string;
+    _outputFilePath: string;
+
+    _tsConfigPath?: string;
+    _tsConfigJson?: { [key: string]: unknown };
+    _tsCompilerConfig?: ParsedCommandLine;
+
+    _sourceScriptTarget?: ScriptTarget;
+    _destScriptTarget?: ScriptTarget;
+    _ecmaVersion?: number;
+    _supportES2015?: boolean;
+
+    _nodeResolveFields?: string[];
+}
+
+export interface PackageEntrypoints {
+    main?: string;
+    module?: string;
+    es2015?: string;
+    esm5?: string;
+    // It is deprecated as of v9, might be removed in the future.
+    esm2015?: string;
+    fesm2015?: string;
+    fesm5?: string;
+    typings?: string;
+}
 
 export interface LibProjectConfigInternal extends ProjectConfig {
     _workspaceRoot: string;
