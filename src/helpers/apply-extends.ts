@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pathExists } from 'fs-extra';
 
 import { readProjectConfigSchema, readSchema } from '../helpers';
-import { LibConfig, LibProjectConfig, LibProjectConfigBase } from '../models';
+import { LibConfig, LibProjectConfig, ProjectConfigBase } from '../models';
 import { InvalidConfigError } from '../models/errors';
 import { LibProjectConfigInternal } from '../models/internals';
 import { findUp, formatValidationError, normalizeRelativePath, readJson, validateSchema } from '../utils';
@@ -104,7 +104,7 @@ export async function getBaseProjectConfigForBuiltInExtends(
         const configRootPath = path.dirname(projectConfig._configPath);
         const projectRootPath = path.resolve(path.dirname(projectConfig._configPath), projectConfig.root);
 
-        const newProdOptions: LibProjectConfigBase = {};
+        const newProdOptions: ProjectConfigBase = {};
 
         const bannerFilePath = await findUp(['banner.txt'], projectRootPath, configRootPath);
         if (bannerFilePath) {

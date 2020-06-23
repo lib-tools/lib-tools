@@ -1,4 +1,4 @@
-import { LibProjectConfigBase } from '../models';
+import { ProjectConfigBase } from '../models';
 import { LibProjectConfigInternal } from '../models/internals';
 
 export function applyProjectConfigWithEnvironment(
@@ -52,7 +52,7 @@ export function applyProjectConfigWithEnvironment(
     });
 }
 
-function overrideProjectConfig(oldConfig: LibProjectConfigInternal, newConfig: LibProjectConfigBase): void {
+function overrideProjectConfig(oldConfig: LibProjectConfigInternal, newConfig: ProjectConfigBase): void {
     if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
         return;
     }

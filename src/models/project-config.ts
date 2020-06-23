@@ -216,7 +216,7 @@ export interface LibBundleOptions {
 /**
  * @additionalProperties false
  */
-export interface LibProjectConfigBase {
+export interface ProjectConfigBase {
     /**
      * The output directory for build results.
      */
@@ -305,13 +305,13 @@ export interface LibProjectConfigBase {
 }
 
 export interface LibEnvOverridesOptions {
-    [name: string]: LibProjectConfigBase;
+    [name: string]: ProjectConfigBase;
 }
 
 /**
  * @additionalProperties false
  */
-export interface LibProjectConfig extends LibProjectConfigBase {
+export interface LibProjectConfig extends ProjectConfigBase {
     /**
      * Link to schema.
      */
