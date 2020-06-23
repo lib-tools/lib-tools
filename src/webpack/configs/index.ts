@@ -1,10 +1,11 @@
 import { pathExists } from 'fs-extra';
 import { Configuration } from 'webpack';
 
-import { isFromBuiltInCli, isFromWebpackCli, normalizeEnvironment } from '../../helpers';
+import { isFromBuiltInCli, isFromWebpackCli, normalizeEnvironment, readSchema } from '../../helpers';
+import { LibConfig } from '../../models';
 import { InvalidConfigError } from '../../models/errors';
 import { BuildCommandOptions, BuildOptionsInternal } from '../../models/internals';
-import { LoggerBase } from '../../utils';
+import { LoggerBase, formatValidationError, readJson, validateSchema } from '../../utils';
 
 export async function getWebpackBuildConfig(
     configPath: string,
@@ -102,6 +103,26 @@ export async function getWebpackBuildConfig(
         if (buildOptions.filter && Array.isArray(buildOptions.filter) && buildOptions.filter.length) {
             filteredProjectNames.push(...prepareFilterNames(buildOptions.filter));
         }
+    }
+
+    let libConfig: LibConfig | null = null;
+
+    try {
+        libConfig = ((await readJson(configPath)) as unknown) as LibConfig;
+    } catch (error) {
+        throw new InvalidConfigError(`Invalid configuration, error: ${(error as Error).message || error}.`);
+    }
+
+    const libConfigSchema = await readSchema();
+
+    if (libConfigSchema.$schema) {
+        delete libConfigSchema.$schema;
+    }
+
+    const errors = validateSchema(libConfigSchema, (libConfig as unknown) as { [key: string]: unknown });
+    if (errors.length) {
+        const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
+        throw new InvalidConfigError(`Invalid configuration.\n\n${errMsg}`);
     }
 }
 
