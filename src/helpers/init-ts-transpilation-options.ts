@@ -79,20 +79,27 @@ export async function initTsTranspilationOptions(
     if (libConfig.main) {
         tsTranspilation._detectedEntryName = libConfig.main.replace(/\.(js|jsx|ts|tsx)$/i, '');
     } else {
-        const flatModuleOutFile =
-            tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleOutFile
-                ? (tsTranspilation._angularCompilerOptions.flatModuleOutFile as string)
-                : null;
+        // const flatModuleOutFile =
+        //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleOutFile
+        //         ? (tsTranspilation._angularCompilerOptions.flatModuleOutFile as string)
+        //         : null;
 
-        if (flatModuleOutFile) {
-            tsTranspilation._detectedEntryName = flatModuleOutFile.replace(/\.js$/i, '');
-        } else {
-            const tsSrcDir = path.dirname(tsConfigPath);
-            if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
-                tsTranspilation._detectedEntryName = 'index';
-            } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
-                tsTranspilation._detectedEntryName = 'main';
-            }
+        // if (flatModuleOutFile) {
+        //     tsTranspilation._detectedEntryName = flatModuleOutFile.replace(/\.js$/i, '');
+        // } else {
+        //     const tsSrcDir = path.dirname(tsConfigPath);
+        //     if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
+        //         tsTranspilation._detectedEntryName = 'index';
+        //     } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
+        //         tsTranspilation._detectedEntryName = 'main';
+        //     }
+        // }
+
+        const tsSrcDir = path.dirname(tsConfigPath);
+        if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
+            tsTranspilation._detectedEntryName = 'index';
+        } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
+            tsTranspilation._detectedEntryName = 'main';
         }
     }
 
@@ -148,7 +155,7 @@ export async function initTsTranspilationOptions(
         _index: i,
         _scriptTarget: scriptTarget,
         _tsConfigPath: tsConfigPath,
-        _tsConfigJson: tsTranspilation._tsConfigJson as { [key: string]: string | boolean | {} },
+        _tsConfigJson: tsTranspilation._tsConfigJson as { [key: string]: unknown },
         _tsCompilerConfig: tsTranspilation._tsCompilerConfig,
         _declaration: declaration,
         _tsOutDirRootResolved: tsOutDir
