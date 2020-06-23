@@ -2,11 +2,15 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-export async function resolveLoaderPath(loaderName: string): Promise<string> {
+export async function resolveLoaderPath(
+    loaderName: string,
+    nodeModulesPath?: string,
+    fromBuiltInCli?: boolean,
+    cliRootPath?: string
+): Promise<string> {
     let resolvedPath = loaderName;
     let resolved = false;
 
-    const nodeModulesPath = await AngularBuildContext.getNodeModulesPath();
     if (nodeModulesPath) {
         if (await pathExists(path.resolve(nodeModulesPath, loaderName))) {
             resolvedPath = path.resolve(nodeModulesPath, loaderName);
@@ -14,9 +18,9 @@ export async function resolveLoaderPath(loaderName: string): Promise<string> {
         }
     }
 
-    if (!resolved && AngularBuildContext.fromBuiltInCli) {
-        if (AngularBuildContext.cliRootPath) {
-            const tempPath = path.resolve(AngularBuildContext.cliRootPath, 'node_modules', loaderName);
+    if (!fromBuiltInCli) {
+        if (cliRootPath) {
+            const tempPath = path.resolve(cliRootPath, 'node_modules', loaderName);
             if (await pathExists(tempPath)) {
                 resolvedPath = tempPath;
                 resolved = true;
