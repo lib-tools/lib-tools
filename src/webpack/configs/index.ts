@@ -1,7 +1,13 @@
 import { pathExists } from 'fs-extra';
 import { Configuration } from 'webpack';
 
-import { isFromBuiltInCli, isFromWebpackCli, normalizeEnvironment, readSchema } from '../../helpers';
+import {
+    isFromBuiltInCli,
+    isFromWebpackCli,
+    normalizeEnvironment,
+    readSchema,
+    toLibConfigInternal
+} from '../../helpers';
 import { LibConfig } from '../../models';
 import { InvalidConfigError } from '../../models/errors';
 import { BuildCommandOptions, BuildOptionsInternal } from '../../models/internals';
@@ -124,6 +130,8 @@ export async function getWebpackBuildConfig(
         const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
         throw new InvalidConfigError(`Invalid configuration.\n\n${errMsg}`);
     }
+
+    const libConfigInternal = toLibConfigInternal(libConfig, configPath);
 }
 
 function prepareFilterNames(filter: string | string[]): string[] {
