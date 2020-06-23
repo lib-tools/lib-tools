@@ -1,3 +1,5 @@
+import { ParsedCommandLine } from 'typescript';
+
 import { LibProjectConfig } from '../lib-project-config';
 
 import { GlobalScriptStyleParsedEntry } from './global-script-style-parsed-entry';
@@ -39,7 +41,7 @@ export interface LibProjectConfigInternal extends LibProjectConfig {
 
     _tsConfigPath?: string;
     _tsConfigJson?: { [key: string]: unknown };
-    _tsCompilerConfig?: { [key: string]: unknown };
+    _tsCompilerConfig?: ParsedCommandLine;
 
     _isNestedPackage?: boolean;
     _styleParsedEntries?: GlobalScriptStyleParsedEntry[];
