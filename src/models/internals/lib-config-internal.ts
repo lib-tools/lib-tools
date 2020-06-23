@@ -1,9 +1,8 @@
 import { LibConfig } from '../lib-config';
 
-import { LibProjectConfigInternal } from './project-config-internal';
+import { ProjectConfigInternal } from './project-config-internal';
 
 export interface LibConfigInternal extends LibConfig {
-    projects: LibProjectConfigInternal[];
-    _schema?: { [key: string]: unknown };
+    projects: ProjectConfigInternal[];
     _configPath: string;
 }
