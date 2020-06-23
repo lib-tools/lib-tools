@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { readFile } from 'fs';
 
 import { stripComments } from './strip-comments';
 
-export async function readJson(filePath: string): Promise<any> {
+export async function readJson(filePath: string): Promise<{ [key: string]: unknown }> {
     const content: Buffer = await new Promise((resolve, reject) => {
         readFile(filePath, (err, buffer) => {
             if (err) {
@@ -20,5 +17,5 @@ export async function readJson(filePath: string): Promise<any> {
 
     const contentStr = stripComments(content.toString().replace(/^\uFEFF/, ''));
 
-    return JSON.parse(contentStr);
+    return JSON.parse(contentStr) as { [key: string]: unknown };
 }
