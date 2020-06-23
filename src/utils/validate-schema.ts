@@ -17,10 +17,10 @@ const ajv = new Ajv({
 
 require('ajv-keywords')(ajv, ['instanceof']);
 
-export interface JsonObject {
-    [key: string]: unknown;
-}
-export function validateSchema(schema: JsonObject, data: JsonObject): Ajv.ErrorObject[] {
+export function validateSchema(
+    schema: { [key: string]: unknown },
+    data: { [key: string]: unknown }
+): Ajv.ErrorObject[] {
     if (Array.isArray(data)) {
         const errors = data.map((opts: any) => validateObject(schema, opts));
         errors.forEach((list, idx) => {
