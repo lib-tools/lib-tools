@@ -51,16 +51,17 @@ export interface PackageEntrypoints {
     typings?: string;
 }
 
-export interface LibProjectConfigInternal extends ProjectConfig {
+export interface ProjectConfigInternal extends ProjectConfig {
+    _index: number;
+    _configPath: string;
     _workspaceRoot: string;
+}
 
-    _configPath?: string;
+export interface ProjectConfigInternal2 extends ProjectConfigInternal {
     _nodeModulesPath?: string | null;
 
     _projectRoot: string;
     _outputPath: string;
-
-    _index: number;
 
     _bannerText?: string;
 
