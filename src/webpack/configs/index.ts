@@ -4,7 +4,7 @@ import { Configuration } from 'webpack';
 import { InvalidConfigError } from '../../models/errors';
 import { BuildCommandOptions } from '../../models/internals';
 
-export async function getWebpackLibBuildConfig(
+export async function getWebpackBuildConfig(
     configPath: string,
     env?: string | { [key: string]: boolean | string },
     argv?: BuildCommandOptions,
