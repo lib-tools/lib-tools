@@ -166,7 +166,7 @@ export interface TsTranspilationOptions {
 /**
  * @additionalProperties false
  */
-export interface LibBundleOptions {
+export interface BundleOptions {
     /**
      * Bundle module format.
      */
@@ -289,7 +289,7 @@ export interface ProjectConfigBase {
     /**
      * Bundle target options.
      */
-    bundles?: LibBundleOptions[] | boolean;
+    bundles?: BundleOptions[] | boolean;
     /**
      * The output root directory for package.json file.
      */
