@@ -304,7 +304,7 @@ export interface ProjectConfigBase {
     replaceVersionPlaceholder?: boolean;
 }
 
-export interface LibEnvOverridesOptions {
+export interface EnvOverridesOptions {
     [name: string]: ProjectConfigBase;
 }
 
@@ -332,5 +332,5 @@ export interface ProjectConfig extends ProjectConfigBase {
     /**
      * To override properties based on build environment.
      */
-    envOverrides?: LibEnvOverridesOptions;
+    envOverrides?: EnvOverridesOptions;
 }
