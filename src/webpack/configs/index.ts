@@ -132,6 +132,10 @@ export async function getWebpackBuildConfig(
     }
 
     const libConfigInternal = toLibConfigInternal(libConfig, configPath);
+
+    if (libConfigInternal.projects.length === 0) {
+        throw new InvalidConfigError('No project is available to build.');
+    }
 }
 
 function prepareFilterNames(filter: string | string[]): string[] {
