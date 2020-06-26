@@ -2,6 +2,7 @@ import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
 import { BundleOptions, TsTranspilationOptions } from '../project-config';
 import { ProjectConfigInternal } from './project-config-internal';
+import { PackageJsonLike } from './package-jon-like';
 
 export interface GlobalScriptStyleParsedEntry {
     paths: string[];
@@ -53,41 +54,32 @@ export interface PackageEntrypoints {
 }
 
 export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
-    _nodeModulesPath?: string | null;
-
     _projectRoot: string;
     _outputPath: string;
 
-    _bannerText?: string;
-
-    _packageConfigPath: string;
-    _rootPackageConfigPath?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _packageJson: { [key: string]: any };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _rootPackageJson?: { [key: string]: any };
-
+    _packageJsonPath: string;
+    _rootPackageJsonPath: string | null;
+    _packageJson: PackageJsonLike;
+    _rootPackageJson: PackageJsonLike | null;
     _packageName: string;
     _packageNameWithoutScope: string;
+    _packageVersion: string | null;
+    _packageScope: string | null;
+    _packagePrivate: boolean | null;
+    _nestedPackage: boolean | null;
 
-    _projectVersion?: string;
-    _projectDescription?: string;
-    _projectAuthor?: string;
-    _projectHomePage?: string;
-    _packageScope?: string;
-
-    _isPackagePrivate?: boolean;
+    _nodeModulesPath: string | null;
+    _bannerText: string | null;
 
     _tsConfigPath?: string;
     _tsConfigJson?: { [key: string]: unknown };
     _tsCompilerConfig?: ParsedCommandLine;
 
-    _isNestedPackage?: boolean;
-    _styleParsedEntries?: GlobalScriptStyleParsedEntry[];
-
     _tsTranspilations?: TsTranspilationOptionsInternal[];
     _prevTsTranspilationVersionReplaced?: boolean;
     _prevTsTranspilationResourcesInlined?: boolean;
+
+    _styleParsedEntries?: GlobalScriptStyleParsedEntry[];
 
     _bundles?: LibBundleOptionsInternal[];
 
