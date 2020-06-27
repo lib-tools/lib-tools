@@ -32,6 +32,10 @@ export function toTsScriptTarget(target: string): ScriptTarget | undefined {
         case 'Latest':
         case 'latest':
             return ScriptTarget.Latest;
+        case 'JSON':
+        case 'Json':
+        case 'json':
+            return ScriptTarget.JSON;
         default:
             return undefined;
     }
