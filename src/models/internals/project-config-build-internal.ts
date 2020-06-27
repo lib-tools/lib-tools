@@ -4,7 +4,7 @@ import { BundleOptions, TsTranspilationOptions } from '../project-config';
 import { ProjectConfigInternal } from './project-config-internal';
 import { PackageEntrypoints, PackageJsonLike } from './package-jon-like';
 
-export interface GlobalScriptStyleParsedEntry {
+export interface GlobalStyleParsedEntry {
     paths: string[];
     entry: string;
     lazy?: boolean;
@@ -68,7 +68,7 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _prevTsTranspilationVersionReplaced?: boolean;
     _prevTsTranspilationResourcesInlined?: boolean;
 
-    _styleParsedEntries: GlobalScriptStyleParsedEntry[] | null;
+    _styleParsedEntries: GlobalStyleParsedEntry[] | null;
 
     _bundles?: BundleOptionsInternal[];
 
