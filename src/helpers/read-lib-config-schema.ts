@@ -6,7 +6,7 @@ const cache: { libConfigSchema: { [key: string]: unknown } | null } = {
     libConfigSchema: null
 };
 
-export async function getLibConfigSchema(): Promise<{ [key: string]: unknown }> {
+export async function readLibConfigSchema(): Promise<{ [key: string]: unknown }> {
     if (cache.libConfigSchema != null) {
         return cache.libConfigSchema;
     }

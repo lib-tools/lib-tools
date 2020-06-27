@@ -6,7 +6,7 @@ const cache: { projectConfigSchema: { [key: string]: unknown } | null } = {
     projectConfigSchema: null
 };
 
-export async function getProjectConfigSchema(): Promise<{ [key: string]: unknown }> {
+export async function readProjectConfigSchema(): Promise<{ [key: string]: unknown }> {
     if (cache.projectConfigSchema != null) {
         return cache.projectConfigSchema;
     }
