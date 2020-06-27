@@ -7,7 +7,8 @@ import { InvalidConfigError } from '../models/errors';
 import { ProjectConfigInternal } from '../models/internals';
 import { findUp, formatValidationError, normalizeRelativePath, readJson, validateSchema } from '../utils';
 
-import { CacheManager } from './cache-manager';
+import { getLibConfigSchema } from './get-lib-config-schema';
+import { getProjectConfigSchema } from './get-project-config-schema';
 
 export async function applyProjectConfigExtends(
     projectConfig: ProjectConfigInternal,
@@ -203,7 +204,7 @@ export async function getBaseProjectConfigForFileExtends(
                 delete libConfig.$schema;
             }
 
-            const libConfigSchema = await CacheManager.getLibConfigSchema();
+            const libConfigSchema = await getLibConfigSchema();
             const errors = validateSchema(libConfigSchema, (libConfig as unknown) as { [key: string]: unknown });
             if (errors.length) {
                 const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
@@ -223,7 +224,7 @@ export async function getBaseProjectConfigForFileExtends(
             }
         }
     } else {
-        const projectConfigSchema = await CacheManager.getProjectConfigSchema();
+        const projectConfigSchema = await getProjectConfigSchema();
         const errors = validateSchema(projectConfigSchema, config as { [key: string]: unknown });
         if (errors.length) {
             const errMsg = errors.map((err) => formatValidationError(projectConfigSchema, err)).join('\n');
