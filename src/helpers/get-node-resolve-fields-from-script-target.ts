@@ -38,8 +38,7 @@ export function getnodeResolveFieldsFromScriptTarget(scriptTarget: ScriptTarget 
         nodeResolveFields.push('es2015');
         nodeResolveFields.push('fesm2015');
         nodeResolveFields.push('esm2015');
-    } else if (scriptTarget !== ScriptTarget.ES3 &&
-        scriptTarget !== ScriptTarget.ES5) {
+    } else if (scriptTarget !== ScriptTarget.ES3 && scriptTarget !== ScriptTarget.ES5) {
         nodeResolveFields.push('es2015');
         nodeResolveFields.push('fesm2015');
         nodeResolveFields.push('esm2015');
