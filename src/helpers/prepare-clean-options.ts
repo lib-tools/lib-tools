@@ -1,7 +1,7 @@
 import { CleanOptions } from '../models';
-import { LibProjectConfigInternal } from '../models/internals';
+import { ProjectConfigBuildInternal } from '../models/internals';
 
-export function prepareCleanOptions(projectConfig: LibProjectConfigInternal): CleanOptions {
+export function prepareCleanOptions(projectConfig: ProjectConfigBuildInternal): CleanOptions {
     let cleanOptions: CleanOptions = {};
     if (typeof projectConfig.clean === 'object') {
         cleanOptions = { ...cleanOptions, ...projectConfig.clean };
@@ -12,7 +12,7 @@ export function prepareCleanOptions(projectConfig: LibProjectConfigInternal): Cl
 
     let skipCleanOutDir = false;
 
-    if (projectConfig._isNestedPackage && beforeBuildOption.cleanOutDir) {
+    if (projectConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
         skipCleanOutDir = true;
     }
 
