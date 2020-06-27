@@ -2,15 +2,16 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-import { readProjectConfigSchema, readSchema } from '../helpers';
-import { LibConfig, ProjectConfig, ProjectConfigBase } from '../models';
+import { LibConfig, ProjectConfig } from '../models';
 import { InvalidConfigError } from '../models/errors';
-import { LibProjectConfigInternal } from '../models/internals';
+import { ProjectConfigInternal } from '../models/internals';
 import { findUp, formatValidationError, normalizeRelativePath, readJson, validateSchema } from '../utils';
 
+import { CacheManager } from './cache-manager';
+
 export async function applyProjectConfigExtends(
-    projectConfig: LibProjectConfigInternal,
-    projects: LibProjectConfigInternal[] = [],
+    projectConfig: ProjectConfigInternal,
+    projects: ProjectConfigInternal[] = [],
     workspaceRoot: string
 ): Promise<void> {
     if (!projectConfig.extends) {
@@ -29,7 +30,7 @@ export async function applyProjectConfigExtends(
             continue;
         }
 
-        let baseProjectConfig: LibProjectConfigInternal | null | undefined = null;
+        let baseProjectConfig: ProjectConfigInternal | null | undefined = null;
 
         if (extendsName.startsWith('lib:')) {
             baseProjectConfig = await getBaseProjectConfigForBuiltInExtends(extendsName, projectConfig, workspaceRoot);
@@ -50,7 +51,7 @@ export async function applyProjectConfigExtends(
             continue;
         }
 
-        const clonedBaseProject = JSON.parse(JSON.stringify(baseProjectConfig)) as LibProjectConfigInternal;
+        const clonedBaseProject = JSON.parse(JSON.stringify(baseProjectConfig)) as ProjectConfigInternal;
         if (clonedBaseProject.extends) {
             await applyProjectConfigExtends(clonedBaseProject, projects, workspaceRoot);
 
@@ -72,9 +73,9 @@ export async function applyProjectConfigExtends(
 
 export async function getBaseProjectConfigForBuiltInExtends(
     extendsName: string,
-    projectConfig: LibProjectConfigInternal,
+    projectConfig: ProjectConfigInternal,
     workspaceRoot: string
-): Promise<LibProjectConfigInternal> {
+): Promise<ProjectConfigInternal> {
     const errPrefix = 'Error in extending options';
     const errSuffix = projectConfig._configPath
         ? `, config file: ${path.relative(workspaceRoot, projectConfig._configPath)}.`
@@ -82,70 +83,70 @@ export async function getBaseProjectConfigForBuiltInExtends(
     const invalidExtendsErrMsg = `${errPrefix}, invalid extends name: ${extendsName}${errSuffix}`;
     const extendsConfigNotFoundErrMsg = `${errPrefix}, could not found built-in project config to be extended, extends name: ${extendsName}${errSuffix}`;
 
-    const builtInConfigFileName = extendsName.substr('lib:'.length).trim();
+    const builtInConfigFileName = extendsName.trim();
 
     if (!builtInConfigFileName) {
         throw new InvalidConfigError(invalidExtendsErrMsg);
     }
 
     const buildInConfigsRootPath = path.resolve(__dirname, '../../configs');
-    const builtInConfigPath = path.resolve(buildInConfigsRootPath, `lib-${builtInConfigFileName}.json`);
+    const builtInConfigPath = path.resolve(buildInConfigsRootPath, `${builtInConfigFileName}.json`);
 
     if (!(await pathExists(builtInConfigPath))) {
         throw new InvalidConfigError(extendsConfigNotFoundErrMsg);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    let config = await readJson(builtInConfigPath);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    config._configPath = builtInConfigPath;
+    const builtinProjectConfig = ((await readJson(builtInConfigPath)) as unknown) as ProjectConfig;
+    const config: ProjectConfigInternal = {
+        ...builtinProjectConfig,
+        _index: projectConfig._index,
+        _configPath: builtInConfigPath,
+        _workspaceRoot: projectConfig._workspaceRoot
+    };
 
     if (projectConfig._configPath && projectConfig.root) {
         const configRootPath = path.dirname(projectConfig._configPath);
         const projectRootPath = path.resolve(path.dirname(projectConfig._configPath), projectConfig.root);
 
-        const newProdOptions: ProjectConfigBase = {};
-
-        const bannerFilePath = await findUp(['banner.txt'], projectRootPath, configRootPath);
-        if (bannerFilePath) {
-            newProdOptions.banner = normalizeRelativePath(path.relative(projectRootPath, bannerFilePath));
+        let banner: string | undefined;
+        const foundBannerFilePath = await findUp(['banner.txt'], projectRootPath, configRootPath);
+        if (foundBannerFilePath) {
+            banner = normalizeRelativePath(path.relative(projectRootPath, foundBannerFilePath));
         }
 
-        const readmeFilePath = await findUp(['README.md'], projectRootPath, configRootPath);
-        const licenseFilePath = await findUp(['LICENSE', 'LICENSE.txt'], projectRootPath, configRootPath);
+        const foundReadMeFilePath = await findUp(['README.md'], projectRootPath, configRootPath);
+        const foundLicenseFilePath = await findUp(['LICENSE', 'LICENSE.txt'], projectRootPath, configRootPath);
+        let copyAssets: string[] | undefined;
+        if (foundReadMeFilePath || foundLicenseFilePath) {
+            copyAssets = [];
 
-        if (readmeFilePath || licenseFilePath) {
-            newProdOptions.copy = [];
-            if (readmeFilePath) {
-                newProdOptions.copy.push(normalizeRelativePath(path.relative(projectRootPath, readmeFilePath)));
+            if (foundReadMeFilePath) {
+                copyAssets.push(normalizeRelativePath(path.relative(projectRootPath, foundReadMeFilePath)));
             }
-            if (licenseFilePath) {
-                newProdOptions.copy.push(normalizeRelativePath(path.relative(projectRootPath, licenseFilePath)));
+
+            if (foundLicenseFilePath) {
+                copyAssets.push(normalizeRelativePath(path.relative(projectRootPath, foundLicenseFilePath)));
             }
         }
 
-        const newConfig = {
-            envOverrides: {
-                prod: {
-                    bundles: true,
-                    packageJsonCopy: true,
-                    ...newProdOptions
-                }
+        config.envOverrides = {
+            prod: {
+                banner,
+                copy: copyAssets,
+                bundles: true,
+                packageJsonCopy: true
             }
         };
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        config = { ...config, ...newConfig };
     }
 
-    return (config as unknown) as LibProjectConfigInternal;
+    return config;
 }
 
 export async function getBaseProjectConfigForFileExtends(
     extendsName: string,
-    projectConfig: LibProjectConfigInternal,
+    projectConfig: ProjectConfigInternal,
     workspaceRoot: string
-): Promise<LibProjectConfigInternal | null> {
+): Promise<ProjectConfigInternal | null> {
     let baseProjectConfig: ProjectConfig | null = null;
     const errPrefix = 'Error in extending options';
     const errSuffix = projectConfig._configPath
@@ -202,7 +203,7 @@ export async function getBaseProjectConfigForFileExtends(
                 delete libConfig.$schema;
             }
 
-            const libConfigSchema = await readSchema();
+            const libConfigSchema = await CacheManager.getLibConfigSchema();
             const errors = validateSchema(libConfigSchema, (libConfig as unknown) as { [key: string]: unknown });
             if (errors.length) {
                 const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
@@ -222,29 +223,29 @@ export async function getBaseProjectConfigForFileExtends(
             }
         }
     } else {
-        const projectConfigSchema = await readProjectConfigSchema();
+        const projectConfigSchema = await CacheManager.getProjectConfigSchema();
         const errors = validateSchema(projectConfigSchema, config as { [key: string]: unknown });
         if (errors.length) {
             const errMsg = errors.map((err) => formatValidationError(projectConfigSchema, err)).join('\n');
             throw new InvalidConfigError(`${errPrefix}, invalid configuration.\n\n${errMsg}`);
         }
 
-        baseProjectConfig = config as LibProjectConfigInternal;
+        baseProjectConfig = config as ProjectConfigInternal;
     }
 
     if (baseProjectConfig) {
-        (baseProjectConfig as LibProjectConfigInternal)._configPath = extendsFilePath;
+        (baseProjectConfig as ProjectConfigInternal)._configPath = extendsFilePath;
     }
 
-    return baseProjectConfig as LibProjectConfigInternal;
+    return baseProjectConfig as ProjectConfigInternal;
 }
 
 export function getBaseProjectConfigForProjectExtends(
     extendsName: string,
-    projectConfig: LibProjectConfigInternal,
-    projects: LibProjectConfigInternal[] = [],
+    projectConfig: ProjectConfigInternal,
+    projects: ProjectConfigInternal[] = [],
     workspaceRoot: string
-): LibProjectConfigInternal | null {
+): ProjectConfigInternal | null {
     if (projects.length < 1) {
         return null;
     }
