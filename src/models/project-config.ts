@@ -137,6 +137,8 @@ export interface CommonJsOptions {
     ignoreGlobal?: boolean;
 }
 
+export type EcmaScriptTargetString = 'es5' | 'es2015' | 'es2016' | 'es2017' | 'es2018' | 'es2019' | 'es2020' | 'esnext';
+
 /**
  * @additionalProperties false
  */
@@ -152,7 +154,7 @@ export interface TsTranspilationOptions {
     /**
      * Override script target for this transpilation.
      */
-    target?: 'es5' | 'es2015' | 'es2016' | 'es2017' | 'es2018' | 'es2019' | 'es2020' | 'esnext';
+    target?: EcmaScriptTargetString;
     /**
      * Override declaration option for this transpilation.
      */
@@ -220,7 +222,7 @@ export interface ProjectConfigBase {
     /**
      * The output directory for build results.
      */
-    outputPath?: string;
+    outputPath: string;
     /**
      * Tell the build system which platform environment the application is targeting.
      */
