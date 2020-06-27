@@ -4,9 +4,9 @@ import { InvalidConfigError } from '../models/errors';
 import { isInFolder, isSamePaths } from '../utils';
 
 export function validateOutputPath(
+    outputPath: string,
     workspaceRoot: string,
     projectRoot: string,
-    outputPath: string,
     projectIndexName: string
 ): void {
     if (path.isAbsolute(outputPath)) {
