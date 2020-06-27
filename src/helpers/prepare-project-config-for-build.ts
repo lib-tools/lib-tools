@@ -4,7 +4,7 @@ import { pathExists, readFile } from 'fs-extra';
 import * as ts from 'typescript';
 
 import { GlobalEntry, TsTranspilationOptions } from '../models';
-import { InternalError, InvalidConfigError } from '../models/errors';
+import { InvalidConfigError } from '../models/errors';
 import {
     BuildOptionsInternal,
     BundleOptionsInternal,
@@ -14,7 +14,7 @@ import {
     ProjectConfigInternal,
     TsTranspilationOptionsInternal
 } from '../models/internals';
-import { findUp, formatTsDiagnostics, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
+import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
 
 import { applyProjectConfigWithEnvironment } from './apply-env-overrides';
 import { CacheManager } from './cache-manager';
@@ -137,17 +137,22 @@ export async function prepareProjectConfigForBuild(
         _packageJsonOutDir: packageJsonOutDir
     };
 
+    // tsconfig
     if (projectConfigForBuild.tsConfig) {
         const tsConfigPath = path.resolve(projectRoot, projectConfigForBuild.tsConfig);
-        loadTsConfig(tsConfigPath, projectConfigForBuild, projectConfigForBuild);
+
+        projectConfigForBuild._tsConfigPath = tsConfigPath;
+        projectConfigForBuild._tsConfigJson = CacheManager.readTsConfigFile(tsConfigPath);
+        projectConfigForBuild._tsCompilerConfig = CacheManager.getTsCompilerConfig(tsConfigPath);
     }
 
-    await initTsTranspilations(projectConfigForBuild);
+    // TsTranspilations
+    await prepareTsTranspilations(projectConfigForBuild);
 
-    // bundles
+    // Bundles
     initBundleOptions(projectConfigForBuild);
 
-    // parsed result
+    // Styles
     if (
         projectConfigForBuild.styles &&
         Array.isArray(projectConfigForBuild.styles) &&
@@ -242,67 +247,7 @@ function replaceTokensForBanner(input: string, packageName: string, packageVersi
     return str;
 }
 
-function loadTsConfig(
-    tsConfigPath: string,
-    config: {
-        _tsConfigPath?: string;
-        _tsConfigJson?: { [key: string]: unknown };
-        _tsCompilerConfig?: ts.ParsedCommandLine;
-        // _angularCompilerOptions?: JsonObject;
-    },
-    projectConfig: ProjectConfigBuildInternal
-): void {
-    config._tsConfigPath = tsConfigPath;
-    if (!config._tsConfigJson || !config._tsCompilerConfig) {
-        const sameAsProjectTsConfig =
-            projectConfig.tsConfig && projectConfig._tsConfigPath && tsConfigPath === projectConfig._tsConfigPath;
-
-        if (sameAsProjectTsConfig && projectConfig._tsConfigJson && projectConfig._tsCompilerConfig) {
-            config._tsConfigJson = projectConfig._tsConfigJson;
-            config._tsCompilerConfig = projectConfig._tsCompilerConfig;
-            // config._angularCompilerOptions = projectConfig._angularCompilerOptions;
-        } else {
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            const jsonConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-            if (jsonConfigFile.error && jsonConfigFile.error.length) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const formattedMsg = formatTsDiagnostics(jsonConfigFile.error);
-                if (formattedMsg) {
-                    throw new InvalidConfigError(formattedMsg);
-                }
-            }
-
-            // _tsConfigJson
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            config._tsConfigJson = jsonConfigFile.config;
-            if (sameAsProjectTsConfig && !projectConfig._tsConfigJson) {
-                // tslint:disable-next-line: no-unsafe-any
-                projectConfig._tsConfigJson = config._tsConfigJson;
-            }
-
-            // _tsCompilerConfig
-            config._tsCompilerConfig = ts.parseJsonConfigFileContent(
-                config._tsConfigJson,
-                ts.sys,
-                path.dirname(tsConfigPath),
-                undefined,
-                tsConfigPath
-            );
-
-            if (sameAsProjectTsConfig && !projectConfig._tsCompilerConfig) {
-                projectConfig._tsCompilerConfig = config._tsCompilerConfig;
-            }
-
-            // _angularCompilerOptions
-            // config._angularCompilerOptions = config._tsConfigJson.angularCompilerOptions as JsonObject;
-            // if (sameAsProjectTsConfig && config._angularCompilerOptions && !projectConfig._angularCompilerOptions) {
-            //     projectConfig._angularCompilerOptions = config._angularCompilerOptions;
-            // }
-        }
-    }
-}
-
-async function initTsTranspilations(projectConfig: ProjectConfigBuildInternal): Promise<void> {
+async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal): Promise<void> {
     const workspaceRoot = projectConfig._workspaceRoot;
     const projectRoot = projectConfig._projectRoot;
     const tsTranspilationInternals: TsTranspilationOptionsInternal[] = [];
@@ -310,10 +255,10 @@ async function initTsTranspilations(projectConfig: ProjectConfigBuildInternal): 
     if (projectConfig.tsTranspilations && Array.isArray(projectConfig.tsTranspilations)) {
         const tsTranspilations = projectConfig.tsTranspilations;
         for (let i = 0; i < tsTranspilations.length; i++) {
-            const tsTranspilationPartial = tsTranspilations[i];
+            const tsTranspilation = tsTranspilations[i];
             let tsConfigPath = '';
-            if (tsTranspilationPartial.tsConfig) {
-                tsConfigPath = path.resolve(projectRoot, tsTranspilationPartial.tsConfig);
+            if (tsTranspilation.tsConfig) {
+                tsConfigPath = path.resolve(projectRoot, tsTranspilation.tsConfig);
             } else {
                 if (projectConfig.tsConfig && projectConfig._tsConfigPath) {
                     tsConfigPath = projectConfig._tsConfigPath;
@@ -335,21 +280,13 @@ async function initTsTranspilations(projectConfig: ProjectConfigBuildInternal): 
                 );
             }
 
-            if (i > 0 && tsConfigPath === tsTranspilationInternals[i - 1]._tsConfigPath) {
-                tsTranspilationPartial._tsConfigPath = tsTranspilationInternals[i - 1]._tsConfigPath;
-                tsTranspilationPartial._tsConfigJson = tsTranspilationInternals[i - 1]._tsConfigJson;
-                tsTranspilationPartial._tsCompilerConfig = tsTranspilationInternals[i - 1]._tsCompilerConfig;
-                // tsTranspilationPartial._angularCompilerOptions =
-                //     tsTranspilationInternals[i - 1]._angularCompilerOptions;
-            }
-
-            const tsTranspilation = await initTsTranspilationOptions(
+            const tsTranspilationInternal = await initTsTranspilationOptions(
                 tsConfigPath,
-                tsTranspilationPartial,
+                tsTranspilation,
                 1,
                 projectConfig
             );
-            tsTranspilationInternals.push(tsTranspilation);
+            tsTranspilationInternals.push(tsTranspilationInternal);
         }
     } else if (projectConfig.tsTranspilations) {
         let tsConfigPath: string | null = null;
@@ -365,27 +302,24 @@ async function initTsTranspilations(projectConfig: ProjectConfigBuildInternal): 
             );
         }
 
-        const esm2015TranspilationPartial: Partial<TsTranspilationOptionsInternal> = {
-            target: 'es2015',
-            outDir: 'esm2015'
-        };
-
         const esm2015Transpilation = await initTsTranspilationOptions(
             tsConfigPath,
-            esm2015TranspilationPartial,
+            {
+                target: 'es2015',
+                outDir: 'esm2015'
+            },
             0,
             projectConfig
         );
         tsTranspilationInternals.push(esm2015Transpilation);
 
-        const esm5TranspilationPartial: Partial<TsTranspilationOptionsInternal> = {
-            target: 'es5',
-            outDir: 'esm5',
-            declaration: false
-        };
         const esm5Transpilation = await initTsTranspilationOptions(
             tsConfigPath,
-            esm5TranspilationPartial,
+            {
+                target: 'es5',
+                outDir: 'esm5',
+                declaration: false
+            },
             1,
             projectConfig
         );
@@ -462,17 +396,15 @@ async function detectTsConfigPathForLib(workspaceRoot: string, projectRoot: stri
 
 export async function initTsTranspilationOptions(
     tsConfigPath: string,
-    tsTranspilation: TsTranspilationOptions &
-        Partial<TsTranspilationOptionsInternal> & {
-            _tsCompilerConfig: ts.ParsedCommandLine;
-        },
+    tsTranspilation: TsTranspilationOptions & Partial<TsTranspilationOptionsInternal>,
     i: number,
     projectConfig: ProjectConfigBuildInternal
 ): Promise<TsTranspilationOptionsInternal> {
-    loadTsConfig(tsConfigPath, tsTranspilation, projectConfig);
+    const tsConfigJson = CacheManager.readTsConfigFile(tsConfigPath);
+    const tsCompilerConfig = CacheManager.getTsCompilerConfig(tsConfigPath);
 
     const outputRootDir = projectConfig._outputPath;
-    const compilerOptions = tsTranspilation._tsCompilerConfig.options;
+    const compilerOptions = tsCompilerConfig.options;
 
     // scriptTarget
     let scriptTarget: ts.ScriptTarget = ts.ScriptTarget.ES2015;
@@ -605,8 +537,8 @@ export async function initTsTranspilationOptions(
         _index: i,
         _scriptTarget: scriptTarget,
         _tsConfigPath: tsConfigPath,
-        _tsConfigJson: tsTranspilation._tsConfigJson as { [key: string]: unknown },
-        _tsCompilerConfig: tsTranspilation._tsCompilerConfig,
+        _tsConfigJson: tsConfigJson,
+        _tsCompilerConfig: tsCompilerConfig,
         _declaration: declaration,
         _tsOutDirRootResolved: tsOutDir
     };
@@ -730,11 +662,8 @@ export function initBundleTarget(
     let nodeResolveFields: string[] = [];
 
     if (currentBundle._tsConfigPath) {
-        loadTsConfig(currentBundle._tsConfigPath, currentBundle, projectConfig);
-
-        if (!currentBundle._tsCompilerConfig) {
-            throw new InternalError("The 'currentBundle._tsCompilerConfig' is not set.");
-        }
+        currentBundle._tsConfigJson = CacheManager.readTsConfigFile(currentBundle._tsConfigPath);
+        currentBundle._tsCompilerConfig = CacheManager.getTsCompilerConfig(currentBundle._tsConfigPath);
 
         if (!currentBundle._sourceScriptTarget) {
             currentBundle._sourceScriptTarget = currentBundle._tsCompilerConfig.options.target;
