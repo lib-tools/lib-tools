@@ -2,7 +2,7 @@ import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
 import { BundleOptions, TsTranspilationOptions } from '../project-config';
 import { ProjectConfigInternal } from './project-config-internal';
-import { PackageJsonLike } from './package-jon-like';
+import { PackageEntrypoints, PackageJsonLike } from './package-jon-like';
 
 export interface GlobalScriptStyleParsedEntry {
     paths: string[];
@@ -41,32 +41,21 @@ export interface LibBundleOptionsInternal extends BundleOptions {
     _nodeResolveFields?: string[];
 }
 
-export interface PackageEntrypoints {
-    main?: string;
-    module?: string;
-    es2015?: string;
-    esm5?: string;
-    // It is deprecated as of v9, might be removed in the future.
-    esm2015?: string;
-    fesm2015?: string;
-    fesm5?: string;
-    typings?: string;
-}
-
 export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _projectRoot: string;
     _outputPath: string;
 
     _packageJsonPath: string;
-    _rootPackageJsonPath: string | null;
     _packageJson: PackageJsonLike;
-    _rootPackageJson: PackageJsonLike | null;
     _packageName: string;
     _packageNameWithoutScope: string;
-    _packageVersion: string | null;
+    _packageVersion: string;
+    _privatePackage: boolean;
+    _nestedPackage: boolean;
     _packageScope: string | null;
-    _packagePrivate: boolean | null;
-    _nestedPackage: boolean | null;
+
+    _rootPackageJsonPath: string | null;
+    _rootPackageJson: PackageJsonLike | null;
 
     _nodeModulesPath: string | null;
     _bannerText: string | null;
@@ -79,10 +68,10 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _prevTsTranspilationVersionReplaced?: boolean;
     _prevTsTranspilationResourcesInlined?: boolean;
 
-    _styleParsedEntries?: GlobalScriptStyleParsedEntry[];
+    // _styleParsedEntries: GlobalScriptStyleParsedEntry[] | null;
 
     _bundles?: LibBundleOptionsInternal[];
 
-    _packageJsonOutDir?: string;
+    _packageJsonOutDir: string;
     _packageEntryPoints?: PackageEntrypoints;
 }
