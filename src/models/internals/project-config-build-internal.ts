@@ -68,7 +68,8 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _prevTsTranspilationVersionReplaced?: boolean;
     _prevTsTranspilationResourcesInlined?: boolean;
 
-    _styleParsedEntries: GlobalStyleParsedEntry[] | null;
+    // styles
+    _styleParsedEntries?: GlobalStyleParsedEntry[];
 
     _bundles?: BundleOptionsInternal[];
 
