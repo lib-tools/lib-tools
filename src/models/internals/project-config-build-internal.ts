@@ -24,7 +24,7 @@ export interface TsTranspilationOptionsInternal extends TsTranspilationOptions {
     _customTsOutDir?: string;
 }
 
-export interface LibBundleOptionsInternal extends BundleOptions {
+export interface BundleOptionsInternal extends BundleOptions {
     _index: number;
     _entryFilePath: string;
     _outputFilePath: string;
@@ -68,9 +68,9 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _prevTsTranspilationVersionReplaced?: boolean;
     _prevTsTranspilationResourcesInlined?: boolean;
 
-    // _styleParsedEntries: GlobalScriptStyleParsedEntry[] | null;
+    _styleParsedEntries: GlobalScriptStyleParsedEntry[] | null;
 
-    _bundles?: LibBundleOptionsInternal[];
+    _bundles?: BundleOptionsInternal[];
 
     _packageJsonOutDir: string;
     _packageEntryPoints?: PackageEntrypoints;
