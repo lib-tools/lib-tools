@@ -8,7 +8,6 @@ import {
     isFromBuiltInCli,
     isFromWebpackCli,
     normalizeEnvironment,
-    readSchema,
     toLibConfigInternal
 } from '../../helpers';
 import { LibConfig } from '../../models';
