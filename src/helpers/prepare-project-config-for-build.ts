@@ -17,11 +17,16 @@ import {
 import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
 
 import { applyProjectConfigWithEnvironment } from './apply-env-overrides';
-import { CacheManager } from './cache-manager';
 import { toTsScriptTarget } from './to-ts-script-target';
 import { getEcmaVersionFromScriptTarget } from './get-ecma-version-from-script-target';
 import { getnodeResolveFieldsFromScriptTarget } from './get-node-resolve-fields-from-script-target';
 import { validateOutputPath } from './validate-output-path';
+
+import { findPackageJsonPath } from './find-package-json-path';
+import { findNodeModulesPath } from './find-node-modules-path';
+import { readPackageJson } from './read-package-json';
+import { readTsConfigFile } from './read-ts-config-file';
+import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
@@ -41,21 +46,21 @@ export async function prepareProjectConfigForBuild(
         throw new InvalidConfigError(`The 'projects[${projectIndexName}].root' must be relative path.`);
     }
 
-    const nodeModulesPath = await CacheManager.getNodeModulesPath(workspaceRoot);
+    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
 
     const projectRoot = path.resolve(workspaceRoot, projectConfigCloned.root || '');
     const outputPath = path.resolve(workspaceRoot, projectConfigCloned.outputPath);
 
-    const packageJsonPath = await CacheManager.findPackageJsonPath(workspaceRoot, projectRoot);
+    const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
     if (!packageJsonPath) {
         throw new InvalidConfigError('Could not detect package.json file.');
     }
-    const packageJson = await CacheManager.getPackageJson(packageJsonPath);
+    const packageJson = await readPackageJson(packageJsonPath);
 
-    const rootPackageJsonPath = await CacheManager.findPackageJsonPath(workspaceRoot);
+    const rootPackageJsonPath = await findPackageJsonPath(workspaceRoot);
     let rootPackageJson: PackageJsonLike | null = null;
     if (rootPackageJsonPath) {
-        rootPackageJson = await CacheManager.getPackageJson(rootPackageJsonPath);
+        rootPackageJson = await readPackageJson(rootPackageJsonPath);
     }
 
     const packageName = packageJson.name;
@@ -142,8 +147,8 @@ export async function prepareProjectConfigForBuild(
         const tsConfigPath = path.resolve(projectRoot, projectConfigForBuild.tsConfig);
 
         projectConfigForBuild._tsConfigPath = tsConfigPath;
-        projectConfigForBuild._tsConfigJson = CacheManager.readTsConfigFile(tsConfigPath);
-        projectConfigForBuild._tsCompilerConfig = CacheManager.getTsCompilerConfig(tsConfigPath);
+        projectConfigForBuild._tsConfigJson = readTsConfigFile(tsConfigPath);
+        projectConfigForBuild._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
     }
 
     // TsTranspilations
@@ -400,8 +405,8 @@ export async function initTsTranspilationOptions(
     i: number,
     projectConfig: ProjectConfigBuildInternal
 ): Promise<TsTranspilationOptionsInternal> {
-    const tsConfigJson = CacheManager.readTsConfigFile(tsConfigPath);
-    const tsCompilerConfig = CacheManager.getTsCompilerConfig(tsConfigPath);
+    const tsConfigJson = readTsConfigFile(tsConfigPath);
+    const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
 
     const outputRootDir = projectConfig._outputPath;
     const compilerOptions = tsCompilerConfig.options;
@@ -662,8 +667,8 @@ export function initBundleTarget(
     let nodeResolveFields: string[] = [];
 
     if (currentBundle._tsConfigPath) {
-        currentBundle._tsConfigJson = CacheManager.readTsConfigFile(currentBundle._tsConfigPath);
-        currentBundle._tsCompilerConfig = CacheManager.getTsCompilerConfig(currentBundle._tsConfigPath);
+        currentBundle._tsConfigJson = readTsConfigFile(currentBundle._tsConfigPath);
+        currentBundle._tsCompilerConfig = parseTsJsonConfigFileContent(currentBundle._tsConfigPath);
 
         if (!currentBundle._sourceScriptTarget) {
             currentBundle._sourceScriptTarget = currentBundle._tsCompilerConfig.options.target;
