@@ -1,7 +1,10 @@
+import * as path from 'path';
+
 import { pathExists } from 'fs-extra';
 import { Configuration } from 'webpack';
 
 import {
+    applyProjectConfigExtends,
     isFromBuiltInCli,
     isFromWebpackCli,
     normalizeEnvironment,
@@ -10,7 +13,7 @@ import {
 } from '../../helpers';
 import { LibConfig } from '../../models';
 import { InvalidConfigError } from '../../models/errors';
-import { BuildCommandOptions, BuildOptionsInternal } from '../../models/internals';
+import { BuildCommandOptions, BuildOptionsInternal, ProjectConfigInternal } from '../../models/internals';
 import { LoggerBase, formatValidationError, readJson, validateSchema } from '../../utils';
 
 export async function getWebpackBuildConfig(
@@ -18,7 +21,7 @@ export async function getWebpackBuildConfig(
     env?: string | { [key: string]: boolean | string },
     argv?: BuildCommandOptions & { [key: string]: unknown },
     logger?: LoggerBase
-): Promise<Configuration> {
+): Promise<Configuration[]> {
     const startTime = argv && argv._startTime && typeof argv._startTime === 'number' ? argv._startTime : Date.now();
     const fromBuiltInCli =
         argv && typeof argv._fromBuiltInCli === 'boolean' ? argv._fromBuiltInCli : isFromBuiltInCli();
@@ -131,11 +134,43 @@ export async function getWebpackBuildConfig(
         throw new InvalidConfigError(`Invalid configuration.\n\n${errMsg}`);
     }
 
-    const libConfigInternal = toLibConfigInternal(libConfig, configPath);
+    const workspaceRoot = path.dirname(configPath);
+    const libConfigInternal = toLibConfigInternal(libConfig, configPath, workspaceRoot);
 
     if (libConfigInternal.projects.length === 0) {
         throw new InvalidConfigError('No project is available to build.');
     }
+
+    const filteredProjectConfigs = libConfigInternal.projects.filter(
+        (projectConfig) =>
+            filteredProjectNames.length === 0 ||
+            (filteredProjectNames.length > 0 && projectConfig.name && filteredProjectNames.includes(projectConfig.name))
+    );
+
+    const webpackConfigs: Configuration[] = [];
+
+    for (const filteredProjectConfig of filteredProjectConfigs) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const projectConfigRaw = JSON.parse(JSON.stringify(filteredProjectConfig)) as ProjectConfigInternal;
+        await applyProjectConfigExtends(projectConfigRaw, libConfigInternal.projects, workspaceRoot);
+
+        const angularBuildContext = new AngularBuildContext({
+            projectConfigRaw: libConfigRaw,
+            buildOptions
+        });
+        await angularBuildContext.init();
+
+        if (angularBuildContext.projectConfig.skip) {
+            continue;
+        }
+
+        const wpConfig = (await getLibWebpackConfig(angularBuildContext)) as Configuration | null;
+        if (wpConfig) {
+            webpackConfigs.push(wpConfig);
+        }
+    }
+
+    return webpackConfigs;
 }
 
 function prepareFilterNames(filter: string | string[]): string[] {
