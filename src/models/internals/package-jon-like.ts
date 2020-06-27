@@ -8,13 +8,15 @@ export interface PackageEntrypoints {
     fesm2015?: string;
     fesm5?: string;
     typings?: string;
+    browser?: string;
 }
 
 export interface PackageJsonLike extends PackageEntrypoints {
     [key: string]: string | boolean | { [key: string]: string } | string[] | undefined;
     name: string;
     version?: string;
-    author?: string;
+    author?: string | { [key: string]: string };
+    keywords?: string[];
     license?: string;
     homepage?: string;
     repository?: { [key: string]: string };
