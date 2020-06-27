@@ -52,7 +52,7 @@ export function applyProjectConfigWithEnvironment(
     });
 }
 
-function overrideProjectConfig(oldConfig: ProjectConfigInternal, newConfig: ProjectConfigBase): void {
+function overrideProjectConfig(oldConfig: ProjectConfigInternal, newConfig: Partial<ProjectConfigBase>): void {
     if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
         return;
     }
