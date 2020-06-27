@@ -5,7 +5,7 @@ import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
 import { InvalidConfigError } from '../../../../models/errors';
-import { LibProjectConfigInternal } from '../../../../models/internals';
+import { ProjectConfigInternal } from '../../../../models/internals';
 import { LoggerBase } from '../../../../utils';
 
 import { getRollupConfig } from './get-rollup-config';
@@ -14,7 +14,7 @@ import { minifyFile } from './minify-file';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const sorcery = require('sorcery');
 
-export async function performLibBundles(libConfig: LibProjectConfigInternal, logger: LoggerBase): Promise<void> {
+export async function performLibBundles(libConfig: ProjectConfigInternal, logger: LoggerBase): Promise<void> {
     if (!libConfig._bundles || !libConfig._bundles.length) {
         return;
     }

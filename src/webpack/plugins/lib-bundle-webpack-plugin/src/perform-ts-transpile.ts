@@ -5,12 +5,12 @@ import { writeFile } from 'fs-extra';
 import { ScriptTarget } from 'typescript';
 
 import { InternalError, TypescriptCompileError } from '../../../../models/errors';
-import { LibProjectConfigInternal, TsTranspilationOptionsInternal } from '../../../../models/internals';
+import { ProjectConfigInternal, TsTranspilationOptionsInternal } from '../../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizeRelativePath } from '../../../../utils';
 
 import { replaceVersion } from './replace-version';
 
-export async function performTsTranspile(libConfig: LibProjectConfigInternal, logger: LoggerBase): Promise<void> {
+export async function performTsTranspile(libConfig: ProjectConfigInternal, logger: LoggerBase): Promise<void> {
     if (!libConfig._tsTranspilations || !libConfig._tsTranspilations.length) {
         return;
     }
@@ -90,7 +90,7 @@ export async function performTsTranspile(libConfig: LibProjectConfigInternal, lo
 
 async function afterTsTranspileTask(
     tsTranspilation: TsTranspilationOptionsInternal,
-    libConfig: LibProjectConfigInternal,
+    libConfig: ProjectConfigInternal,
     logger: LoggerBase
 ): Promise<void> {
     if (!libConfig._projectRoot) {

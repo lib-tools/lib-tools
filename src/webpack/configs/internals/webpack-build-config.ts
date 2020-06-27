@@ -7,12 +7,12 @@ import { CleanWebpackPlugin } from '../plugins/clean-webpack-plugin';
 import { CopyWebpackPlugin } from '../plugins/copy-webpack-plugin';
 import { LibBundleWebpackPlugin } from '../plugins/lib-bundle-webpack-plugin';
 
-import { BuildOptionsInternal, LibProjectConfigInternal } from '../../models/internals';
+import { BuildOptionsInternal, ProjectConfigInternal } from '../../models/internals';
 import { prepareCleanOptions } from '../../helpers';
 import { LoggerBase } from '../../utils';
 
 export async function getWebpackBuildConfig(
-    projectConfig: LibProjectConfigInternal,
+    projectConfig: ProjectConfigInternal,
     buildOptions: BuildOptionsInternal,
     logger: LoggerBase
 ): Promise<Configuration> {

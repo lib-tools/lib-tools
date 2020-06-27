@@ -307,7 +307,7 @@ export interface ProjectConfigBase {
 }
 
 export interface EnvOverridesOptions {
-    [name: string]: ProjectConfigBase;
+    [name: string]: Partial<ProjectConfigBase>;
 }
 
 /**

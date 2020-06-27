@@ -1,6 +1,6 @@
 import * as webpack from 'webpack';
 
-import { BuildOptionsInternal, LibProjectConfigInternal } from '../../../../models/internals';
+import { BuildOptionsInternal, ProjectConfigInternal } from '../../../../models/internals';
 import { LoggerBase } from '../../../../utils';
 
 import { performLibBundles } from './perform-lib-bundles';
@@ -10,7 +10,7 @@ import { performTsTranspile } from './perform-ts-transpile';
 // import { processStyles } from './process-styles';
 
 export interface LibBundleWebpackPluginOptions {
-    projectConfig: LibProjectConfigInternal;
+    projectConfig: ProjectConfigInternal;
     buildOptions: BuildOptionsInternal;
     logger: LoggerBase;
 }

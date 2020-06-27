@@ -1,10 +1,10 @@
 import * as webpack from 'webpack';
 
-import { BuildOptionsInternal, LibProjectConfigInternal } from '../../../models/internals';
+import { BuildOptionsInternal, ProjectConfigInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
 export interface BuildInfoWebpackPluginOptions {
-    projectConfig: LibProjectConfigInternal;
+    projectConfig: ProjectConfigInternal;
     buildOptions: BuildOptionsInternal;
     logger: LoggerBase;
 }

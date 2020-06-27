@@ -3,12 +3,12 @@ import * as path from 'path';
 import { writeFile } from 'fs-extra';
 
 import { InvalidConfigError } from '../../../../models/errors';
-import { LibProjectConfigInternal } from '../../../../models/internals';
+import { ProjectConfigInternal } from '../../../../models/internals';
 import { LoggerBase } from '../../../../utils';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
-export async function performPackageJsonCopy(libConfig: LibProjectConfigInternal, logger: LoggerBase): Promise<void> {
+export async function performPackageJsonCopy(libConfig: ProjectConfigInternal, logger: LoggerBase): Promise<void> {
     if (!libConfig.packageJsonCopy) {
         return;
     }
