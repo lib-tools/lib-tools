@@ -1,20 +1,27 @@
 import * as webpack from 'webpack';
 
 import { BuildOptionsInternal, ProjectConfigBuildInternal } from '../../../models/internals';
-import { LoggerBase } from '../../../utils';
+import { LogLevelString, Logger } from '../../../utils';
 
 export interface ProjectBuildInfoWebpackPluginOptions {
     projectConfig: ProjectConfigBuildInternal;
     buildOptions: BuildOptionsInternal;
-    logger: LoggerBase;
+    logLevel?: LogLevelString;
 }
 
 export class ProjectBuildInfoWebpackPlugin {
+    private readonly logger: Logger;
+
     get name(): string {
         return 'project-build-info-webpack-plugin';
     }
 
-    constructor(private readonly options: ProjectBuildInfoWebpackPluginOptions) {}
+    constructor(private readonly options: ProjectBuildInfoWebpackPluginOptions) {
+        this.logger = new Logger({
+            name: `[${this.name}]`,
+            logLevel: this.options.logLevel || 'info'
+        });
+    }
 
     apply(compiler: webpack.Compiler): void {
         let configName: string;
@@ -35,6 +42,6 @@ export class ProjectBuildInfoWebpackPlugin {
             msg += `env: ${envStr}`;
         }
 
-        this.options.logger.info(msg);
+        this.logger.info(msg);
     }
 }
