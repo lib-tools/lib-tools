@@ -6,9 +6,10 @@ import { pathExists, readFile, readJson, writeFile } from 'fs-extra';
 import * as glob from 'glob';
 
 import * as autoprefixer from 'autoprefixer';
-import * as cssnano from 'cssnano';
 import { minify as minifyHtml } from 'html-minifier';
 import * as sass from 'sass';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const cssnano = require('cssnano');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MagicString = require('magic-string');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
