@@ -1,10 +1,10 @@
 import * as path from 'path';
 
 import * as spawn from 'cross-spawn';
-import { writeFile } from 'fs-extra';
+import { pathExists, writeFile } from 'fs-extra';
 import { ScriptTarget } from 'typescript';
 
-import { InternalError, TypescriptCompileError } from '../models/errors';
+import { TypescriptCompileError } from '../models/errors';
 import { ProjectConfigBuildInternal, TsTranspilationOptionsInternal } from '../models/internals';
 import { LoggerBase, globCopyFiles, normalizeRelativePath } from '../utils';
 
@@ -18,13 +18,19 @@ export async function preformTsTranspilations(
         return;
     }
 
+    let tsc = 'tsc';
+    const nodeModulesPath = projectConfig._nodeModulesPath;
+    if (nodeModulesPath) {
+        if (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) {
+            tsc = path.join(nodeModulesPath, '.bin/ngc');
+        } else if (await pathExists(path.join(nodeModulesPath, '.bin/tsc'))) {
+            tsc = path.join(nodeModulesPath, '.bin/tsc');
+        }
+    }
+
     for (const tsTranspilation of projectConfig._tsTranspilations) {
         const tsConfigPath = tsTranspilation._tsConfigPath;
-        if (!tsTranspilation._tsCompilerConfig) {
-            throw new InternalError("The 'tsTranspilation._tsCompilerConfig' is not set.");
-        }
         const compilerOptions = tsTranspilation._tsCompilerConfig.options;
-
         const commandArgs: string[] = ['-p', tsConfigPath];
 
         if (tsTranspilation._customTsOutDir) {
@@ -55,16 +61,13 @@ export async function preformTsTranspilations(
             scriptTargetText = ScriptTarget[tsTranspilation._scriptTarget];
         }
 
-        logger.info(`Compiling typescript with ngc, target: ${scriptTargetText}`);
+        logger.info(`Compiling typescript files, target: ${scriptTargetText}`);
 
-        const nodeModulesPath = projectConfig._nodeModulesPath;
         await new Promise((resolve, reject) => {
             const errors: string[] = [];
-            const commandPath = nodeModulesPath ? path.join(nodeModulesPath, '.bin/ngc') : 'ngc';
-            const child = spawn(commandPath, commandArgs, {});
+            const child = spawn(tsc, commandArgs, {});
             if (child.stdout) {
                 child.stdout.on('data', (data: string | Buffer) => {
-                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     logger.debug(`${data}`);
                 });
             }
@@ -76,7 +79,7 @@ export async function preformTsTranspilations(
             child.on('error', reject);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
-                    afterTsTranspileTask(tsTranspilation, projectConfig, logger)
+                    afterTsTranspileTask(tsTranspilation, projectConfig, tsc, logger)
                         .then(() => {
                             resolve();
                         })
@@ -94,23 +97,10 @@ export async function preformTsTranspilations(
 async function afterTsTranspileTask(
     tsTranspilation: TsTranspilationOptionsInternal,
     projectConfig: ProjectConfigBuildInternal,
+    tsc: string,
     logger: LoggerBase
 ): Promise<void> {
-    if (!projectConfig._projectRoot) {
-        throw new InternalError("The 'projectConfig._projectRoot' is not set.");
-    }
-    if (!projectConfig._outputPath) {
-        throw new InternalError("The 'projectConfig._outputPath' is not set.");
-    }
-
-    // const projectRoot = projectConfig._projectRoot;
     const outputRootDir = projectConfig._outputPath;
-
-    // const stylePreprocessorOptions = projectConfig.stylePreprocessorOptions;
-    // const flatModuleOutFile =
-    //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleOutFile
-    //         ? (tsTranspilation._angularCompilerOptions.flatModuleOutFile as string)
-    //         : '';
 
     // Replace version
     if (
@@ -132,43 +122,41 @@ async function afterTsTranspileTask(
         }
     }
 
-    // Inline assets
-    // let inlineAssets = true;
-    // if (
-    //     tsTranspilation._angularCompilerOptions &&
-    //     tsTranspilation._angularCompilerOptions.enableResourceInlining != null
-    // ) {
-    //     inlineAssets = false;
-    // }
+    // Angular inline assets
+    if (
+        /ngc$/.test(tsc) &&
+        tsTranspilation._tsConfigJson.angularCompilerOptions &&
+        tsTranspilation._tsConfigJson.angularCompilerOptions.enableResourceInlining
+    ) {
+        const stylePreprocessorOptions = projectConfig.stylePreprocessorOptions;
+        let flatModuleOutFile = '';
+        if (
+            /ngc$/.test(tsc) &&
+            tsTranspilation._tsConfigJson.angularCompilerOptions &&
+            tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleOutFile
+        ) {
+            flatModuleOutFile = tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleOutFile;
+        }
 
-    // if (
-    //     inlineAssets &&
-    //     tsTranspilation.enableResourceInlining !== false &&
-    //     (tsTranspilation._index === 0 || (tsTranspilation._index > 0 && projectConfig._prevTsTranspilationResourcesInlined))
-    // ) {
-    //     logger.debug('Checking resources to be inlined');
+        let stylePreprocessorIncludePaths: string[] = [];
+        if (stylePreprocessorOptions && stylePreprocessorOptions.includePaths) {
+            stylePreprocessorIncludePaths = stylePreprocessorOptions.includePaths.map((p) =>
+                path.resolve(projectConfig._projectRoot, p)
+            );
+        }
 
-    //     let stylePreprocessorIncludePaths: string[] = [];
-    //     if (stylePreprocessorOptions && stylePreprocessorOptions.includePaths) {
-    //         stylePreprocessorIncludePaths = stylePreprocessorOptions.includePaths.map((p) =>
-    //             path.resolve(projectRoot, p)
-    //         );
-    //     }
+        logger.debug('Checking resources to be inlined');
 
-    //     const resourcesInlined = await processNgResources(
-    //         projectRoot,
-    //         tsTranspilation._tsOutDirRootResolved,
-    //         `${path.join(tsTranspilation._tsOutDirRootResolved, '**/*.js')}`,
-    //         stylePreprocessorIncludePaths,
-    //         tsTranspilation._declaration,
-    //         flatModuleOutFile ? flatModuleOutFile.replace(/\.js$/i, '.metadata.json') : null,
-    //         logger
-    //     );
-
-    //     if (tsTranspilation._index === 0) {
-    //         projectConfig._prevTsTranspilationResourcesInlined = resourcesInlined;
-    //     }
-    // }
+        await processNgResources(
+            projectConfig._projectRoot,
+            tsTranspilation._tsOutDirRootResolved,
+            `${path.join(tsTranspilation._tsOutDirRootResolved, '**/*.js')}`,
+            stylePreprocessorIncludePaths,
+            tsTranspilation._declaration,
+            flatModuleOutFile ? flatModuleOutFile.replace(/\.js$/i, '.metadata.json') : null,
+            logger
+        );
+    }
 
     // Move typings and metadata files
     if (
@@ -176,14 +164,26 @@ async function afterTsTranspileTask(
         tsTranspilation._typingsOutDir &&
         tsTranspilation._typingsOutDir !== tsTranspilation._tsOutDirRootResolved
     ) {
-        logger.debug('Moving typing and metadata files to output root');
+        // Angular
+        if (/ngc$/.test(tsc)) {
+            logger.debug('Moving typing and metadata files to output root');
 
-        await globCopyFiles(
-            tsTranspilation._tsOutDirRootResolved,
-            '**/*.+(d.ts|metadata.json)',
-            tsTranspilation._typingsOutDir,
-            true
-        );
+            await globCopyFiles(
+                tsTranspilation._tsOutDirRootResolved,
+                '**/*.+(d.ts|metadata.json)',
+                tsTranspilation._typingsOutDir,
+                true
+            );
+        } else {
+            logger.debug('Moving typing files to output root');
+
+            await globCopyFiles(
+                tsTranspilation._tsOutDirRootResolved,
+                '**/*.+(d.ts)',
+                tsTranspilation._typingsOutDir,
+                true
+            );
+        }
     }
 
     // Re-export
@@ -205,27 +205,32 @@ async function afterTsTranspileTask(
         // add banner to index
         const bannerContent = projectConfig._bannerText ? `${projectConfig._bannerText}\n` : '';
 
-        logger.debug('Re-exporting typing and metadata entry files to output root');
+        logger.debug('Re-exporting typing files to output root');
 
         const reExportTypingsContent = `${bannerContent}export * from './${relPath}/${tsTranspilation._detectedEntryName}';\n`;
         const reEportTypingsOutFileAbs = path.resolve(outputRootDir, `${reExportName}.d.ts`);
         await writeFile(reEportTypingsOutFileAbs, reExportTypingsContent);
 
-        // const flatModuleId =
-        //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleId
-        //         ? tsTranspilation._angularCompilerOptions.flatModuleId
-        //         : projectConfig._packageName;
+        // Angular
+        if (/ngc$/.test(tsc)) {
+            logger.debug('Re-exporting Angular metadata files to output root');
+            const flatModuleId =
+                tsTranspilation._tsConfigJson.angularCompilerOptions &&
+                tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleId
+                    ? tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleId
+                    : projectConfig._packageName;
 
-        // const metadataJson = {
-        //     __symbolic: 'module',
-        //     version: 3,
-        //     metadata: {},
-        //     exports: [{ from: `./${relPath}/${tsTranspilation._detectedEntryName}` }],
-        //     flatModuleIndexRedirect: true,
-        //     importAs: flatModuleId
-        // };
+            const metadataJson = {
+                __symbolic: 'module',
+                version: 3,
+                metadata: {},
+                exports: [{ from: `./${relPath}/${tsTranspilation._detectedEntryName}` }],
+                flatModuleIndexRedirect: true,
+                importAs: flatModuleId
+            };
 
-        // const reEportMetaDataFileAbs = reEportTypingsOutFileAbs.replace(/\.d\.ts$/i, '.metadata.json');
-        // await writeFile(reEportMetaDataFileAbs, JSON.stringify(metadataJson, null, 2));
+            const reEportMetaDataFileAbs = reEportTypingsOutFileAbs.replace(/\.d\.ts$/i, '.metadata.json');
+            await writeFile(reEportMetaDataFileAbs, JSON.stringify(metadataJson, null, 2));
+        }
     }
 }
