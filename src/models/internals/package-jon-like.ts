@@ -19,8 +19,8 @@ export interface PackageJsonLike extends PackageEntrypoints {
     keywords?: string[];
     license?: string;
     homepage?: string;
-    repository?: { [key: string]: string };
-    bugs?: { [key: string]: string };
+    repository?: string | { [key: string]: string };
+    bugs?: string | { [key: string]: string };
     scripts?: { [key: string]: string };
     dependencies?: { [key: string]: string };
     devDependencies?: { [key: string]: string };
