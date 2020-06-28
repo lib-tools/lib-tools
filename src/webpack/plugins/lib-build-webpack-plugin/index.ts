@@ -1,7 +1,7 @@
 import * as webpack from 'webpack';
 
 import { BuildOptionsInternal, ProjectConfigBuildInternal } from '../../../models/internals';
-import { LoggerBase } from '../../../utils';
+import { LogLevelString, Logger } from '../../../utils';
 
 import { copyPackageJsonFile, performBundles, preformTsTranspilations } from '../../../helpers';
 
@@ -10,15 +10,22 @@ import { copyPackageJsonFile, performBundles, preformTsTranspilations } from '..
 export interface LibBuildWebpackPluginOptions {
     projectConfig: ProjectConfigBuildInternal;
     buildOptions: BuildOptionsInternal;
-    logger: LoggerBase;
+    logLevel?: LogLevelString;
 }
 
 export class LibBuildWebpackPlugin {
+    private readonly logger: Logger;
+
     get name(): string {
         return 'lib-build-webpack-plugin';
     }
 
-    constructor(private readonly options: LibBuildWebpackPluginOptions) {}
+    constructor(private readonly options: LibBuildWebpackPluginOptions) {
+        this.logger = new Logger({
+            name: `[${this.name}]`,
+            logLevel: this.options.logLevel || 'info'
+        });
+    }
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () => {
@@ -28,15 +35,14 @@ export class LibBuildWebpackPlugin {
 
     private async performBuildTask(): Promise<void> {
         const projectConfig = this.options.projectConfig;
-        const logger = this.options.logger;
 
-        await preformTsTranspilations(projectConfig, logger);
+        await preformTsTranspilations(projectConfig, this.logger);
 
         // if (projectConfig.styles) {
         //     await processStyles(projectConfig, logger);
         // }
 
-        await performBundles(projectConfig, logger);
-        await copyPackageJsonFile(projectConfig, logger);
+        await performBundles(projectConfig, this.logger);
+        await copyPackageJsonFile(projectConfig, this.logger);
     }
 }
