@@ -4,9 +4,11 @@ import { colorize } from '../utils/colorize';
 
 import { getBuildCommandModule } from './build/build-command-module';
 
-import { CliParams } from './cli-params';
+const cliVersion = global.libCli.version;
+const cliIsGlobal = global.libCli.isGlobal;
+const cliIsLink = global.libCli.isLink;
 
-function initYargs(cliVersion: string, args?: string[]): yargs.Argv {
+function initYargs(args?: string[]): yargs.Argv {
     const cliUsage = `${colorize(`lib-tools ${cliVersion}`, 'white')}\n
 Usage:
   lib [options...]`;
@@ -36,7 +38,7 @@ Usage:
     return yargsInstance;
 }
 
-export default async function (cliParams: CliParams): Promise<number> {
+export default async function (): Promise<number> {
     let args = process.argv.slice(2);
     let isHelpCommand = false;
     if (args.includes('help')) {
@@ -49,17 +51,15 @@ export default async function (cliParams: CliParams): Promise<number> {
         args.push('-h');
     }
 
-    const yargsInstance = initYargs(cliParams.cliVersion, args);
+    const yargsInstance = initYargs(args);
     const command = yargsInstance.argv._[0] ? yargsInstance.argv._[0].toLowerCase() : undefined;
-    const commandArgv = yargsInstance.argv;
+    const argv = yargsInstance.argv;
 
     if (command === 'build') {
         // eslint-disable-next-line no-console
         console.log(
             `${colorize(
-                `\nlib-tools ${cliParams.cliVersion} [${
-                    cliParams.cliIsGlobal ? 'Global' : cliParams.cliIsLink ? 'Local - link' : 'Local'
-                }]`,
+                `lib-tools ${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
                 'white'
             )}\n`
         );
@@ -67,17 +67,17 @@ export default async function (cliParams: CliParams): Promise<number> {
         const cliBuildModule = await import('./build/cli-build');
         const cliBuild = cliBuildModule.cliBuild;
 
-        return cliBuild(cliParams);
+        return cliBuild(argv);
     }
 
-    if (commandArgv.version) {
+    if (argv.version) {
         // eslint-disable-next-line no-console
-        console.log(cliParams.cliVersion);
+        console.log(cliVersion);
 
         return 0;
     }
 
-    if (command === 'help' || commandArgv.help || isHelpCommand) {
+    if (command === 'help' || argv.help || isHelpCommand) {
         yargsInstance.showHelp();
 
         return 0;
