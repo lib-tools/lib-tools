@@ -6,6 +6,7 @@ export * from './find-node-modules-path';
 export * from './find-package-json-path';
 export * from './get-ecma-version-from-script-target';
 export * from './get-node-resolve-fields-from-script-target';
+export * from './inline-ng-resources';
 export * from './minify-js-file';
 export * from './normalize-environment';
 export * from './parse-ts-json-config-file-content';
