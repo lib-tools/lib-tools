@@ -43,21 +43,21 @@ async function main() {
         basedir: process.cwd()
     });
 
-    let cliIsGlobal = true;
-    let cliIsLink = false;
+    let isGlobal = true;
+    let isLink = false;
     let tempCliPath;
 
     if (localCli) {
         const localCliRealPath = await realpathAsync(localCli);
         if (localCliRealPath !== localCli) {
-            cliIsLink = true;
+            isLink = true;
         }
 
         tempCliPath = path.dirname(localCli);
-        cliIsGlobal = false;
+        isGlobal = false;
     } else {
         tempCliPath = path.resolve(__dirname, '..');
-        cliIsGlobal = true;
+        isGlobal = true;
     }
 
     let packageJsonPath = '';
@@ -93,7 +93,7 @@ async function main() {
     }
 
     const packageJson = require(packageJsonPath);
-    const cliVersion = packageJson.version;
+    const version = packageJson.version;
     let cli;
 
     if (localCli) {
@@ -119,11 +119,13 @@ async function main() {
         }
     }
 
-    const cliParams = {
-        cliVersion,
-        cliIsGlobal,
-        cliIsLink,
-        cliRootPath: path.dirname(packageJsonPath),
+    const location = path.dirname(packageJsonPath);
+
+    global.libCli = {
+        version,
+        isGlobal,
+        isLink,
+        location,
         startTime
     };
 
@@ -132,7 +134,7 @@ async function main() {
     }
 
     try {
-        await cli(cliParams);
+        await cli();
     } catch (err) {
         process.exitCode = -1;
         console.error(`${err.stack || err.message || err}`);
