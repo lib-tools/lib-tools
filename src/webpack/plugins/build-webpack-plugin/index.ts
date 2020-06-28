@@ -7,20 +7,20 @@ import { copyPackageJsonFile, performBundles, preformTsTranspilations } from '..
 
 // import { processStyles } from './process-styles';
 
-export interface LibBuildWebpackPluginOptions {
+export interface BuildWebpackPluginOptions {
     projectConfig: ProjectConfigBuildInternal;
     buildOptions: BuildOptionsInternal;
     logLevel?: LogLevelString;
 }
 
-export class LibBuildWebpackPlugin {
+export class BuildWebpackPlugin {
     private readonly logger: Logger;
 
     get name(): string {
-        return 'lib-build-webpack-plugin';
+        return 'build-webpack-plugin';
     }
 
-    constructor(private readonly options: LibBuildWebpackPluginOptions) {
+    constructor(private readonly options: BuildWebpackPluginOptions) {
         this.logger = new Logger({
             name: `[${this.name}]`,
             logLevel: this.options.logLevel || 'info'
