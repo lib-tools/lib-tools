@@ -12,14 +12,9 @@ import {
     readLibConfigSchema,
     toLibConfigInternal
 } from '../../helpers';
-import { LibConfig } from '../../models';
+import { BuildCommandOptions, LibConfig } from '../../models';
 import { InvalidConfigError } from '../../models/errors';
-import {
-    BuildCommandOptions,
-    BuildOptionsInternal,
-    ProjectConfigBuildInternal,
-    ProjectConfigInternal
-} from '../../models/internals';
+import { BuildOptionsInternal, ProjectConfigBuildInternal, ProjectConfigInternal } from '../../models/internals';
 import { formatValidationError, readJson, validateSchema } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
