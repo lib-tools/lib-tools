@@ -159,10 +159,6 @@ export interface TsTranspilationOptions {
      * Override declaration option for this transpilation.
      */
     declaration?: boolean;
-    /**
-     * If true, templateUrl and styleUrls resources are inlined.
-     */
-    enableResourceInlining?: boolean;
 }
 
 /**

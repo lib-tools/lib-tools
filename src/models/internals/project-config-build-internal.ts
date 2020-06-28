@@ -10,10 +10,25 @@ export interface GlobalStyleParsedEntry {
     lazy?: boolean;
 }
 
+export interface AngularCompilerJsonOptions {
+    [key: string]: string | boolean | undefined;
+    flatModuleOutFile?: string;
+    flatModuleId?: string;
+}
+
+export interface TsConfigJsonOptions {
+    extends?: string;
+    compilerOptions?: {
+        [key: string]: unknown;
+    };
+    files?: string[];
+    angularCompilerOptions?: AngularCompilerJsonOptions;
+}
+
 export interface TsTranspilationOptionsInternal extends TsTranspilationOptions {
     _index: number;
     _tsConfigPath: string;
-    _tsConfigJson: { [key: string]: unknown };
+    _tsConfigJson: TsConfigJsonOptions;
     _tsCompilerConfig: ParsedCommandLine;
     _declaration: boolean;
     _scriptTarget: ScriptTarget;
@@ -30,7 +45,7 @@ export interface BundleOptionsInternal extends BundleOptions {
     _outputFilePath: string;
 
     _tsConfigPath?: string;
-    _tsConfigJson?: { [key: string]: unknown };
+    _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
 
     _sourceScriptTarget?: ScriptTarget;
@@ -61,12 +76,11 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _bannerText?: string;
 
     _tsConfigPath?: string;
-    _tsConfigJson?: { [key: string]: unknown };
+    _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
 
     _tsTranspilations?: TsTranspilationOptionsInternal[];
     _prevTsTranspilationVersionReplaced?: boolean;
-    _prevTsTranspilationResourcesInlined?: boolean;
 
     // styles
     _styleParsedEntries?: GlobalStyleParsedEntry[];
