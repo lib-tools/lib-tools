@@ -5,7 +5,6 @@ import { Configuration, Plugin } from 'webpack';
 
 import {
     applyProjectConfigExtends,
-    isFromBuiltInCli,
     isFromWebpackCli,
     normalizeEnvironment,
     prepareCleanOptions,
@@ -21,33 +20,32 @@ import {
     ProjectConfigBuildInternal,
     ProjectConfigInternal
 } from '../../models/internals';
-import { LoggerBase, formatValidationError, readJson, validateSchema } from '../../utils';
+import { formatValidationError, readJson, validateSchema } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
 import { CleanWebpackPlugin } from '../plugins/clean-webpack-plugin';
 import { CopyWebpackPlugin } from '../plugins/copy-webpack-plugin';
-import { LibBuildWebpackPlugin } from '../plugins/lib-build-webpack-plugin';
+import { BuildWebpackPlugin } from '../plugins/build-webpack-plugin';
 
 export async function getWebpackBuildConfig(
-    configPath: string,
+    libConfigPath: string,
     env?: string | { [key: string]: boolean | string },
-    argv?: BuildCommandOptions & { [key: string]: unknown },
-    logger?: LoggerBase
+    argv?: BuildCommandOptions & { [key: string]: unknown }
 ): Promise<Configuration[]> {
-    const startTime = argv && argv._startTime && typeof argv._startTime === 'number' ? argv._startTime : Date.now();
-    const fromBuiltInCli =
-        argv && typeof argv._fromBuiltInCli === 'boolean' ? argv._fromBuiltInCli : isFromBuiltInCli();
+    // const startTime = argv && argv._startTime && typeof argv._startTime === 'number' ? argv._startTime : Date.now();
+    // const fromBuiltInCli =
+    //     argv && typeof argv._fromBuiltInCli === 'boolean' ? argv._fromBuiltInCli : isFromBuiltInCli();
 
-    if (!configPath || !configPath.length) {
-        throw new InvalidConfigError("The 'configPath' is required.");
+    if (!libConfigPath) {
+        throw new InvalidConfigError("The 'libConfigPath' parameter is required.");
     }
 
-    if (!/\.json$/i.test(configPath)) {
-        throw new InvalidConfigError(`Invalid config file, path: ${configPath}.`);
+    if (!/\.json$/i.test(libConfigPath)) {
+        throw new InvalidConfigError(`Invalid config file: ${libConfigPath}.`);
     }
 
-    if (!(await pathExists(configPath))) {
-        throw new InvalidConfigError(`The config file does not exist at ${configPath}.`);
+    if (!(await pathExists(libConfigPath))) {
+        throw new InvalidConfigError(`Could not read config file: ${libConfigPath}.`);
     }
 
     const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
@@ -59,14 +57,14 @@ export async function getWebpackBuildConfig(
         buildOptions.logLevel = 'debug';
     }
 
-    const cliRootPath = fromBuiltInCli && argv && argv._cliRootPath ? argv._cliRootPath : undefined;
-    const cliIsGlobal = fromBuiltInCli && argv && argv._cliIsGlobal ? (argv._cliIsGlobal as boolean) : undefined;
-    const cliIsLink = fromBuiltInCli && argv && argv._cliIsLink ? (argv._cliIsLink as boolean) : undefined;
-    const cliVersion = fromBuiltInCli && argv && argv._cliVersion ? argv._cliVersion : undefined;
+    // const cliRootPath = fromBuiltInCli && argv && argv._cliRootPath ? argv._cliRootPath : undefined;
+    // const cliIsGlobal = fromBuiltInCli && argv && argv._cliIsGlobal ? (argv._cliIsGlobal as boolean) : undefined;
+    // const cliIsLink = fromBuiltInCli && argv && argv._cliIsLink ? (argv._cliIsLink as boolean) : undefined;
+    // const cliVersion = fromBuiltInCli && argv && argv._cliVersion ? argv._cliVersion : undefined;
 
     const filteredProjectNames: string[] = [];
 
-    if (isFromWebpackCli() && !fromBuiltInCli) {
+    if (isFromWebpackCli()) {
         if (argv && (argv.projectName || argv['project-name'])) {
             const projectName = (argv.projectName || argv['project-name']) as string;
             filteredProjectNames.push(projectName);
@@ -129,7 +127,7 @@ export async function getWebpackBuildConfig(
     let libConfig: LibConfig | null = null;
 
     try {
-        libConfig = ((await readJson(configPath)) as unknown) as LibConfig;
+        libConfig = ((await readJson(libConfigPath)) as unknown) as LibConfig;
     } catch (error) {
         throw new InvalidConfigError(`Invalid configuration, error: ${(error as Error).message || error}.`);
     }
@@ -146,8 +144,8 @@ export async function getWebpackBuildConfig(
         throw new InvalidConfigError(`Invalid configuration.\n\n${errMsg}`);
     }
 
-    const workspaceRoot = path.dirname(configPath);
-    const libConfigInternal = toLibConfigInternal(libConfig, configPath, workspaceRoot);
+    const workspaceRoot = path.dirname(libConfigPath);
+    const libConfigInternal = toLibConfigInternal(libConfig, libConfigPath, workspaceRoot);
 
     if (libConfigInternal.projects.length === 0) {
         throw new InvalidConfigError('No project is available to build.');
@@ -171,8 +169,7 @@ export async function getWebpackBuildConfig(
 
         const wpConfig = (await getWebpackBuildConfigInternal(
             projectConfigBuildInternal,
-            buildOptions,
-            logger
+            buildOptions
         )) as Configuration | null;
         if (wpConfig) {
             webpackConfigs.push(wpConfig);
@@ -184,8 +181,7 @@ export async function getWebpackBuildConfig(
 
 async function getWebpackBuildConfigInternal(
     projectConfig: ProjectConfigBuildInternal,
-    buildOptions: BuildOptionsInternal,
-    logger: LoggerBase
+    buildOptions: BuildOptionsInternal
 ): Promise<Configuration> {
     const projectRoot = projectConfig._projectRoot;
     const outputPath = projectConfig._outputPath;
@@ -195,7 +191,7 @@ async function getWebpackBuildConfigInternal(
         new ProjectBuildInfoWebpackPlugin({
             projectConfig,
             buildOptions,
-            logger
+            logLevel: buildOptions.logLevel
         })
     ];
 
@@ -228,10 +224,10 @@ async function getWebpackBuildConfigInternal(
 
     // Bundle
     plugins.push(
-        new LibBuildWebpackPlugin({
+        new BuildWebpackPlugin({
             projectConfig,
             buildOptions,
-            logger
+            logLevel: buildOptions.logLevel
         })
     );
 
