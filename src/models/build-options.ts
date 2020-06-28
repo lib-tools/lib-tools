@@ -1,20 +1,6 @@
 /**
  * @additionalProperties true
  */
-export interface ShortcutBuildOptions {
-    /**
-     * Shortcut flag to set build environment to 'production'.
-     */
-    prod?: boolean;
-    /**
-     * Shortcut flag to set logLevel to 'debug'.
-     */
-    verbose?: boolean;
-}
-
-/**
- * @additionalProperties true
- */
 export interface BuildOptions {
     /**
      * Define the build environment.
