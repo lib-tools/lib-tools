@@ -39,7 +39,6 @@
     "minimatch": "^3.0.4",
     "resolve": "^1.17.0",
     "rollup": "^2.18.1",
-    "sorcery": "^0.10.0",
     "supports-color": "^7.1.0",
     "uglify-js": "^3.10.0",
     "update-notifier": "^4.1.0",
@@ -52,7 +51,6 @@
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
-    "@types/cssnano": "^4.0.0",
     "@types/fs-extra": "^9.0.1",
     "@types/glob": "^7.1.2",
     "@types/html-minifier": "^4.0.0",
