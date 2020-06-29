@@ -126,12 +126,10 @@ async function afterTsTranspileTask(
     if (
         /ngc$/.test(tsc) &&
         tsTranspilation._tsConfigJson.angularCompilerOptions &&
-        tsTranspilation._tsConfigJson.angularCompilerOptions.enableResourceInlining
+        tsTranspilation._tsConfigJson.angularCompilerOptions.enableResourceInlining == null
     ) {
-        const stylePreprocessorOptions = projectConfig.stylePreprocessorOptions;
         let flatModuleOutFile = '';
         if (
-            /ngc$/.test(tsc) &&
             tsTranspilation._tsConfigJson.angularCompilerOptions &&
             tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleOutFile
         ) {
@@ -139,15 +137,18 @@ async function afterTsTranspileTask(
         }
 
         let stylePreprocessorIncludePaths: string[] = [];
-        if (stylePreprocessorOptions && stylePreprocessorOptions.includePaths) {
-            stylePreprocessorIncludePaths = stylePreprocessorOptions.includePaths.map((p) =>
+        if (projectConfig.stylePreprocessorOptions && projectConfig.stylePreprocessorOptions.includePaths) {
+            stylePreprocessorIncludePaths = projectConfig.stylePreprocessorOptions.includePaths.map((p) =>
                 path.resolve(projectConfig._projectRoot, p)
             );
         }
 
-        logger.debug('Checking resources to be inlined');
+        logger.debug('Processing Angular resources to be inlined');
 
-        await processNgResources(
+        const inlineResourcesModule = await import('./ng-resource-inlining/inline-resources');
+
+        await inlineResourcesModule.inlineResources(
+            projectConfig._workspaceRoot,
             projectConfig._projectRoot,
             tsTranspilation._tsOutDirRootResolved,
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/*.js')}`,
