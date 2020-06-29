@@ -5,9 +5,7 @@ import { Configuration, Plugin } from 'webpack';
 
 import {
     applyProjectConfigExtends,
-    isFromWebpackCli,
     normalizeEnvironment,
-    prepareCleanOptions,
     prepareProjectConfigForBuild,
     readLibConfigSchema,
     toLibConfigInternal
@@ -18,9 +16,6 @@ import { BuildOptionsInternal, ProjectConfigBuildInternal, ProjectConfigInternal
 import { formatValidationError, readJson, validateSchema } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
-import { CleanWebpackPlugin } from '../plugins/clean-webpack-plugin';
-import { CopyWebpackPlugin } from '../plugins/copy-webpack-plugin';
-import { BuildWebpackPlugin } from '../plugins/build-webpack-plugin';
 
 export async function getWebpackBuildConfig(
     libConfigPath: string,
@@ -51,11 +46,6 @@ export async function getWebpackBuildConfig(
     if (verbose) {
         buildOptions.logLevel = 'debug';
     }
-
-    // const cliRootPath = fromBuiltInCli && argv && argv._cliRootPath ? argv._cliRootPath : undefined;
-    // const cliIsGlobal = fromBuiltInCli && argv && argv._cliIsGlobal ? (argv._cliIsGlobal as boolean) : undefined;
-    // const cliIsLink = fromBuiltInCli && argv && argv._cliIsLink ? (argv._cliIsLink as boolean) : undefined;
-    // const cliVersion = fromBuiltInCli && argv && argv._cliVersion ? argv._cliVersion : undefined;
 
     const filteredProjectNames: string[] = [];
 
@@ -182,7 +172,7 @@ async function getWebpackBuildConfigInternal(
     const outputPath = projectConfig._outputPath;
 
     const plugins: Plugin[] = [
-        // Info
+        // Info plugin
         new ProjectBuildInfoWebpackPlugin({
             projectConfig,
             buildOptions,
@@ -190,44 +180,65 @@ async function getWebpackBuildConfigInternal(
         })
     ];
 
-    // Clean
+    // Clean plugin
     let shouldClean = projectConfig.clean || projectConfig.clean !== false;
     if (projectConfig.clean === false) {
         shouldClean = false;
     }
     if (shouldClean) {
-        let cleanOutputPath = outputPath;
-        if (projectConfig._nestedPackage) {
-            const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
-            const nestedPackageSuffix = projectConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
-            cleanOutputPath = path.resolve(cleanOutputPath, nestedPackageSuffix);
-        }
-
-        const cleanOptions = prepareCleanOptions(projectConfig);
-        const cacheDirs: string[] = [];
-
+        const pluginModule = await import('../plugins/clean-webpack-plugin');
+        const CleanWebpackPlugin = pluginModule.CleanWebpackPlugin;
         plugins.push(
             new CleanWebpackPlugin({
-                ...cleanOptions,
-                workspaceRoot: projectConfig._workspaceRoot,
-                outputPath: cleanOutputPath,
-                cacheDirectries: cacheDirs,
+                projectConfig,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
-    // Bundle
-    plugins.push(
-        new BuildWebpackPlugin({
-            projectConfig,
-            buildOptions,
-            logLevel: buildOptions.logLevel
-        })
-    );
+    // Typescript transpilation plugin
+    if (projectConfig._tsTranspilations && projectConfig._tsTranspilations.length > 0) {
+        const pluginModule = await import('../plugins/ts-transpilations-webpack-plugin');
+        const TsTranspilationsWebpackPlugin = pluginModule.TsTranspilationsWebpackPlugin;
+        plugins.push(
+            new TsTranspilationsWebpackPlugin({
+                projectConfig,
+                logLevel: buildOptions.logLevel
+            })
+        );
+    }
 
-    // Copy assets
+    // styles
+    // TODO:
+
+    // Rollup bundles plugin
+    if (projectConfig._bundles && projectConfig._bundles.length > 0) {
+        const pluginModule = await import('../plugins/rollup-bundles-webpack-plugin');
+        const RollupBundlesWebpackPlugin = pluginModule.RollupBundlesWebpackPlugin;
+        plugins.push(
+            new RollupBundlesWebpackPlugin({
+                projectConfig,
+                logLevel: buildOptions.logLevel
+            })
+        );
+    }
+
+    // Copy package.json plugin
+    if (projectConfig.packageJsonCopy) {
+        const pluginModule = await import('../plugins/package-json-webpack-plugin');
+        const PackageJsonFileWebpackPlugin = pluginModule.PackageJsonFileWebpackPlugin;
+        plugins.push(
+            new PackageJsonFileWebpackPlugin({
+                projectConfig,
+                logLevel: buildOptions.logLevel
+            })
+        );
+    }
+
+    // Copy plugin
     if (projectConfig.copy && Array.isArray(projectConfig.copy) && projectConfig.copy.length > 0) {
+        const pluginModule = await import('../plugins/copy-webpack-plugin');
+        const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
         plugins.push(
             new CopyWebpackPlugin({
                 assets: projectConfig.copy,
@@ -271,4 +282,8 @@ function prepareFilterNames(filter: string | string[]): string[] {
     }
 
     return filterNames;
+}
+
+function isFromWebpackCli(): boolean {
+    return process.argv.length >= 2 && /(\\|\/)?webpack(\.js)?$/i.test(process.argv[1]);
 }
