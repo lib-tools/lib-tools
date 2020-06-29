@@ -11,9 +11,6 @@ import { LoggerBase } from '../../../utils';
 import { getRollupConfig } from './get-rollup-config';
 import { minifyJsFile } from './minify-js-file';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
-const sorcery = require('sorcery');
-
 export async function performRollupBundles(
     projectConfig: ProjectConfigBuildInternal,
     logger: LoggerBase
@@ -34,9 +31,6 @@ export async function performRollupBundles(
             );
         }
 
-        // path.dirname(entryFilePath) !== srcDir
-        const shouldReMapSourceMap = projectConfig.sourceMap && !/\.tsx?$/i.test(entryFilePath);
-
         // main bundling
         const rollupOptions = getRollupConfig(projectConfig, currentBundle, logger);
 
@@ -51,12 +45,12 @@ export async function performRollupBundles(
         await bundle.write(rollupOptions.outputOptions);
 
         // Remapping sourcemaps
-        if (shouldReMapSourceMap) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call,  @typescript-eslint/no-unsafe-member-access
-            const chain = await sorcery.load(currentBundle._outputFilePath);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            await chain.write();
-        }
+        // const shouldReMapSourceMap = projectConfig.sourceMap && !/\.tsx?$/i.test(entryFilePath);
+        // (path.dirname(entryFilePath) !== srcDir)
+        // if (shouldReMapSourceMap) {
+        //     const chain = await sorcery.load(currentBundle._outputFilePath);
+        //     await chain.write();
+        // }
 
         // minify umd files
         if (currentBundle.minify || (currentBundle.minify !== false && currentBundle.libraryTarget === 'umd')) {
@@ -72,12 +66,10 @@ export async function performRollupBundles(
             );
 
             // Remapping sourcemaps
-            if (projectConfig.sourceMap) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call,  @typescript-eslint/no-unsafe-member-access
-                const chain = await sorcery.load(currentBundle._outputFilePath);
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-                await chain.write();
-            }
+            // if (projectConfig.sourceMap) {
+            //     const chain = await sorcery.load(currentBundle._outputFilePath);
+            //     await chain.write();
+            // }
         }
     }
 }
