@@ -11,7 +11,5 @@ export interface LibConfig {
     /**
      * The project configurations.
      */
-    projects: {
-        [key: string]: ProjectConfig;
-    };
+    projects: ProjectConfig[];
 }
