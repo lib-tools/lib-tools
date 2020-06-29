@@ -1,13 +1,12 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { BundleOptions, TsTranspilationOptions } from '../project-config';
+import { BundleOptions, TsTranspilationOptions } from '../project-config-build';
 import { ProjectConfigInternal } from './project-config-internal';
 import { PackageEntrypoints, PackageJsonLike } from './package-jon-like';
 
-export interface GlobalStyleParsedEntry {
+export interface StyleEntryParsed {
     paths: string[];
     entry: string;
-    lazy?: boolean;
 }
 
 export interface AngularCompilerJsonOptions {
@@ -83,7 +82,7 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _prevTsTranspilationVersionReplaced?: boolean;
 
     // styles
-    _styleParsedEntries?: GlobalStyleParsedEntry[];
+    _styleParsedEntries?: StyleEntryParsed[];
 
     _bundles?: BundleOptionsInternal[];
 
