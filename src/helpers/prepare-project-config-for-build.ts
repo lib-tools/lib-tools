@@ -17,16 +17,15 @@ import {
 import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
 
 import { applyProjectConfigWithEnvironment } from './apply-env-overrides';
-import { toTsScriptTarget } from './to-ts-script-target';
-import { getEcmaVersionFromScriptTarget } from './get-ecma-version-from-script-target';
-import { getnodeResolveFieldsFromScriptTarget } from './get-node-resolve-fields-from-script-target';
-import { validateOutputPath } from './validate-output-path';
-
 import { findPackageJsonPath } from './find-package-json-path';
 import { findNodeModulesPath } from './find-node-modules-path';
+import { getEcmaVersionFromScriptTarget } from './get-ecma-version-from-script-target';
+import { getnodeResolveFieldsFromScriptTarget } from './get-node-resolve-fields-from-script-target';
+import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { readPackageJson } from './read-package-json';
 import { readTsConfigFile } from './read-ts-config-file';
-import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
+import { toTsScriptTarget } from './to-ts-script-target';
+import { validateOutputPath } from './validate-output-path';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
@@ -145,8 +144,8 @@ export async function prepareProjectConfigForBuild(
     // tsconfig
     if (projectConfigForBuild.tsConfig) {
         const tsConfigPath = path.resolve(projectRoot, projectConfigForBuild.tsConfig);
-
         projectConfigForBuild._tsConfigPath = tsConfigPath;
+
         projectConfigForBuild._tsConfigJson = readTsConfigFile(tsConfigPath);
         projectConfigForBuild._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
     }
