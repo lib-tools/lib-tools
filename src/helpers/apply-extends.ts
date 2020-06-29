@@ -72,7 +72,7 @@ export async function applyProjectConfigExtends(
     }
 }
 
-export async function getBaseProjectConfigForBuiltInExtends(
+async function getBaseProjectConfigForBuiltInExtends(
     extendsName: string,
     projectConfig: ProjectConfigInternal,
     workspaceRoot: string
@@ -143,7 +143,7 @@ export async function getBaseProjectConfigForBuiltInExtends(
     return config;
 }
 
-export async function getBaseProjectConfigForFileExtends(
+async function getBaseProjectConfigForFileExtends(
     extendsName: string,
     projectConfig: ProjectConfigInternal,
     workspaceRoot: string
@@ -241,7 +241,7 @@ export async function getBaseProjectConfigForFileExtends(
     return baseProjectConfig as ProjectConfigInternal;
 }
 
-export function getBaseProjectConfigForProjectExtends(
+function getBaseProjectConfigForProjectExtends(
     extendsName: string,
     projectConfig: ProjectConfigInternal,
     projects: ProjectConfigInternal[] = [],
