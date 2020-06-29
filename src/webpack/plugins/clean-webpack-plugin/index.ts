@@ -1,5 +1,5 @@
 import * as path from 'path';
-import * as util from 'util';
+import { promisify } from 'util';
 
 import { pathExists, remove, stat } from 'fs-extra';
 import * as glob from 'glob';
@@ -8,12 +8,17 @@ import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models';
 import { InternalError, InvalidConfigError } from '../../../models/errors';
+import { ProjectConfigBuildInternal } from '../../../models/internals';
 import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizeRelativePath } from '../../../utils';
 
-// const globPromise = util.promisify(glob) as (pattern: string, options?: glob.IOptions) => Promise<string[]>;
-const globPromise = util.promisify(glob);
+const globPromise = promisify(glob);
 
-export interface CleanWebpackPluginOptions extends CleanOptions {
+export interface CleanWebpackPluginOptions {
+    projectConfig: ProjectConfigBuildInternal;
+    logLevel?: LogLevelString;
+}
+
+interface CleanOptionsInternal extends CleanOptions {
     workspaceRoot: string;
     outputPath?: string;
     cacheDirectries?: string[];
@@ -22,54 +27,57 @@ export interface CleanWebpackPluginOptions extends CleanOptions {
 }
 
 export class CleanWebpackPlugin {
-    private readonly _logger: Logger;
-    private readonly _persistedOutputFileSystemNames = ['NodeOutputFileSystem'];
-    private _beforeRunCleaned = false;
-    private _afterEmitCleaned = false;
-    private _isPersistedOutputFileSystem = true;
+    private readonly options: CleanOptionsInternal;
+    private readonly logger: Logger;
+    private readonly persistedOutputFileSystemNames = ['NodeOutputFileSystem'];
+    private beforeRunCleaned = false;
+    private afterEmitCleaned = false;
+    private isPersistedOutputFileSystem = true;
 
     get name(): string {
         return 'clean-webpack-plugin';
     }
 
-    constructor(private readonly _options: CleanWebpackPluginOptions) {
-        this._logger = new Logger({
+    constructor(options: CleanWebpackPluginOptions) {
+        this.options = this.prepareCleanOptions(options);
+
+        this.logger = new Logger({
             name: `[${this.name}]`,
-            logLevel: this._options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info'
         });
     }
 
     apply(compiler: Compiler): void {
-        let outputPath = this._options.outputPath;
+        let outputPath = this.options.outputPath;
         if (!outputPath && compiler.options.output && compiler.options.output.path) {
             outputPath = compiler.options.output.path;
         }
 
-        const workspaceRoot = this._options.workspaceRoot;
+        const workspaceRoot = this.options.workspaceRoot;
 
-        if (!this._persistedOutputFileSystemNames.includes(compiler.outputFileSystem.constructor.name)) {
-            this._isPersistedOutputFileSystem = false;
+        if (!this.persistedOutputFileSystemNames.includes(compiler.outputFileSystem.constructor.name)) {
+            this.isPersistedOutputFileSystem = false;
         }
 
         compiler.hooks.beforeRun.tapAsync(this.name, (_, cb: (err?: Error) => void) => {
             const startTime = Date.now();
 
-            if (this._beforeRunCleaned || !this._options.beforeBuild) {
+            if (this.beforeRunCleaned || !this.options.beforeBuild) {
                 cb();
 
                 return;
             }
 
-            const beforeBuildOptions = this._options.beforeBuild;
+            const beforeBuildOptions = this.options.beforeBuild;
 
             if (
                 !beforeBuildOptions.cleanOutDir &&
                 !beforeBuildOptions.cleanCache &&
                 beforeBuildOptions.cleanCache &&
-                (!this._options.cacheDirectries || !this._options.cacheDirectries.length) &&
+                (!this.options.cacheDirectries || !this.options.cacheDirectries.length) &&
                 (!beforeBuildOptions.paths || (beforeBuildOptions.paths && !beforeBuildOptions.paths.length))
             ) {
-                this._beforeRunCleaned = true;
+                this.beforeRunCleaned = true;
 
                 cb();
 
@@ -82,15 +90,15 @@ export class CleanWebpackPlugin {
                 );
             }
 
-            this._logger.debug('The before build cleaning started');
+            this.logger.debug('The before build cleaning started');
 
-            // if (!this._isPersistedOutputFileSystem && !this._options.forceCleanToDisk && !this._options.host) {
-            if (!this._isPersistedOutputFileSystem && !this._options.forceCleanToDisk) {
-                this._logger.debug(
+            // if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk && !this.options.host) {
+            if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk) {
+                this.logger.debug(
                     `No persisted output file system: '${compiler.outputFileSystem.constructor.name}', skipping`
                 );
 
-                this._beforeRunCleaned = true;
+                this.beforeRunCleaned = true;
 
                 cb();
 
@@ -99,10 +107,10 @@ export class CleanWebpackPlugin {
 
             this.cleanTask(beforeBuildOptions, true, outputPath, workspaceRoot)
                 .then(() => {
-                    this._beforeRunCleaned = true;
+                    this.beforeRunCleaned = true;
                     const duration = Date.now() - startTime;
 
-                    this._logger.debug(`The before build cleaning completed in [${duration}ms]`);
+                    this.logger.debug(`The before build cleaning completed in [${duration}ms]`);
 
                     cb();
 
@@ -114,29 +122,29 @@ export class CleanWebpackPlugin {
         compiler.hooks.afterEmit.tapAsync(this.name, (_, cb: (err?: Error) => void) => {
             const startTime = Date.now();
 
-            if (this._afterEmitCleaned || !this._options.afterEmit) {
+            if (this.afterEmitCleaned || !this.options.afterEmit) {
                 cb();
 
                 return;
             }
 
-            const afterEmitOptions = this._options.afterEmit;
+            const afterEmitOptions = this.options.afterEmit;
 
             if (!afterEmitOptions.paths || (afterEmitOptions.paths && !afterEmitOptions.paths.length)) {
-                this._afterEmitCleaned = true;
+                this.afterEmitCleaned = true;
 
                 cb();
 
                 return;
             }
 
-            // if (!this._isPersistedOutputFileSystem && !this._options.forceCleanToDisk && !this._options.host) {
-            if (!this._isPersistedOutputFileSystem && !this._options.forceCleanToDisk) {
-                this._logger.debug(
+            // if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk && !this.options.host) {
+            if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk) {
+                this.logger.debug(
                     `No persisted output file system: '${compiler.outputFileSystem.constructor.name}', skipping`
                 );
 
-                this._afterEmitCleaned = true;
+                this.afterEmitCleaned = true;
 
                 cb();
 
@@ -149,14 +157,14 @@ export class CleanWebpackPlugin {
                 );
             }
 
-            this._logger.debug('The after emit cleaning started');
+            this.logger.debug('The after emit cleaning started');
 
             this.cleanTask(afterEmitOptions, false, outputPath, workspaceRoot)
                 .then(() => {
                     const duration = Date.now() - startTime;
 
-                    this._logger.debug(`The after emit cleaning completed in [${duration}ms]`);
-                    this._afterEmitCleaned = true;
+                    this.logger.debug(`The after emit cleaning completed in [${duration}ms]`);
+                    this.afterEmitCleaned = true;
 
                     cb();
 
@@ -203,7 +211,7 @@ export class CleanWebpackPlugin {
         }
 
         if (isBeforeBuildClean && (cleanOptions as BeforeBuildCleanOptions).cleanOutDir) {
-            if (!isInFolder(workspaceRoot, outputPath) && this._options.allowOutsideWorkspaceRoot === false) {
+            if (!isInFolder(workspaceRoot, outputPath) && this.options.allowOutsideWorkspaceRoot === false) {
                 throw new InternalError(
                     `Cleaning outside of the workspace root directory is disabled, outputPath: ${outputPath}.` +
                         " To enable cleaning, please set 'allowOutsideWorkspaceRoot = true' in clean option."
@@ -220,8 +228,8 @@ export class CleanWebpackPlugin {
             });
         }
 
-        if (this._options.cacheDirectries && this._options.cacheDirectries.length) {
-            this._options.cacheDirectries.forEach((p) => {
+        if (this.options.cacheDirectries && this.options.cacheDirectries.length) {
+            this.options.cacheDirectries.forEach((p) => {
                 rawPathsToClean.push(p);
             });
         }
@@ -258,7 +266,7 @@ export class CleanWebpackPlugin {
         if (pathsToExclude.length > 0) {
             await Promise.all(
                 pathsToExclude.map(async (excludePath: string) => {
-                    if (this._isPersistedOutputFileSystem || this._options.forceCleanToDisk) {
+                    if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
                         const isExists = await pathExists(excludePath);
                         if (isExists) {
                             const statInfo = await stat(excludePath);
@@ -273,8 +281,8 @@ export class CleanWebpackPlugin {
                             }
                         }
                     }
-                    // else if (this._options.host) {
-                    //     const host = this._options.host;
+                    // else if (this.options.host) {
+                    //     const host = this.options.host;
                     //     const resolvedPath = normalize(excludePath);
                     //     const exists = await host.exists(resolvedPath).toPromise();
                     //     if (exists) {
@@ -295,7 +303,7 @@ export class CleanWebpackPlugin {
         }
 
         if (patternsToExclude.length > 0) {
-            if (this._isPersistedOutputFileSystem || this._options.forceCleanToDisk) {
+            if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
                 await Promise.all(
                     patternsToExclude.map(async (excludePattern: string) => {
                         const foundExcludePaths = await globPromise(excludePattern, {
@@ -319,8 +327,8 @@ export class CleanWebpackPlugin {
                     })
                 );
             }
-            // else if (this._options.host) {
-            //     const host = this._options.host;
+            // else if (this.options.host) {
+            //     const host = this.options.host;
             //     if (!outputPathFragementsInitialized) {
             //         await this.calculateOutputPathRecursive(
             //             host,
@@ -381,7 +389,7 @@ export class CleanWebpackPlugin {
                         pathsToClean.push(absolutePath);
                     }
                 } else {
-                    if (this._isPersistedOutputFileSystem || this._options.forceCleanToDisk) {
+                    if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
                         const foundPaths = await globPromise(cleanPattern, { cwd: outputPath, dot: true });
                         foundPaths.forEach((p) => {
                             const absolutePath = path.isAbsolute(p) ? path.resolve(p) : path.resolve(outputPath, p);
@@ -390,8 +398,8 @@ export class CleanWebpackPlugin {
                             }
                         });
                     }
-                    // else if (this._options.host) {
-                    //     const host = this._options.host;
+                    // else if (this.options.host) {
+                    //     const host = this.options.host;
 
                     //     if (!outputPathFragementsInitialized) {
                     //         await this.calculateOutputPathRecursive(
@@ -424,7 +432,7 @@ export class CleanWebpackPlugin {
             })
         );
 
-        const cachePaths = this._options.cacheDirectries || [];
+        const cachePaths = this.options.cacheDirectries || [];
 
         for (const pathToClean of pathsToClean) {
             if (
@@ -479,7 +487,7 @@ export class CleanWebpackPlugin {
                     );
                 }
 
-                if (!isInFolder(workspaceRoot, pathToClean) && this._options.allowOutsideWorkspaceRoot === false) {
+                if (!isInFolder(workspaceRoot, pathToClean) && this.options.allowOutsideWorkspaceRoot === false) {
                     throw new InternalError(
                         `Cleaning outside of the workspace root directory is disabled, outputPath: ${pathToClean}.` +
                             " To enable cleaning, please set 'allowOutsideWorkspaceRoot = true' in clean option."
@@ -488,7 +496,7 @@ export class CleanWebpackPlugin {
 
                 if (
                     (!isInFolder(outputPath, pathToClean) || isSamePaths(outputPath, pathToClean)) &&
-                    !this._options.allowOutsideOutDir &&
+                    !this.options.allowOutsideOutDir &&
                     !cachePaths.includes(pathToClean)
                 ) {
                     throw new InvalidConfigError(
@@ -502,19 +510,19 @@ export class CleanWebpackPlugin {
 
             let retryDelete = false;
 
-            // if (this._options.host) {
-            //     const host = this._options.host;
+            // if (this.options.host) {
+            //     const host = this.options.host;
             //     const resolvedPath = normalize(pathToClean);
 
             //     try {
             //         const exists = await host.exists(resolvedPath).toPromise();
             //         if (exists) {
-            //             this._logger.debug(`Deleting ${relToWorkspace}`);
+            //             this.logger.debug(`Deleting ${relToWorkspace}`);
 
             //             await host.delete(resolvedPath).toPromise();
             //         }
             //     } catch (deleteError) {
-            //         if (this._isPersistedOutputFileSystem || this._options.forceCleanToDisk) {
+            //         if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
             //             retryDelete = true;
             //         } else {
             //             throw deleteError;
@@ -522,12 +530,12 @@ export class CleanWebpackPlugin {
             //     }
             // }
 
-            // (!this._options.host || retryDelete) &&
-            if (retryDelete && (this._isPersistedOutputFileSystem || this._options.forceCleanToDisk)) {
+            // (!this.options.host || retryDelete) &&
+            if (retryDelete && (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk)) {
                 const exists = await pathExists(pathToClean);
                 if (exists) {
                     if (!retryDelete) {
-                        this._logger.debug(`Deleting ${relToWorkspace}`);
+                        this.logger.debug(`Deleting ${relToWorkspace}`);
                     }
                     let retryDeleteCount = 0;
 
@@ -546,5 +554,49 @@ export class CleanWebpackPlugin {
                 }
             }
         }
+    }
+
+    private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
+        const projectConfig = options.projectConfig;
+
+        const workspaceRoot = projectConfig._workspaceRoot;
+        let outputPath = projectConfig.outputPath;
+        if (projectConfig._nestedPackage) {
+            const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
+            const nestedPackageSuffix = projectConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
+            outputPath = path.resolve(outputPath, nestedPackageSuffix);
+        }
+
+        const cleanConfigOptions = typeof projectConfig.clean === 'object' ? projectConfig.clean : {};
+
+        const cleanOptions: CleanOptionsInternal = {
+            ...cleanConfigOptions,
+            workspaceRoot,
+            outputPath,
+            logLevel: options.logLevel
+        };
+
+        cleanOptions.beforeBuild = cleanOptions.beforeBuild || {};
+        const beforeBuildOption = cleanOptions.beforeBuild;
+
+        let skipCleanOutDir = false;
+
+        if (projectConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
+            skipCleanOutDir = true;
+        }
+
+        if (skipCleanOutDir) {
+            beforeBuildOption.cleanOutDir = false;
+        } else if (beforeBuildOption.cleanOutDir == null) {
+            beforeBuildOption.cleanOutDir = true;
+        }
+
+        if (beforeBuildOption.cleanCache == null) {
+            beforeBuildOption.cleanCache = true;
+        }
+
+        cleanOptions.beforeBuild = beforeBuildOption;
+
+        return cleanOptions;
     }
 }
