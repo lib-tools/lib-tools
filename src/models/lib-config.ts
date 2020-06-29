@@ -9,7 +9,9 @@ export interface LibConfig {
      */
     $schema?: string;
     /**
-     * The library project configurations.
+     * The project configurations.
      */
-    projects: ProjectConfig[];
+    projects: {
+        [key: string]: ProjectConfig;
+    };
 }
