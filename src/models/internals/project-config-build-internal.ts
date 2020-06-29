@@ -73,7 +73,7 @@ export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
     _rootPackageJson: PackageJsonLike | null;
 
     _nodeModulesPath: string | null;
-    _bannerText?: string;
+    _bannerText: string | null;
 
     _tsConfigPath?: string;
     _tsConfigJson?: TsConfigJsonOptions;
