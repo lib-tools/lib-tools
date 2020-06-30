@@ -1,19 +1,16 @@
-import * as path from 'path';
-
 import { pathExists } from 'fs-extra';
 import { Configuration, Plugin } from 'webpack';
 
 import {
     applyProjectConfigExtends,
     normalizeEnvironment,
-    prepareProjectConfigForBuild,
+    prepareProjectBuildConfig,
     readLibConfigSchema,
     toLibConfigInternal
 } from '../../helpers';
 import { BuildCommandOptions, LibConfig } from '../../models';
-import { InvalidConfigError } from '../../models/errors';
-import { BuildOptionsInternal, ProjectConfigBuildInternal, ProjectConfigInternal } from '../../models/internals';
-import { formatValidationError, readJson, validateSchema } from '../../utils';
+import { BuildOptionsInternal, ProjectBuildConfigInternal, ProjectConfigInternal } from '../../models/internals';
+import { formatValidationError, readJsonWithComments, validateSchema } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
 
@@ -27,15 +24,15 @@ export async function getWebpackBuildConfig(
     //     argv && typeof argv._fromBuiltInCli === 'boolean' ? argv._fromBuiltInCli : isFromBuiltInCli();
 
     if (!libConfigPath) {
-        throw new InvalidConfigError("The 'libConfigPath' parameter is required.");
+        throw new Error("The 'libConfigPath' parameter is required.");
     }
 
     if (!/\.json$/i.test(libConfigPath)) {
-        throw new InvalidConfigError(`Invalid config file: ${libConfigPath}.`);
+        throw new Error(`Invalid config file: ${libConfigPath}.`);
     }
 
     if (!(await pathExists(libConfigPath))) {
-        throw new InvalidConfigError(`Could not read config file: ${libConfigPath}.`);
+        throw new Error(`Could not read config file: ${libConfigPath}.`);
     }
 
     const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
@@ -112,9 +109,9 @@ export async function getWebpackBuildConfig(
     let libConfig: LibConfig | null = null;
 
     try {
-        libConfig = ((await readJson(libConfigPath)) as unknown) as LibConfig;
+        libConfig = ((await readJsonWithComments(libConfigPath)) as unknown) as LibConfig;
     } catch (error) {
-        throw new InvalidConfigError(`Invalid configuration, error: ${(error as Error).message || error}.`);
+        throw new Error(`Invalid configuration, error: ${(error as Error).message || error}.`);
     }
 
     const libConfigSchema = await readLibConfigSchema();
@@ -126,15 +123,10 @@ export async function getWebpackBuildConfig(
     const errors = validateSchema(libConfigSchema, (libConfig as unknown) as { [key: string]: unknown });
     if (errors.length) {
         const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
-        throw new InvalidConfigError(`Invalid configuration.\n\n${errMsg}`);
+        throw new Error(`Invalid configuration.\n\n${errMsg}`);
     }
 
-    const workspaceRoot = path.dirname(libConfigPath);
-    const libConfigInternal = toLibConfigInternal(libConfig, libConfigPath, workspaceRoot);
-
-    if (libConfigInternal.projects.length === 0) {
-        throw new InvalidConfigError('No project is available to build.');
-    }
+    const libConfigInternal = toLibConfigInternal(libConfig, libConfigPath);
 
     const filteredProjectConfigs = libConfigInternal.projects.filter(
         (projectConfig) =>
@@ -146,8 +138,8 @@ export async function getWebpackBuildConfig(
 
     for (const filteredProjectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(filteredProjectConfig)) as ProjectConfigInternal;
-        await applyProjectConfigExtends(projectConfigInternal, libConfigInternal.projects, workspaceRoot);
-        const projectConfigBuildInternal = await prepareProjectConfigForBuild(projectConfigInternal, buildOptions);
+        await applyProjectConfigExtends(projectConfigInternal, libConfigInternal.projects);
+        const projectConfigBuildInternal = await prepareProjectBuildConfig(projectConfigInternal, buildOptions);
         if (projectConfigBuildInternal.skip) {
             continue;
         }
@@ -165,7 +157,7 @@ export async function getWebpackBuildConfig(
 }
 
 async function getWebpackBuildConfigInternal(
-    projectConfig: ProjectConfigBuildInternal,
+    projectConfig: ProjectBuildConfigInternal,
     buildOptions: BuildOptionsInternal
 ): Promise<Configuration> {
     const projectRoot = projectConfig._projectRoot;
@@ -242,7 +234,7 @@ async function getWebpackBuildConfigInternal(
         plugins.push(
             new CopyWebpackPlugin({
                 assets: projectConfig.copy,
-                baseDir: projectRoot,
+                projectRoot,
                 outputPath,
                 allowCopyOutsideOutputPath: true,
                 forceWriteToDisk: true,
@@ -252,7 +244,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     const webpackConfig: Configuration = {
-        name: projectConfig.name,
+        name: projectConfig._name,
         entry: () => ({}),
         output: {
             path: outputPath,
