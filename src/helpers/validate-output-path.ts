@@ -1,13 +1,14 @@
 import * as path from 'path';
 
-import { ProjectBuildConfigInternal } from '../models/internals';
 import { isInFolder, isSamePaths } from '../utils';
 
-export function validateOutputPath(projectConfig: ProjectBuildConfigInternal): void {
-    const workspaceRoot = path.dirname(projectConfig._configPath);
-    const projectRoot = projectConfig._projectRoot;
-    const outputPath = projectConfig._outputPath;
-    const configErrorLocation = `projects[${projectConfig._name}].outputPath`;
+export function validateOutputPath(
+    outputPath: string,
+    workspaceRoot: string,
+    projectRoot: string,
+    projectName: string
+): void {
+    const configErrorLocation = `projects[${projectName}].outputPath`;
 
     if (path.isAbsolute(outputPath)) {
         throw new Error(`The '${configErrorLocation}' must be relative path.`);
