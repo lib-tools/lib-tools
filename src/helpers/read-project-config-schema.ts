@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { readJson } from '../utils';
+import { readJSON } from 'fs-extra';
 
 const cache: { projectConfigSchema: { [key: string]: unknown } | null } = {
     projectConfigSchema: null
@@ -12,7 +12,7 @@ export async function readProjectConfigSchema(): Promise<{ [key: string]: unknow
     }
 
     const schemaRootPath = path.resolve(__dirname, '../schemas');
-    const schema = await readJson(path.resolve(schemaRootPath, 'project-config-schema.json'));
+    const schema = await readJSON(path.resolve(schemaRootPath, 'project-config-schema.json'));
 
     if (schema.$schema) {
         delete schema.$schema;
