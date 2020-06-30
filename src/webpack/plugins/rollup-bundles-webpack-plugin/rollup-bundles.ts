@@ -4,15 +4,14 @@ import { pathExists } from 'fs-extra';
 import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
-import { InvalidConfigError } from '../../../models/errors';
-import { ProjectConfigBuildInternal } from '../../../models/internals';
+import { ProjectBuildConfigInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
 import { getRollupConfig } from './get-rollup-config';
 import { minifyJsFile } from './minify-js-file';
 
 export async function performRollupBundles(
-    projectConfig: ProjectConfigBuildInternal,
+    projectConfig: ProjectBuildConfigInternal,
     logger: LoggerBase
 ): Promise<void> {
     if (!projectConfig._bundles || !projectConfig._bundles.length) {
@@ -26,8 +25,8 @@ export async function performRollupBundles(
         const entryFileExists = await pathExists(entryFilePath);
 
         if (!entryFileExists) {
-            throw new InvalidConfigError(
-                `The entry file path: ${entryFilePath} doesn't exist. Please correct value in 'projects[${projectConfig._index}].bundles[${currentBundle._index}].entry'.`
+            throw new Error(
+                `The entry file path: ${entryFilePath} doesn't exist. Please correct value in 'projects[${projectConfig._name}].bundles[${currentBundle._index}].entry'.`
             );
         }
 

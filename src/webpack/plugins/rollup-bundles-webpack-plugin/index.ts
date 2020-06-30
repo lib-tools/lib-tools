@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 
-import { ProjectConfigBuildInternal } from '../../../models/internals';
+import { ProjectBuildConfigInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 import { performRollupBundles } from './rollup-bundles';
 
 export interface RollupBundlesWebpackPluginebpackPluginOptions {
-    projectConfig: ProjectConfigBuildInternal;
+    projectConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 

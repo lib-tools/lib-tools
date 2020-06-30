@@ -4,13 +4,13 @@ import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
 import { ExternalsEntry } from '../../../models';
-import { BundleOptionsInternal, ProjectConfigBuildInternal } from '../../../models/internals';
+import { BundleOptionsInternal, ProjectBuildConfigInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export function getRollupConfig(
-    projectConfig: ProjectConfigBuildInternal,
+    projectConfig: ProjectBuildConfigInternal,
     currentBundle: BundleOptionsInternal,
     logger: LoggerBase
 ): {
