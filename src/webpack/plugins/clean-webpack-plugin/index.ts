@@ -7,20 +7,19 @@ import * as minimatch from 'minimatch';
 import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models';
-import { InternalError, InvalidConfigError } from '../../../models/errors';
-import { ProjectConfigBuildInternal } from '../../../models/internals';
+import { ProjectBuildConfigInternal } from '../../../models/internals';
 import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizeRelativePath } from '../../../utils';
 
 const globPromise = promisify(glob);
 
 export interface CleanWebpackPluginOptions {
-    projectConfig: ProjectConfigBuildInternal;
+    projectConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
 interface CleanOptionsInternal extends CleanOptions {
     workspaceRoot: string;
-    outputPath?: string;
+    outputPath: string;
     cacheDirectries?: string[];
     forceCleanToDisk?: boolean;
     logLevel?: LogLevelString;
@@ -85,7 +84,7 @@ export class CleanWebpackPlugin {
             }
 
             if (!outputPath || outputPath === '/' || !path.isAbsolute(outputPath)) {
-                throw new InternalError(
+                throw new Error(
                     `[${this.name}] Absolute output path must be specified at webpack config -> output -> path.`
                 );
             }
@@ -152,7 +151,7 @@ export class CleanWebpackPlugin {
             }
 
             if (!outputPath || outputPath === '/' || !path.isAbsolute(outputPath)) {
-                throw new InternalError(
+                throw new Error(
                     `[${this.name}] Absolute output path must be specified at webpack config -> output -> path.`
                 );
             }
@@ -187,32 +186,30 @@ export class CleanWebpackPlugin {
         const rawPathsToClean: string[] = [];
 
         if (!outputPath) {
-            throw new InternalError("The 'outputPath' options is required.");
+            throw new Error("The 'outputPath' options is required.");
         }
 
         if (!path.isAbsolute(outputPath) || outputPath === '/' || isGlob(outputPath)) {
-            throw new InternalError("The absolute path is required for 'outputPath' options.");
+            throw new Error("The absolute path is required for 'outputPath' options.");
         }
 
         if (isSamePaths(path.parse(outputPath).root, outputPath)) {
-            throw new InternalError(`The output path must not be the root directory, outputPath: ${outputPath}.`);
+            throw new Error(`The output path must not be the root directory, outputPath: ${outputPath}.`);
         }
 
         if (isSamePaths(workspaceRoot, outputPath)) {
-            throw new InternalError(
-                `The output path must not be the workspace root directory, outputPath: ${outputPath}.`
-            );
+            throw new Error(`The output path must not be the workspace root directory, outputPath: ${outputPath}.`);
         }
 
         if (isInFolder(outputPath, workspaceRoot)) {
-            throw new InternalError(
+            throw new Error(
                 `The workspace root directory must not be inside the output path, outputPath: ${outputPath}.`
             );
         }
 
         if (isBeforeBuildClean && (cleanOptions as BeforeBuildCleanOptions).cleanOutDir) {
             if (!isInFolder(workspaceRoot, outputPath) && this.options.allowOutsideWorkspaceRoot === false) {
-                throw new InternalError(
+                throw new Error(
                     `Cleaning outside of the workspace root directory is disabled, outputPath: ${outputPath}.` +
                         " To enable cleaning, please set 'allowOutsideWorkspaceRoot = true' in clean option."
                 );
@@ -472,23 +469,23 @@ export class CleanWebpackPlugin {
             // validation
             if (!isSamePaths(pathToClean, outputPath)) {
                 if (isSamePaths(path.parse(pathToClean).root, pathToClean)) {
-                    throw new InvalidConfigError(`Cleaning the root directory is not permitted, path: ${pathToClean}.`);
+                    throw new Error(`Cleaning the root directory is not permitted, path: ${pathToClean}.`);
                 }
 
                 if (workspaceRoot && isInFolder(pathToClean, workspaceRoot)) {
-                    throw new InvalidConfigError(
+                    throw new Error(
                         `The workspace root path must not be inside the path to be deleted, path: ${pathToClean}, context: ${workspaceRoot}.`
                     );
                 }
 
                 if (workspaceRoot && isSamePaths(pathToClean, workspaceRoot)) {
-                    throw new InvalidConfigError(
+                    throw new Error(
                         `The path to be deleted must not be the same as workspace root path, path: ${outputPath}, context: ${workspaceRoot}.`
                     );
                 }
 
                 if (!isInFolder(workspaceRoot, pathToClean) && this.options.allowOutsideWorkspaceRoot === false) {
-                    throw new InternalError(
+                    throw new Error(
                         `Cleaning outside of the workspace root directory is disabled, outputPath: ${pathToClean}.` +
                             " To enable cleaning, please set 'allowOutsideWorkspaceRoot = true' in clean option."
                     );
@@ -499,7 +496,7 @@ export class CleanWebpackPlugin {
                     !this.options.allowOutsideOutDir &&
                     !cachePaths.includes(pathToClean)
                 ) {
-                    throw new InvalidConfigError(
+                    throw new Error(
                         `Cleaning outside of output directory is disabled, path to clean: ${pathToClean}.` +
                             " To enable cleaning, please set 'allowOutsideOutDir = true' in clean option."
                     );
@@ -559,8 +556,8 @@ export class CleanWebpackPlugin {
     private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
         const projectConfig = options.projectConfig;
 
-        const workspaceRoot = projectConfig._workspaceRoot;
-        let outputPath = projectConfig.outputPath;
+        const workspaceRoot = path.dirname(projectConfig._configPath);
+        let outputPath = projectConfig._outputPath;
         if (projectConfig._nestedPackage) {
             const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
             const nestedPackageSuffix = projectConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
