@@ -1,6 +1,6 @@
 export * from './apply-extends';
 export * from './normalize-environment';
-export * from './prepare-project-config-for-build';
+export * from './prepare-project-build-config';
 export * from './read-lib-config-schema';
 export * from './read-package-json';
 export * from './read-project-config-schema';
