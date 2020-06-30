@@ -47,7 +47,7 @@ async function applyProjectConfigExtendsInternal(
         baseProjectConfig = await getBaseProjectConfigForFileExtends(projectConfig, rootConfigPath);
     } else {
         throw new InvalidConfigError(
-            `Error in extending project config, invalid extends name at ${currentConfigFile} -> ${configErrorLocation}.`,
+            `Error in extending project config, invalid extends name. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
             rootConfigPath,
             configErrorLocation
         );
