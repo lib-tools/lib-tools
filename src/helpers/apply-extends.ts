@@ -29,7 +29,7 @@ async function applyProjectConfigExtendsInternal(
     projectCollection: { [key: string]: ProjectConfigInternal } = {},
     rootConfigPath: string
 ): Promise<void> {
-    if (!projectConfig.extends || !projectConfig.extends.trim().length) {
+    if (!projectConfig.extends) {
         return;
     }
 
