@@ -3,20 +3,19 @@ import * as path from 'path';
 import { pathExists, readFile } from 'fs-extra';
 import * as ts from 'typescript';
 
-import { GlobalEntry, TsTranspilationOptions } from '../models';
-import { InvalidConfigError } from '../models/errors';
+import { StyleEntry, TsTranspilationOptions } from '../models';
 import {
     BuildOptionsInternal,
     BundleOptionsInternal,
-    GlobalStyleParsedEntry,
+    StyleEntryParsed
     PackageJsonLike,
-    ProjectConfigBuildInternal,
+    ProjectBuildConfigInternal,
     ProjectConfigInternal,
     TsTranspilationOptionsInternal
 } from '../models/internals';
 import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
 
-import { applyProjectConfigWithEnvironment } from './apply-env-overrides';
+import { applyEnvOverrides } from './apply-env-overrides';
 import { findPackageJsonPath } from './find-package-json-path';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { getEcmaVersionFromScriptTarget } from './get-ecma-version-from-script-target';
@@ -29,20 +28,21 @@ import { validateOutputPath } from './validate-output-path';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
-export async function prepareProjectConfigForBuild(
-    projectConfig: ProjectConfigInternal,
+export async function prepareProjectBuildConfig(
+    projectConfig: ProjectBuildConfigInternal,
     buildOptions: BuildOptionsInternal
-): Promise<ProjectConfigBuildInternal> {
-    const projectConfigCloned = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
+): Promise<ProjectBuildConfigInternal> {
+    const projectConfigCloned = JSON.parse(JSON.stringify(projectConfig)) as ProjectBuildConfigInternal;
 
     // apply env
-    applyProjectConfigWithEnvironment(projectConfigCloned, buildOptions.environment);
+    applyEnvOverrides(projectConfigCloned, buildOptions.environment);
 
-    const workspaceRoot = projectConfigCloned._workspaceRoot;
-    const projectIndexName = projectConfigCloned.name || `${projectConfigCloned._index}`;
+    const configPath = projectConfigCloned._configPath;
+    const workspaceRoot = path.dirname(configPath);
+    const projectLocation = `projects[${projectConfigCloned._name}]`;
 
     if (projectConfigCloned.root && path.isAbsolute(projectConfigCloned.root)) {
-        throw new InvalidConfigError(`The 'projects[${projectIndexName}].root' must be relative path.`);
+        throw new Error(`The '${projectLocation}.root' must be relative path.`);
     }
 
     const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
@@ -52,7 +52,7 @@ export async function prepareProjectConfigForBuild(
 
     const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
     if (!packageJsonPath) {
-        throw new InvalidConfigError('Could not detect package.json file.');
+        throw new Error('Could not detect package.json file.');
     }
     const packageJson = await readPackageJson(packageJsonPath);
 
@@ -86,7 +86,7 @@ export async function prepareProjectConfigForBuild(
             if (rootPackageJson && rootPackageJson.version) {
                 packageVersion = rootPackageJson.version;
             } else {
-                throw new InvalidConfigError('The package version could not be detected.');
+                throw new Error('The package version could not be detected.');
             }
         } else {
             packageVersion = packageJson.version;
@@ -193,7 +193,7 @@ async function getBannerText(
         if (bannerFilePath) {
             bannerText = await readFile(bannerFilePath, 'utf-8');
         } else {
-            throw new InvalidConfigError(
+            throw new Error(
                 `The banner text file: ${path.resolve(
                     projectRoot,
                     bannerText
@@ -277,7 +277,7 @@ async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal
             }
 
             if (!tsConfigPath) {
-                throw new InvalidConfigError(
+                throw new Error(
                     `The 'projects[${
                         projectConfig.name || projectConfig._index
                     }].tsTranspilations[${i}].tsConfig' value is required.`
@@ -301,7 +301,7 @@ async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal
         }
 
         if (!tsConfigPath) {
-            throw new InvalidConfigError(
+            throw new Error(
                 `Could not detect tsconfig file for 'projects[${projectConfig.name || projectConfig._index}].`
             );
         }
@@ -379,7 +379,7 @@ function initBundleOptions(projectConfig: ProjectConfigBuildInternal): void {
             const umdBundleInternal = initBundleTarget(bundleInternals, umdBundlePartial, 2, projectConfig);
             bundleInternals.push(umdBundleInternal);
         } else {
-            throw new InvalidConfigError(
+            throw new Error(
                 `Counld not detect to bunlde automatically, please correct option in 'projects[${
                     projectConfig.name || projectConfig._index
                 }].bundles'.`
@@ -555,7 +555,7 @@ export function initBundleTarget(
     projectConfig: ProjectConfigBuildInternal
 ): BundleOptionsInternal {
     if (!currentBundle.libraryTarget) {
-        throw new InvalidConfigError(
+        throw new Error(
             `The 'projects[${
                 projectConfig.name || projectConfig._index
             }].bundles[${i}].libraryTarget' value is required.`
@@ -592,7 +592,7 @@ export function initBundleTarget(
         }
 
         if (!foundBundleTarget) {
-            throw new InvalidConfigError(
+            throw new Error(
                 `No previous bundle target found, please correct value in 'projects[${
                     projectConfig.name || projectConfig._index
                 }].bundles[${i}].entryRoot'.`
@@ -604,7 +604,7 @@ export function initBundleTarget(
         currentBundle._destScriptTarget = foundBundleTarget._destScriptTarget;
     } else if (currentBundle.entryRoot === 'tsTranspilationOutput') {
         if (!projectConfig._tsTranspilations || !projectConfig._tsTranspilations.length) {
-            throw new InvalidConfigError(
+            throw new Error(
                 `To use 'tsTranspilationOutDir', the 'projects[${
                     projectConfig.name || projectConfig._index
                 }].tsTranspilations' option is required.`
@@ -617,7 +617,7 @@ export function initBundleTarget(
             foundTsTranspilation = projectConfig._tsTranspilations[0];
         } else {
             if (currentBundle.tsTranspilationIndex > projectConfig._tsTranspilations.length - 1) {
-                throw new InvalidConfigError(
+                throw new Error(
                     `No _tsTranspilations found, please correct value in 'projects[${
                         projectConfig.name || projectConfig._index
                     }].bundles[${i}].tsTranspilationIndex'.`
@@ -633,7 +633,7 @@ export function initBundleTarget(
             entryFile = `${foundTsTranspilation._detectedEntryName}.js`;
         }
         if (!entryFile) {
-            throw new InvalidConfigError(
+            throw new Error(
                 `The 'projects[${projectConfig.name || projectConfig._index}].bundles[${i}].entry' value is required.`
             );
         }
@@ -645,7 +645,7 @@ export function initBundleTarget(
     } else {
         const entryFile = currentBundle.entry || projectConfig.main;
         if (!entryFile) {
-            throw new InvalidConfigError(
+            throw new Error(
                 `The 'projects[${projectConfig.name || projectConfig._index}].bundles[${i}].entry' value is required.`
             );
         }
