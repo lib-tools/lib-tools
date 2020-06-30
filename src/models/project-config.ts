@@ -5,9 +5,9 @@ import { ProjectBuildConfig } from './project-build-config';
  */
 export interface ProjectConfig {
     /**
-     * Name of build-in preset ('default') or path to base configuration file or name of the base project to inherit from.
+     * Path to base configuration file or name of the base project to inherit from.
      */
-    extends?: 'default' | string;
+    extends?: string;
 
     /**
      * Root folder of the project files.
