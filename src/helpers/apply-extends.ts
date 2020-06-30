@@ -3,7 +3,6 @@ import * as path from 'path';
 import { pathExists } from 'fs-extra';
 
 import { LibConfig, ProjectConfigStandalone } from '../models';
-import { InvalidConfigError } from '../models/errors';
 import { ProjectConfigInternal } from '../models/internals';
 import { formatValidationError, readJsonWithComments, validateSchema } from '../utils';
 
@@ -43,7 +42,7 @@ async function applyProjectConfigExtendsInternal(
     } else if (projectConfig.extends.startsWith('file:')) {
         baseProjectConfig = await getBaseProjectConfigForFileExtends(projectConfig, rootConfigPath);
     } else {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, invalid extends name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
@@ -90,20 +89,20 @@ function getBaseProjectConfigForProjectExtends(
 
     const projectNameToExtend = projectConfig.extends.substr('project:'.length).trim();
     if (!projectNameToExtend) {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, invalid extends name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
 
     const foundBaseProject = projectCollection[projectNameToExtend];
     if (!foundBaseProject) {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, no base project config exists with name '${projectNameToExtend}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
 
     if (foundBaseProject._name === projectConfig._name) {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
@@ -125,7 +124,7 @@ async function getBaseProjectConfigForFileExtends(
 
     const parts = projectConfig.extends.split(':');
     if (parts.length < 2 || parts.length > 3) {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, invalid extends name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
@@ -135,7 +134,7 @@ async function getBaseProjectConfigForFileExtends(
         : path.resolve(path.dirname(projectConfig._configPath), parts[1]);
 
     if (!(await pathExists(extendsFilePath))) {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, no file exists at ${extendsFilePath}. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
@@ -146,7 +145,7 @@ async function getBaseProjectConfigForFileExtends(
             const libConfig = (await readJsonWithComments(extendsFilePath)) as LibConfig;
             const foundBaseProject = libConfig.projects[projectNameToExtend];
             if (!foundBaseProject) {
-                throw new InvalidConfigError(
+                throw new Error(
                     `Error in extending project config, no base project config exists with name '${projectNameToExtend}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`
                 );
             }
@@ -155,7 +154,7 @@ async function getBaseProjectConfigForFileExtends(
             const foundBaseProjectInternal = libConifgInternal.projects[projectNameToExtend];
 
             if (foundBaseProjectInternal._name === projectConfig._name) {
-                throw new InvalidConfigError(
+                throw new Error(
                     `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
                 );
             }
@@ -170,7 +169,7 @@ async function getBaseProjectConfigForFileExtends(
                 const errors = validateSchema(libConfigSchema, (libConfig as unknown) as { [key: string]: unknown });
                 if (errors.length) {
                     const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
-                    throw new InvalidConfigError(
+                    throw new Error(
                         `Error in extending project config, invalid configuration:\n\n${errMsg}\nConfig file location ${currentConfigFile}.`
                     );
                 }
@@ -192,7 +191,7 @@ async function getBaseProjectConfigForFileExtends(
             const errors = validateSchema(projectConfigSchema, foundBaseProject as { [key: string]: unknown });
             if (errors.length) {
                 const errMsg = errors.map((err) => formatValidationError(projectConfigSchema, err)).join('\n');
-                throw new InvalidConfigError(
+                throw new Error(
                     `Error in extending project config, invalid configuration:\n\n${errMsg}\nConfig file location ${currentConfigFile}.`
                 );
             }
@@ -204,7 +203,7 @@ async function getBaseProjectConfigForFileExtends(
             };
         }
     } catch (err) {
-        throw new InvalidConfigError(
+        throw new Error(
             `Error in extending project config, could not read file '${extendsFilePath}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
