@@ -5,7 +5,11 @@ import { formatTsDiagnostics } from '../utils';
 
 const tsConfigJsonMap = new Map<string, { [key: string]: unknown }>();
 
-export function readTsConfigFile(tsConfigPath: string): { [key: string]: unknown } {
+export function readTsConfigFile(
+    tsConfigPath: string,
+    configPath: string,
+    configErrorLocation: string
+): { [key: string]: unknown } {
     const cachedTsConfigJson = tsConfigJsonMap.get(tsConfigPath);
     if (cachedTsConfigJson) {
         return cachedTsConfigJson;
@@ -14,9 +18,10 @@ export function readTsConfigFile(tsConfigPath: string): { [key: string]: unknown
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const jsonConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
     if (jsonConfigFile.error && jsonConfigFile.error.length) {
-        const formattedMsg = formatTsDiagnostics(jsonConfigFile.error);
+        let formattedMsg = formatTsDiagnostics(jsonConfigFile.error);
         if (formattedMsg) {
-            throw new InvalidConfigError(formattedMsg);
+            formattedMsg += `\nConfig location ${configErrorLocation}.`;
+            throw new InvalidConfigError(formattedMsg, configPath, configErrorLocation);
         }
     }
 
