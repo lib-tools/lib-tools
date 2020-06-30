@@ -38,10 +38,7 @@ async function applyProjectConfigExtendsInternal(
     const configErrorLocation = `projects[${projectConfig._name}].extends`;
     let baseProjectConfig: ProjectConfigInternal | null;
 
-    if (projectConfig.extends === 'lib:default') {
-        // TODO:
-        return;
-    } else if (projectConfig.extends.startsWith('project:')) {
+    if (projectConfig.extends.startsWith('project:')) {
         baseProjectConfig = getBaseProjectConfigForProjectExtends(projectConfig, projectCollection, rootConfigPath);
     } else if (projectConfig.extends.startsWith('file:')) {
         baseProjectConfig = await getBaseProjectConfigForFileExtends(projectConfig, rootConfigPath);
@@ -79,47 +76,6 @@ async function applyProjectConfigExtendsInternal(
     const extendedConfig = { ...clonedBaseProject, ...projectConfig };
     Object.assign(projectConfig, extendedConfig);
 }
-
-// async function getBaseProjectConfigForDefaultExtends(
-//     projectConfig: ProjectConfigInternal
-// ): Promise<ProjectConfigInternal> {
-//     if (projectConfig._configPath && projectConfig.root) {
-//         const configRootPath = path.dirname(projectConfig._configPath);
-//         const projectRootPath = path.resolve(path.dirname(projectConfig._configPath), projectConfig.root);
-
-//         let banner: string | undefined;
-//         const foundBannerFilePath = await findUp(['banner.txt'], projectRootPath, configRootPath);
-//         if (foundBannerFilePath) {
-//             banner = normalizeRelativePath(path.relative(projectRootPath, foundBannerFilePath));
-//         }
-
-//         const foundReadMeFilePath = await findUp(['README.md'], projectRootPath, configRootPath);
-//         const foundLicenseFilePath = await findUp(['LICENSE', 'LICENSE.txt'], projectRootPath, configRootPath);
-//         let copyAssets: string[] | undefined;
-//         if (foundReadMeFilePath || foundLicenseFilePath) {
-//             copyAssets = [];
-
-//             if (foundReadMeFilePath) {
-//                 copyAssets.push(normalizeRelativePath(path.relative(projectRootPath, foundReadMeFilePath)));
-//             }
-
-//             if (foundLicenseFilePath) {
-//                 copyAssets.push(normalizeRelativePath(path.relative(projectRootPath, foundLicenseFilePath)));
-//             }
-//         }
-
-//         config.envOverrides = {
-//             prod: {
-//                 banner,
-//                 copy: copyAssets,
-//                 bundles: true,
-//                 packageJsonCopy: true
-//             }
-//         };
-//     }
-
-//     return config;
-// }
 
 function getBaseProjectConfigForProjectExtends(
     projectConfig: ProjectConfigInternal,
