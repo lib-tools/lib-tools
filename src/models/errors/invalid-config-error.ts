@@ -1,7 +1,7 @@
 export class InvalidConfigError extends Error {
     private readonly _nativeError: Error;
 
-    constructor(message: string, readonly configPath: string, readonly configErrorLocation: string) {
+    constructor(message: string) {
         super(message);
         // Required for TS 2.1, see
         // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
