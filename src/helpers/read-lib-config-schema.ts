@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { readJson } from '../utils';
+import { readJson } from 'fs-extra';
 
 const cache: { libConfigSchema: { [key: string]: unknown } | null } = {
     libConfigSchema: null
