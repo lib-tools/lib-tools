@@ -1,8 +1,7 @@
-import { ProjectConfigBase } from '../models';
-import { ProjectConfigInternal } from '../models/internals';
+import { OverridableProjectConfig } from '../models';
 
-export function applyProjectConfigWithEnvironment(
-    projectConfig: ProjectConfigInternal,
+export function applyEnvOverrides<TConfigBase>(
+    projectConfig: OverridableProjectConfig<TConfigBase>,
     env: { [key: string]: boolean | string }
 ): void {
     if (!projectConfig.envOverrides || Object.keys(projectConfig.envOverrides).length === 0) {
@@ -52,7 +51,10 @@ export function applyProjectConfigWithEnvironment(
     });
 }
 
-function overrideProjectConfig(oldConfig: ProjectConfigInternal, newConfig: Partial<ProjectConfigBase>): void {
+function overrideProjectConfig<TConfigBase>(
+    oldConfig: OverridableProjectConfig<TConfigBase>,
+    newConfig: Partial<TConfigBase>
+): void {
     if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
         return;
     }
@@ -60,7 +62,8 @@ function overrideProjectConfig(oldConfig: ProjectConfigInternal, newConfig: Part
     Object.keys(newConfig)
         .filter((key: string) => key !== 'envOverrides')
         .forEach((key: string) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-            (oldConfig as any)[key] = JSON.parse(JSON.stringify((newConfig as any)[key]));
+            (oldConfig as { [k: string]: unknown })[key] = JSON.parse(
+                JSON.stringify((newConfig as { [k: string]: unknown })[key])
+            );
         });
 }
