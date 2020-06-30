@@ -3,14 +3,13 @@ import * as path from 'path';
 import { pathExists, readFile } from 'fs-extra';
 import * as ts from 'typescript';
 
-import { StyleEntry, TsTranspilationOptions } from '../models';
+import { ProjectBuildConfig, StyleEntry, TsTranspilationOptions } from '../models';
 import {
     BuildOptionsInternal,
     BundleOptionsInternal,
-    StyleEntryParsed
     PackageJsonLike,
     ProjectBuildConfigInternal,
-    ProjectConfigInternal,
+    StyleParsedEntry,
     TsTranspilationOptionsInternal
 } from '../models/internals';
 import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
@@ -29,26 +28,16 @@ import { validateOutputPath } from './validate-output-path';
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
 export async function prepareProjectBuildConfig(
-    projectConfig: ProjectBuildConfigInternal,
-    buildOptions: BuildOptionsInternal
+    projectBuildConfig: ProjectBuildConfig,
+    buildOptions: BuildOptionsInternal,
+    workspaceRoot: string,
+    projectRoot: string,
+    projectName: string
 ): Promise<ProjectBuildConfigInternal> {
-    const projectConfigCloned = JSON.parse(JSON.stringify(projectConfig)) as ProjectBuildConfigInternal;
+    const projectBuildConfigCloned = JSON.parse(JSON.stringify(projectBuildConfig)) as ProjectBuildConfig;
 
     // apply env
-    applyEnvOverrides(projectConfigCloned, buildOptions.environment);
-
-    const configPath = projectConfigCloned._configPath;
-    const workspaceRoot = path.dirname(configPath);
-    const projectLocation = `projects[${projectConfigCloned._name}]`;
-
-    if (projectConfigCloned.root && path.isAbsolute(projectConfigCloned.root)) {
-        throw new Error(`The '${projectLocation}.root' must be relative path.`);
-    }
-
-    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
-
-    const projectRoot = path.resolve(workspaceRoot, projectConfigCloned.root || '');
-    const outputPath = path.resolve(workspaceRoot, projectConfigCloned.outputPath);
+    applyEnvOverrides(projectBuildConfigCloned, buildOptions.environment);
 
     const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
     if (!packageJsonPath) {
@@ -99,20 +88,27 @@ export async function prepareProjectBuildConfig(
         nestedPackage = true;
     }
 
-    validateOutputPath(outputPath, workspaceRoot, projectRoot, projectIndexName);
-
     const bannerText = await getBannerText(
         workspaceRoot,
         projectRoot,
-        projectIndexName,
+        projectName,
         packageName,
         packageVersion,
-        projectConfigCloned.banner
+        projectBuildConfigCloned.banner
     );
 
+    let outputPath: string;
+    if (projectBuildConfigCloned.outputPath) {
+        outputPath = path.resolve(workspaceRoot, projectBuildConfigCloned.outputPath);
+    } else {
+        outputPath = `dist/packages/${packageNameWithoutScope}`;
+    }
+
+    validateOutputPath(outputPath, workspaceRoot, projectRoot, projectName);
+
     let packageJsonOutDir: string;
-    if (projectConfigCloned.packageJsonOutDir) {
-        packageJsonOutDir = path.resolve(outputPath, projectConfigCloned.packageJsonOutDir);
+    if (projectBuildConfigCloned.packageJsonOutDir) {
+        packageJsonOutDir = path.resolve(outputPath, projectBuildConfigCloned.packageJsonOutDir);
     } else {
         if (nestedPackage) {
             const nestedPath = packageNameWithoutScope.substr(packageNameWithoutScope.indexOf('/') + 1);
@@ -122,8 +118,8 @@ export async function prepareProjectBuildConfig(
         }
     }
 
-    const projectConfigForBuild: ProjectConfigBuildInternal = {
-        ...projectConfigCloned,
+    const projectBuildConfigInternal: ProjectBuildConfigInternal = {
+        ...projectBuildConfigCloned,
         _projectRoot: projectRoot,
         _outputPath: outputPath,
         _packageJsonPath: packageJsonPath,
@@ -136,48 +132,46 @@ export async function prepareProjectBuildConfig(
         _packageScope: packageScope,
         _rootPackageJsonPath: rootPackageJsonPath,
         _rootPackageJson: rootPackageJson,
-        _nodeModulesPath: nodeModulesPath,
         _bannerText: bannerText,
         _packageJsonOutDir: packageJsonOutDir
     };
 
     // tsconfig
-    if (projectConfigForBuild.tsConfig) {
-        const tsConfigPath = path.resolve(projectRoot, projectConfigForBuild.tsConfig);
-        projectConfigForBuild._tsConfigPath = tsConfigPath;
+    if (projectBuildConfigInternal.tsConfig) {
+        const tsConfigPath = path.resolve(projectRoot, projectBuildConfigInternal.tsConfig);
+        projectBuildConfigInternal._tsConfigPath = tsConfigPath;
 
-        projectConfigForBuild._tsConfigJson = readTsConfigFile(tsConfigPath);
-        projectConfigForBuild._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
+        projectBuildConfigInternal._tsConfigJson = readTsConfigFile(tsConfigPath);
+        projectBuildConfigInternal._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
     }
 
     // TsTranspilations
-    await prepareTsTranspilations(projectConfigForBuild);
+    await prepareTsTranspilations(projectBuildConfigInternal, workspaceRoot, projectName);
 
     // Bundles
-    initBundleOptions(projectConfigForBuild);
+    initBundleOptions(projectBuildConfigInternal, projectName);
 
     // Styles
     if (
-        projectConfigForBuild.styles &&
-        Array.isArray(projectConfigForBuild.styles) &&
-        projectConfigForBuild.styles.length > 0
+        projectBuildConfigInternal.styles &&
+        Array.isArray(projectBuildConfigInternal.styles) &&
+        projectBuildConfigInternal.styles.length > 0
     ) {
-        projectConfigForBuild._styleParsedEntries = await parseStyleEntries(
-            projectConfigForBuild.styles,
+        projectBuildConfigInternal._styleParsedEntries = await parseStyleEntries(
+            projectBuildConfigInternal.styles,
             'styles',
             workspaceRoot,
-            nodeModulesPath,
             projectRoot
         );
     }
 
-    return projectConfigForBuild;
+    return projectBuildConfigInternal;
 }
 
 async function getBannerText(
     workspaceRoot: string,
     projectRoot: string,
-    projectIndexName: string,
+    projectName: string,
     packageName: string,
     packageVersion: string,
     banner?: string
@@ -197,7 +191,7 @@ async function getBannerText(
                 `The banner text file: ${path.resolve(
                     projectRoot,
                     bannerText
-                )} doesn't exist, please correct value in 'projects[${projectIndexName}].banner'.`
+                )} doesn't exist, please correct value in 'projects[${projectName}].banner'.`
             );
         }
     }
@@ -251,8 +245,11 @@ function replaceTokensForBanner(input: string, packageName: string, packageVersi
     return str;
 }
 
-async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal): Promise<void> {
-    const workspaceRoot = projectConfig._workspaceRoot;
+async function prepareTsTranspilations(
+    projectConfig: ProjectBuildConfigInternal,
+    workspaceRoot: string,
+    projectName: string
+): Promise<void> {
     const projectRoot = projectConfig._projectRoot;
     const tsTranspilationInternals: TsTranspilationOptionsInternal[] = [];
 
@@ -277,11 +274,7 @@ async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal
             }
 
             if (!tsConfigPath) {
-                throw new Error(
-                    `The 'projects[${
-                        projectConfig.name || projectConfig._index
-                    }].tsTranspilations[${i}].tsConfig' value is required.`
-                );
+                throw new Error(`The 'projects[${projectName}].tsTranspilations[${i}].tsConfig' value is required.`);
             }
 
             const tsTranspilationInternal = await initTsTranspilationOptions(
@@ -301,9 +294,7 @@ async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal
         }
 
         if (!tsConfigPath) {
-            throw new Error(
-                `Could not detect tsconfig file for 'projects[${projectConfig.name || projectConfig._index}].`
-            );
+            throw new Error(`Could not detect tsconfig file for 'projects[${projectName}].`);
         }
 
         const esm2015Transpilation = await initTsTranspilationOptions(
@@ -333,13 +324,13 @@ async function prepareTsTranspilations(projectConfig: ProjectConfigBuildInternal
     projectConfig._tsTranspilations = tsTranspilationInternals;
 }
 
-function initBundleOptions(projectConfig: ProjectConfigBuildInternal): void {
+function initBundleOptions(projectConfig: ProjectBuildConfigInternal, projectName: string): void {
     const bundleInternals: BundleOptionsInternal[] = [];
     if (projectConfig.bundles && Array.isArray(projectConfig.bundles)) {
         const bundles = projectConfig.bundles;
         for (let i = 0; i < bundles.length; i++) {
             const bundlePartial = bundles[i];
-            bundleInternals.push(initBundleTarget(bundleInternals, bundlePartial, i, projectConfig));
+            bundleInternals.push(initBundleTarget(bundleInternals, bundlePartial, i, projectConfig, projectName));
         }
     } else if (projectConfig.bundles) {
         let shouldBundlesDefault = projectConfig.tsTranspilations === true;
@@ -360,7 +351,13 @@ function initBundleOptions(projectConfig: ProjectConfigBuildInternal): void {
                 tsTranspilationIndex: 0
             };
 
-            const es2015BundleInternal = initBundleTarget(bundleInternals, es2015BundlePartial, 0, projectConfig);
+            const es2015BundleInternal = initBundleTarget(
+                bundleInternals,
+                es2015BundlePartial,
+                0,
+                projectConfig,
+                projectName
+            );
             bundleInternals.push(es2015BundleInternal);
 
             const es5BundlePartial: Partial<BundleOptionsInternal> = {
@@ -369,20 +366,30 @@ function initBundleOptions(projectConfig: ProjectConfigBuildInternal): void {
                 tsTranspilationIndex: 1
             };
 
-            const es5BundleInternal = initBundleTarget(bundleInternals, es5BundlePartial, 1, projectConfig);
+            const es5BundleInternal = initBundleTarget(
+                bundleInternals,
+                es5BundlePartial,
+                1,
+                projectConfig,
+                projectName
+            );
             bundleInternals.push(es5BundleInternal);
 
             const umdBundlePartial: Partial<BundleOptionsInternal> = {
                 libraryTarget: 'umd',
                 entryRoot: 'prevBundleOutput'
             };
-            const umdBundleInternal = initBundleTarget(bundleInternals, umdBundlePartial, 2, projectConfig);
+            const umdBundleInternal = initBundleTarget(
+                bundleInternals,
+                umdBundlePartial,
+                2,
+                projectConfig,
+                projectName
+            );
             bundleInternals.push(umdBundleInternal);
         } else {
             throw new Error(
-                `Counld not detect to bunlde automatically, please correct option in 'projects[${
-                    projectConfig.name || projectConfig._index
-                }].bundles'.`
+                `Counld not detect to bunlde automatically, please correct option in 'projects[${projectName}].bundles'.`
             );
         }
     }
@@ -402,7 +409,7 @@ export async function initTsTranspilationOptions(
     tsConfigPath: string,
     tsTranspilation: TsTranspilationOptions & Partial<TsTranspilationOptionsInternal>,
     i: number,
-    projectConfig: ProjectConfigBuildInternal
+    projectConfig: ProjectBuildConfigInternal
 ): Promise<TsTranspilationOptionsInternal> {
     const tsConfigJson = readTsConfigFile(tsConfigPath);
     const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
@@ -552,14 +559,11 @@ export function initBundleTarget(
     bundles: BundleOptionsInternal[],
     currentBundle: Partial<BundleOptionsInternal>,
     i: number,
-    projectConfig: ProjectConfigBuildInternal
+    projectConfig: ProjectBuildConfigInternal,
+    projectName: string
 ): BundleOptionsInternal {
     if (!currentBundle.libraryTarget) {
-        throw new Error(
-            `The 'projects[${
-                projectConfig.name || projectConfig._index
-            }].bundles[${i}].libraryTarget' value is required.`
-        );
+        throw new Error(`The 'projects[${projectName}].bundles[${i}].libraryTarget' value is required.`);
     }
 
     const projectRoot = projectConfig._projectRoot;
@@ -593,9 +597,7 @@ export function initBundleTarget(
 
         if (!foundBundleTarget) {
             throw new Error(
-                `No previous bundle target found, please correct value in 'projects[${
-                    projectConfig.name || projectConfig._index
-                }].bundles[${i}].entryRoot'.`
+                `No previous bundle target found, please correct value in 'projects[${projectName}].bundles[${i}].entryRoot'.`
             );
         }
 
@@ -605,9 +607,7 @@ export function initBundleTarget(
     } else if (currentBundle.entryRoot === 'tsTranspilationOutput') {
         if (!projectConfig._tsTranspilations || !projectConfig._tsTranspilations.length) {
             throw new Error(
-                `To use 'tsTranspilationOutDir', the 'projects[${
-                    projectConfig.name || projectConfig._index
-                }].tsTranspilations' option is required.`
+                `To use 'tsTranspilationOutDir', the 'projects[${projectName}].tsTranspilations' option is required.`
             );
         }
 
@@ -618,9 +618,7 @@ export function initBundleTarget(
         } else {
             if (currentBundle.tsTranspilationIndex > projectConfig._tsTranspilations.length - 1) {
                 throw new Error(
-                    `No _tsTranspilations found, please correct value in 'projects[${
-                        projectConfig.name || projectConfig._index
-                    }].bundles[${i}].tsTranspilationIndex'.`
+                    `No _tsTranspilations found, please correct value in 'projects[${projectName}].bundles[${i}].tsTranspilationIndex'.`
                 );
             }
 
@@ -633,9 +631,7 @@ export function initBundleTarget(
             entryFile = `${foundTsTranspilation._detectedEntryName}.js`;
         }
         if (!entryFile) {
-            throw new Error(
-                `The 'projects[${projectConfig.name || projectConfig._index}].bundles[${i}].entry' value is required.`
-            );
+            throw new Error(`The 'projects[${projectName}].bundles[${i}].entry' value is required.`);
         }
 
         currentBundle._entryFilePath = path.resolve(entryRootDir, entryFile);
@@ -645,9 +641,7 @@ export function initBundleTarget(
     } else {
         const entryFile = currentBundle.entry || projectConfig.main;
         if (!entryFile) {
-            throw new Error(
-                `The 'projects[${projectConfig.name || projectConfig._index}].bundles[${i}].entry' value is required.`
-            );
+            throw new Error(`The 'projects[${projectName}].bundles[${i}].entry' value is required.`);
         }
 
         currentBundle._entryFilePath = path.resolve(projectRoot, entryFile);
@@ -767,12 +761,11 @@ export function initBundleTarget(
 }
 
 async function parseStyleEntries(
-    extraEntries: string | (string | GlobalEntry)[],
+    extraEntries: string | (string | StyleEntry)[],
     defaultEntry: string,
     workspaceRoot: string,
-    nodeModulesPath: string | null | undefined,
     projectRoot: string
-): Promise<GlobalStyleParsedEntry[]> {
+): Promise<StyleParsedEntry[]> {
     if (!extraEntries || !extraEntries.length) {
         return [];
     }
@@ -780,17 +773,17 @@ async function parseStyleEntries(
     const entries = Array.isArray(extraEntries) ? extraEntries : [extraEntries];
     const clonedEntries = entries.map((entry) => (typeof entry === 'object' ? { ...entry } : entry));
 
-    const mappedEntries = clonedEntries.map((extraEntry: string | GlobalEntry) =>
+    const mappedEntries = clonedEntries.map((extraEntry: string | StyleEntry) =>
         typeof extraEntry === 'object' ? extraEntry : { input: extraEntry }
     );
 
-    const parsedEntries: GlobalStyleParsedEntry[] = [];
+    const parsedEntries: StyleParsedEntry[] = [];
+    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
 
     for (const extraEntry of mappedEntries) {
-        const parsedEntry: GlobalStyleParsedEntry = {
+        const parsedEntry: StyleParsedEntry = {
             paths: [],
-            entry: '',
-            lazy: extraEntry.lazy
+            entry: ''
         };
 
         const inputs = Array.isArray(extraEntry.input) ? extraEntry.input : [extraEntry.input];
@@ -835,7 +828,7 @@ async function parseStyleEntries(
             } else {
                 parsedEntry.entry = extraEntry.bundleName.replace(/\.(js|css)$/i, '');
             }
-        } else if (extraEntry.lazy && !Array.isArray(extraEntry.input) && typeof extraEntry.input === 'string') {
+        } else if (!Array.isArray(extraEntry.input) && typeof extraEntry.input === 'string') {
             parsedEntry.entry = path.basename(extraEntry.input).replace(/\.(js|ts|css|scss|sass|less|styl)$/i, '');
         } else {
             parsedEntry.entry = defaultEntry;
