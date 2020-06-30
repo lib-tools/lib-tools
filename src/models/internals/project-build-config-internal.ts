@@ -1,10 +1,9 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
 import { BundleOptions, ProjectBuildConfig, TsTranspilationOptions } from '../project-build-config';
-import { ProjectConfigInternal } from './project-config-internal';
 import { PackageEntrypoints, PackageJsonLike } from './package-jon-like';
 
-export interface StyleEntryParsed {
+export interface StyleParsedEntry {
     paths: string[];
     entry: string;
 }
@@ -55,7 +54,7 @@ export interface BundleOptionsInternal extends BundleOptions {
     _nodeResolveFields?: string[];
 }
 
-export interface ProjectBuildConfigInternal extends ProjectConfigInternal, ProjectBuildConfig {
+export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
     _projectRoot: string;
     _outputPath: string;
 
@@ -67,22 +66,19 @@ export interface ProjectBuildConfigInternal extends ProjectConfigInternal, Proje
     _privatePackage: boolean;
     _nestedPackage: boolean;
     _packageScope: string | null;
-
     _rootPackageJsonPath: string | null;
     _rootPackageJson: PackageJsonLike | null;
 
-    _nodeModulesPath: string | null;
     _bannerText: string | null;
 
     _tsConfigPath?: string;
     _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
-
     _tsTranspilations?: TsTranspilationOptionsInternal[];
     _prevTsTranspilationVersionReplaced?: boolean;
 
     // styles
-    _styleParsedEntries?: StyleEntryParsed[];
+    _styleParsedEntries?: StyleParsedEntry[];
 
     _bundles?: BundleOptionsInternal[];
 
