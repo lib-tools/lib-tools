@@ -4,7 +4,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import * as path from 'path';
 
-import { InternalError } from '../../../models/errors';
 import { isGlob } from '../../../utils';
 
 export interface PreProcessedAssetEntry {
@@ -180,7 +179,7 @@ export async function preProcessAssets(
 
                 return assetParsedEntry;
             } else {
-                throw new InternalError('Invalid assets entry.');
+                throw new Error('Invalid assets entry.');
             }
         })
     );

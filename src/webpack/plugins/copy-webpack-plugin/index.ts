@@ -4,15 +4,14 @@ import { copy } from 'fs-extra';
 import * as webpack from 'webpack';
 
 import { AssetEntry } from '../../../models';
-import { InternalError, InvalidConfigError } from '../../../models/errors';
 import { LogLevelString, Logger, isInFolder } from '../../../utils';
 
 import { preProcessAssets } from './pre-process-assets';
 import { ProcessedAssetsResult, processAssets } from './process-assets';
 
 export interface CopyWebpackPluginOptions {
-    baseDir: string;
-    outputPath?: string;
+    projectRoot: string;
+    outputPath: string;
     assets: (string | AssetEntry)[];
     allowCopyOutsideOutputPath?: boolean;
     forceWriteToDisk?: boolean;
@@ -20,57 +19,45 @@ export interface CopyWebpackPluginOptions {
 }
 
 export class CopyWebpackPlugin {
-    private readonly _logger: Logger;
-    private readonly _persistedOutputFileSystemNames = ['NodeOutputFileSystem'];
-    private readonly _fileDependencies: string[] = [];
-    private readonly _contextDependencies: string[] = [];
-    private readonly _cachedFiles: { [key: string]: { [key: string]: boolean } } = {};
-    private _newWrittenCount = 0;
+    private readonly logger: Logger;
+    private readonly persistedOutputFileSystemNames = ['NodeOutputFileSystem'];
+    private readonly fileDependencies: string[] = [];
+    private readonly contextDependencies: string[] = [];
+    private readonly cachedFiles: { [key: string]: { [key: string]: boolean } } = {};
+    private newWrittenCount = 0;
 
     get name(): string {
         return 'copy-webpack-plugin';
     }
 
-    constructor(private readonly _options: CopyWebpackPluginOptions) {
-        if (!this._options) {
-            throw new InternalError(`[${this.name}] The 'options' can't be null or empty.`);
-        }
-
-        if (!this._options.baseDir) {
-            throw new InternalError("The 'baseDir' property is required.");
-        }
-
-        if (!path.isAbsolute(this._options.baseDir)) {
-            throw new InternalError(`The 'baseDir' must be absolute path, passed value: ${this._options.baseDir}.`);
-        }
-
-        this._logger = new Logger({
+    constructor(private readonly options: CopyWebpackPluginOptions) {
+        this.logger = new Logger({
             name: `[${this.name}]`,
-            logLevel: this._options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info'
         });
     }
 
     apply(compiler: webpack.Compiler): void {
-        let outputPath = this._options.outputPath;
+        let outputPath = this.options.outputPath;
         if (!outputPath && compiler.options.output && compiler.options.output.path) {
             outputPath = compiler.options.output.path;
         }
 
         const emitFn = (compilation: webpack.compilation.Compilation, cb: (err?: Error) => void) => {
             const startTime = Date.now();
-            this._newWrittenCount = 0;
+            this.newWrittenCount = 0;
 
-            this._logger.debug('Processing assets to be copied');
+            this.logger.debug('Processing assets to be copied');
 
-            if (!this._options.assets || !this._options.assets.length) {
-                this._logger.debug('No asset entry is passed');
+            if (!this.options.assets || !this.options.assets.length) {
+                this.logger.debug('No asset entry is passed');
 
                 cb();
 
                 return;
             }
 
-            preProcessAssets(this._options.baseDir, this._options.assets, compilation.inputFileSystem)
+            preProcessAssets(this.options.projectRoot, this.options.assets, compilation.inputFileSystem)
                 .then(async (preProcessedEntries) =>
                     processAssets(preProcessedEntries, outputPath, compilation.inputFileSystem)
                 )
@@ -78,18 +65,18 @@ export class CopyWebpackPlugin {
                     this.writeFile(processedAssets, compiler, compilation, outputPath || '')
                 )
                 .then(() => {
-                    if (!this._newWrittenCount) {
-                        this._logger.debug('No asset has been emitted');
+                    if (!this.newWrittenCount) {
+                        this.logger.debug('No asset has been emitted');
                     }
-                    this._newWrittenCount = 0;
+                    this.newWrittenCount = 0;
                     const duration = Date.now() - startTime;
-                    this._logger.debug(`Copy completed in [${duration}ms]`);
+                    this.logger.debug(`Copy completed in [${duration}ms]`);
 
-                    this._fileDependencies.forEach((file) => {
+                    this.fileDependencies.forEach((file) => {
                         compilation.fileDependencies.add(file);
                     });
 
-                    this._contextDependencies.forEach((context) => {
+                    this.contextDependencies.forEach((context) => {
                         compilation.contextDependencies.add(context);
                     });
 
@@ -98,7 +85,7 @@ export class CopyWebpackPlugin {
                     return;
                 })
                 .catch((err: Error) => {
-                    this._newWrittenCount = 0;
+                    this.newWrittenCount = 0;
 
                     cb(err);
 
@@ -119,37 +106,35 @@ export class CopyWebpackPlugin {
             processedAssets.map(async (processedAsset) => {
                 const assetEntry = processedAsset.assetEntry;
 
-                if (assetEntry.fromType === 'directory' && !this._contextDependencies.includes(assetEntry.context)) {
-                    this._contextDependencies.push(assetEntry.context);
+                if (assetEntry.fromType === 'directory' && !this.contextDependencies.includes(assetEntry.context)) {
+                    this.contextDependencies.push(assetEntry.context);
                 }
 
                 if (
-                    !this._options.allowCopyOutsideOutputPath &&
+                    !this.options.allowCopyOutsideOutputPath &&
                     outputPath &&
                     path.isAbsolute(outputPath) &&
-                    (this._persistedOutputFileSystemNames.includes(compiler.outputFileSystem.constructor.name) ||
-                        this._options.forceWriteToDisk)
+                    (this.persistedOutputFileSystemNames.includes(compiler.outputFileSystem.constructor.name) ||
+                        this.options.forceWriteToDisk)
                 ) {
                     const absoluteTo = path.resolve(outputPath, processedAsset.relativeTo);
                     if (!isInFolder(outputPath, absoluteTo)) {
-                        throw new InvalidConfigError(
-                            `Copying assets outside of output path is not permitted, path: ${absoluteTo}.`
-                        );
+                        throw new Error(`Copying assets outside of output path is not permitted, path: ${absoluteTo}.`);
                     }
                 }
 
                 if (
                     assetEntry.fromType !== 'directory' &&
-                    !this._fileDependencies.includes(processedAsset.absoluteFrom)
+                    !this.fileDependencies.includes(processedAsset.absoluteFrom)
                 ) {
-                    this._fileDependencies.push(processedAsset.absoluteFrom);
+                    this.fileDependencies.push(processedAsset.absoluteFrom);
                 }
 
                 if (
-                    this._cachedFiles[processedAsset.absoluteFrom] &&
-                    this._cachedFiles[processedAsset.absoluteFrom][processedAsset.hash]
+                    this.cachedFiles[processedAsset.absoluteFrom] &&
+                    this.cachedFiles[processedAsset.absoluteFrom][processedAsset.hash]
                 ) {
-                    this._logger.debug(
+                    this.logger.debug(
                         `Already in cached - ${path.relative(
                             processedAsset.assetEntry.context,
                             processedAsset.absoluteFrom
@@ -158,22 +143,22 @@ export class CopyWebpackPlugin {
 
                     return;
                 } else {
-                    this._cachedFiles[processedAsset.absoluteFrom] = {
+                    this.cachedFiles[processedAsset.absoluteFrom] = {
                         [processedAsset.hash]: true
                     };
                 }
 
                 if (
-                    this._options.forceWriteToDisk &&
-                    !this._persistedOutputFileSystemNames.includes(compiler.outputFileSystem.constructor.name)
+                    this.options.forceWriteToDisk &&
+                    !this.persistedOutputFileSystemNames.includes(compiler.outputFileSystem.constructor.name)
                 ) {
                     if (!outputPath || outputPath === '/' || !path.isAbsolute(outputPath)) {
-                        throw new InternalError('The absolute path must be specified in config -> output.path.');
+                        throw new Error('The absolute path must be specified in config -> output.path.');
                     }
 
                     const absoluteTo = path.resolve(outputPath, processedAsset.relativeTo);
 
-                    this._logger.debug(`Emitting ${processedAsset.relativeTo} to disk`);
+                    this.logger.debug(`Emitting ${processedAsset.relativeTo} to disk`);
                     await copy(processedAsset.absoluteFrom, absoluteTo);
 
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -189,13 +174,13 @@ export class CopyWebpackPlugin {
                         };
                     }
 
-                    ++this._newWrittenCount;
+                    ++this.newWrittenCount;
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 } else if (!compilation.assets[processedAsset.relativeTo]) {
-                    this._logger.debug(
+                    this.logger.debug(
                         `Emitting ${processedAsset.relativeTo}${
                             compiler.outputFileSystem.constructor.name === 'MemoryFileSystem' &&
-                            !this._options.forceWriteToDisk
+                            !this.options.forceWriteToDisk
                                 ? ' to memory'
                                 : ''
                         }`
@@ -211,7 +196,7 @@ export class CopyWebpackPlugin {
                         }
                     };
 
-                    ++this._newWrittenCount;
+                    ++this.newWrittenCount;
                 }
             })
         );

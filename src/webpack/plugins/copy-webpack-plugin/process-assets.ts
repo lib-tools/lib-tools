@@ -11,7 +11,6 @@ import * as glob from 'glob';
 import * as loaderUtils from 'loader-utils';
 import * as minimatch from 'minimatch';
 
-import { InternalError } from '../../../models/errors';
 import { isInFolder, isSamePaths, normalizeRelativePath } from '../../../utils';
 
 import { PreProcessedAssetEntry } from './pre-process-assets';
@@ -206,7 +205,7 @@ export async function processAssets(
 
                     if (path.isAbsolute(assetToEmit.relativeTo)) {
                         if (!outputPath || outputPath === '/') {
-                            throw new InternalError("The absolute path is required for 'outputPath'.");
+                            throw new Error("The absolute path is required for 'outputPath'.");
                         }
 
                         assetToEmit.relativeTo = path.relative(outputPath, assetToEmit.relativeTo);
