@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 
-import { ProjectConfigBuildInternal } from '../../../models/internals';
+import { ProjectBuildConfigInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 import { preformTsTranspilations } from './ts-transpilations';
 
 export interface TsTranspilationsWebpackPluginOptions {
-    projectConfig: ProjectConfigBuildInternal;
+    projectConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
