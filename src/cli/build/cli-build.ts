@@ -2,7 +2,6 @@ import * as path from 'path';
 
 import * as webpack from 'webpack';
 
-import { InvalidConfigError, TypescriptCompileError } from '../../models/errors';
 import { runWebpack } from '../../helpers';
 import { LogLevelString, Logger } from '../../utils';
 
@@ -49,12 +48,8 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
 
     try {
         webpackConfigs = await getWebpackBuildConfig(configPath, environment, commandArgv);
-    } catch (configErr) {
-        if (configErr instanceof InvalidConfigError) {
-            logger.error(`${configErr.message}\n`);
-        } else if (configErr) {
-            logger.error(`${(configErr as Error).stack || (configErr as Error).message || configErr}\n`);
-        }
+    } catch (err) {
+        logger.error(`${err.message || err}\n`);
 
         return -1;
     }
@@ -80,13 +75,8 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
         logger.info(`\nBuild all completed in [${duration}ms]\n`);
     } catch (err) {
         hasError = true;
-
         if (err) {
-            if (err instanceof InvalidConfigError || err instanceof TypescriptCompileError) {
-                logger.error(`\n${err.message.trim()}\n`);
-            } else {
-                logger.error(`${toErrorString(err as Error)}\n`);
-            }
+            logger.error(`${toErrorString(err as Error)}\n`);
         }
     }
 
