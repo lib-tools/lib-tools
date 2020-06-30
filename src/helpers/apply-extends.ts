@@ -13,17 +13,28 @@ import { toLibConfigInternal } from './to-lib-config-internal';
 
 export async function applyProjectConfigExtends(
     projectConfig: ProjectConfigInternal,
-    projects: ProjectConfigInternal[] = [],
-    mainConfigPath: string
+    projectCollection: { [key: string]: ProjectConfigInternal } = {}
+): Promise<void> {
+    if (!projectConfig.extends || !projectConfig.extends.trim().length) {
+        return;
+    }
+
+    const rootConfigPath = projectConfig._configPath;
+
+    applyProjectConfigExtendsInternal(projectConfig, projectCollection, rootConfigPath);
+}
+
+async function applyProjectConfigExtendsInternal(
+    projectConfig: ProjectConfigInternal,
+    projectCollection: { [key: string]: ProjectConfigInternal } = {},
+    rootConfigPath: string
 ): Promise<void> {
     if (!projectConfig.extends || !projectConfig.extends.trim().length) {
         return;
     }
 
     const currentConfigFile =
-        projectConfig._configPath === mainConfigPath
-            ? path.parse(projectConfig._configPath).base
-            : projectConfig._configPath;
+        projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
     const configErrorLocation = `projects[${projectConfig._name}].extends`;
     let baseProjectConfig: ProjectConfigInternal | null;
 
@@ -31,13 +42,13 @@ export async function applyProjectConfigExtends(
         // TODO:
         return;
     } else if (projectConfig.extends.startsWith('project:')) {
-        baseProjectConfig = getBaseProjectConfigForProjectExtends(projectConfig, projects, mainConfigPath);
+        baseProjectConfig = getBaseProjectConfigForProjectExtends(projectConfig, projectCollection, rootConfigPath);
     } else if (projectConfig.extends.startsWith('file:')) {
-        baseProjectConfig = await getBaseProjectConfigForFileExtends(projectConfig, mainConfigPath);
+        baseProjectConfig = await getBaseProjectConfigForFileExtends(projectConfig, rootConfigPath);
     } else {
         throw new InvalidConfigError(
             `Error in extending project config, invalid extends name at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            rootConfigPath,
             configErrorLocation
         );
     }
@@ -48,7 +59,7 @@ export async function applyProjectConfigExtends(
 
     const clonedBaseProject = JSON.parse(JSON.stringify(baseProjectConfig)) as ProjectConfigInternal;
     if (clonedBaseProject.extends) {
-        await applyProjectConfigExtends(clonedBaseProject, projects, mainConfigPath);
+        await applyProjectConfigExtendsInternal(clonedBaseProject, projectCollection, rootConfigPath);
 
         delete clonedBaseProject.extends;
     }
@@ -112,41 +123,39 @@ export async function applyProjectConfigExtends(
 
 function getBaseProjectConfigForProjectExtends(
     projectConfig: ProjectConfigInternal,
-    projects: ProjectConfigInternal[] = [],
-    mainConfigPath: string
+    projectCollection: { [key: string]: ProjectConfigInternal } = {},
+    rootConfigPath: string
 ): ProjectConfigInternal | null {
-    if (projects.length < 1 || !projectConfig.extends) {
+    if (!projectConfig.extends) {
         return null;
     }
 
     const currentConfigFile =
-        projectConfig._configPath === mainConfigPath
-            ? path.parse(projectConfig._configPath).base
-            : projectConfig._configPath;
+        projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
     const configErrorLocation = `projects[${projectConfig._name}].extends`;
 
     const projectNameToExtend = projectConfig.extends.substr('project:'.length).trim();
     if (!projectNameToExtend) {
         throw new InvalidConfigError(
-            `Error in extending project config, invalid extends name at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            `Error in extending project config, invalid extends name. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+            rootConfigPath,
             configErrorLocation
         );
     }
 
-    const foundBaseProject = projects.find((project) => project._name === projectNameToExtend);
+    const foundBaseProject = projectCollection[projectNameToExtend];
     if (!foundBaseProject) {
         throw new InvalidConfigError(
-            `Error in extending project config, could not found any base project config with name '${projectNameToExtend}' at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            `Error in extending project config, no base project config exists with name '${projectNameToExtend}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+            rootConfigPath,
             configErrorLocation
         );
     }
 
     if (foundBaseProject._name === projectConfig._name) {
         throw new InvalidConfigError(
-            `Error in extending project config, base project name must not be the same as current project name at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+            rootConfigPath,
             configErrorLocation
         );
     }
@@ -156,23 +165,21 @@ function getBaseProjectConfigForProjectExtends(
 
 async function getBaseProjectConfigForFileExtends(
     projectConfig: ProjectConfigInternal,
-    mainConfigPath: string
+    rootConfigPath: string
 ): Promise<ProjectConfigInternal | null> {
     if (!projectConfig.extends) {
         return null;
     }
 
     const currentConfigFile =
-        projectConfig._configPath === mainConfigPath
-            ? path.parse(projectConfig._configPath).base
-            : projectConfig._configPath;
+        projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
     const configErrorLocation = `projects[${projectConfig._name}].extends`;
 
     const parts = projectConfig.extends.split(':');
-    if (parts.length < 1 || parts.length > 3) {
+    if (parts.length < 2 || parts.length > 3) {
         throw new InvalidConfigError(
-            `Error in extending project config, invalid extends name at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            `Error in extending project config, invalid extends name. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+            rootConfigPath,
             configErrorLocation
         );
     }
@@ -183,25 +190,37 @@ async function getBaseProjectConfigForFileExtends(
 
     if (!(await pathExists(extendsFilePath))) {
         throw new InvalidConfigError(
-            `Error in extending project config, could not found any file to extend with path '${extendsFilePath}' at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            `Error in extending project config, no file exists at ${extendsFilePath}. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+            rootConfigPath,
             configErrorLocation
         );
     }
 
     try {
-        const projectNameToExtend = parts.length >= 3 ? parts[2] : null;
+        const projectNameToExtend = parts.length === 3 ? parts[2] : null;
         if (projectNameToExtend) {
             const libConfig = (await readJsonWithComments(extendsFilePath)) as LibConfig;
-            if (!libConfig.projects[projectNameToExtend]) {
+            const foundBaseProject = libConfig.projects[projectNameToExtend];
+            if (!foundBaseProject) {
                 throw new InvalidConfigError(
-                    `Error in extending project config, could not found any base project config with name '${projectNameToExtend}' at ${currentConfigFile} -> ${configErrorLocation}.`,
-                    mainConfigPath,
+                    `Error in extending project config, no base project config exists with name '${projectNameToExtend}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+                    rootConfigPath,
                     configErrorLocation
                 );
             }
 
-            const skipValidate = extendsFilePath === mainConfigPath || extendsFilePath === projectConfig._configPath;
+            const libConifgInternal = toLibConfigInternal(libConfig, extendsFilePath);
+            const foundBaseProjectInternal = libConifgInternal.projects[projectNameToExtend];
+
+            if (foundBaseProjectInternal._name === projectConfig._name) {
+                throw new InvalidConfigError(
+                    `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+                    rootConfigPath,
+                    configErrorLocation
+                );
+            }
+
+            const skipValidate = extendsFilePath === rootConfigPath || extendsFilePath === projectConfig._configPath;
             if (!skipValidate) {
                 if (libConfig.$schema) {
                     delete libConfig.$schema;
@@ -212,18 +231,15 @@ async function getBaseProjectConfigForFileExtends(
                 if (errors.length) {
                     const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
                     throw new InvalidConfigError(
-                        `Error in extending project config, invalid configuration at ${currentConfigFile} -> ${configErrorLocation}.\n\n${errMsg}`,
-                        mainConfigPath,
+                        `Error in extending project config, invalid configuration:\n\n${errMsg}\nConfig file location ${currentConfigFile}.`,
+                        rootConfigPath,
                         configErrorLocation
                     );
                 }
             }
 
-            const libConifgInternal = toLibConfigInternal(libConfig, extendsFilePath);
-            const foundBaseProject = libConifgInternal.projects[projectNameToExtend];
-
             return {
-                ...foundBaseProject,
+                ...foundBaseProjectInternal,
                 _name: '',
                 _configPath: extendsFilePath
             };
@@ -239,8 +255,8 @@ async function getBaseProjectConfigForFileExtends(
             if (errors.length) {
                 const errMsg = errors.map((err) => formatValidationError(projectConfigSchema, err)).join('\n');
                 throw new InvalidConfigError(
-                    `Error in extending project config, invalid configuration at ${currentConfigFile} -> ${configErrorLocation}.\n\n${errMsg}`,
-                    mainConfigPath,
+                    `Error in extending project config, invalid configuration:\n\n${errMsg}\nConfig file location ${currentConfigFile}.`,
+                    rootConfigPath,
                     configErrorLocation
                 );
             }
@@ -253,8 +269,8 @@ async function getBaseProjectConfigForFileExtends(
         }
     } catch (err) {
         throw new InvalidConfigError(
-            `Error in extending project config, could not read file '${extendsFilePath}' at ${currentConfigFile} -> ${configErrorLocation}.`,
-            mainConfigPath,
+            `Error in extending project config, could not read file '${extendsFilePath}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`,
+            rootConfigPath,
             configErrorLocation
         );
     }
