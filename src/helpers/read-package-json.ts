@@ -1,6 +1,6 @@
 import { PackageJsonLike } from '../models/internals';
 
-import { readJSON } from 'fs-extra';
+import { readJson } from 'fs-extra';
 
 const packageJsonMap = new Map<string, PackageJsonLike>();
 
@@ -10,7 +10,7 @@ export async function readPackageJson(packageJsonPath: string): Promise<PackageJ
         return cachedPackageJson;
     }
 
-    const packageJson = (await readJSON(packageJsonPath)) as PackageJsonLike;
+    const packageJson = (await readJson(packageJsonPath)) as PackageJsonLike;
     packageJsonMap.set(packageJsonPath, packageJson);
 
     return packageJson;
