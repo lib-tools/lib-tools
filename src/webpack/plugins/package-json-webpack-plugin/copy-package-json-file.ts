@@ -2,14 +2,14 @@ import * as path from 'path';
 
 import { writeFile } from 'fs-extra';
 
-import { PackageJsonLike, ProjectConfigBuildInternal } from '../../../models/internals';
+import { PackageJsonLike, ProjectBuildConfigInternal } from '../../../models/internals';
 
 import { LoggerBase } from '../../../utils';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
 export async function copyPackageJsonFile(
-    projectConfig: ProjectConfigBuildInternal,
+    projectConfig: ProjectBuildConfigInternal,
     logger: LoggerBase
 ): Promise<void> {
     if (!projectConfig.packageJsonCopy) {
