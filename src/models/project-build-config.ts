@@ -210,11 +210,11 @@ export interface BundleOptions {
 /**
  * @additionalProperties false
  */
-export interface ProjectConfigBuildBase {
+export interface ProjectBuildConfigBase {
     /**
      * The output directory for build results.
      */
-    outputPath: string;
+    outputPath?: string;
     /**
      * Tell the build system which platform environment the application is targeting.
      */
@@ -301,11 +301,11 @@ export interface ProjectConfigBuildBase {
 /**
  * @additionalProperties false
  */
-export interface ProjectConfigBuild extends ProjectConfigBuildBase {
+export interface ProjectBuildConfig extends ProjectBuildConfigBase {
     /**
      * To override properties based on build environment.
      */
     envOverrides?: {
-        [name: string]: Partial<ProjectConfigBuildBase>;
+        [name: string]: Partial<ProjectBuildConfigBase>;
     };
 }

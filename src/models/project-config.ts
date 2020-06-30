@@ -1,13 +1,13 @@
-import { ProjectConfigBuild } from './project-config-build';
+import { ProjectBuildConfig } from './project-build-config';
 
 /**
  * @additionalProperties false
  */
 export interface ProjectConfig {
     /**
-     * Path to base configuration file(s) or name of build-in configuration preset(s) to inherit from.
+     * Name of build-in preset ('default') or path to base configuration file or name of the base project to inherit from.
      */
-    extends?: 'lib:default' | string | string[];
+    extends?: 'default' | string;
 
     /**
      * Root folder of the project files.
@@ -17,8 +17,8 @@ export interface ProjectConfig {
     /**
      * The task configurations.
      */
-    task: {
-        build: ProjectConfigBuild;
+    task?: {
+        build: ProjectBuildConfig;
     };
 }
 

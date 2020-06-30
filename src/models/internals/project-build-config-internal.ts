@@ -1,6 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { BundleOptions, TsTranspilationOptions } from '../project-config-build';
+import { BundleOptions, ProjectBuildConfig, TsTranspilationOptions } from '../project-build-config';
 import { ProjectConfigInternal } from './project-config-internal';
 import { PackageEntrypoints, PackageJsonLike } from './package-jon-like';
 
@@ -55,7 +55,7 @@ export interface BundleOptionsInternal extends BundleOptions {
     _nodeResolveFields?: string[];
 }
 
-export interface ProjectConfigBuildInternal extends ProjectConfigInternal {
+export interface ProjectBuildConfigInternal extends ProjectConfigInternal, ProjectBuildConfig {
     _projectRoot: string;
     _outputPath: string;
 
