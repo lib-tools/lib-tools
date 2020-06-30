@@ -6,6 +6,5 @@ export * from './is-glob';
 export * from './is-url';
 export * from './logger';
 export * from './path-helpers';
-export * from './read-json';
-export * from './strip-comments';
+export * from './read-json-with-comments';
 export * from './validate-schema';
