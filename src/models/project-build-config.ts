@@ -1,3 +1,5 @@
+import { OverridableProjectConfig } from './overridable-project-config';
+
 /**
  * @additionalProperties false
  */
@@ -301,7 +303,7 @@ export interface ProjectBuildConfigBase {
 /**
  * @additionalProperties false
  */
-export interface ProjectBuildConfig extends ProjectBuildConfigBase {
+export interface ProjectBuildConfig extends ProjectBuildConfigBase, OverridableProjectConfig<ProjectBuildConfigBase> {
     /**
      * To override properties based on build environment.
      */
