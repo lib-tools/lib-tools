@@ -1,10 +1,8 @@
-import * as webpack from 'webpack';
-
-import { BuildOptionsInternal, ProjectConfigBuildInternal } from '../../../models/internals';
+import { BuildOptionsInternal, ProjectBuildConfigInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 export interface ProjectBuildInfoWebpackPluginOptions {
-    projectConfig: ProjectConfigBuildInternal;
+    projectConfig: ProjectBuildConfigInternal;
     buildOptions: BuildOptionsInternal;
     logLevel?: LogLevelString;
 }
@@ -23,18 +21,8 @@ export class ProjectBuildInfoWebpackPlugin {
         });
     }
 
-    apply(compiler: webpack.Compiler): void {
-        let configName: string;
-
-        if (this.options.projectConfig.name) {
-            configName = this.options.projectConfig.name;
-        } else if (compiler.options.name) {
-            configName = compiler.options.name;
-        } else {
-            configName = this.options.projectConfig._packageNameWithoutScope;
-        }
-
-        let msg = `Processing ${configName}`;
+    apply(): void {
+        let msg = `Processing ${this.options.projectConfig._name}`;
         const envStr = Object.keys(this.options.buildOptions.environment).length
             ? JSON.stringify(this.options.buildOptions.environment)
             : '';
