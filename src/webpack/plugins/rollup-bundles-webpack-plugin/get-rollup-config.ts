@@ -10,7 +10,7 @@ import { LoggerBase } from '../../../utils';
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export function getRollupConfig(
-    projectConfig: ProjectBuildConfigInternal,
+    projectBuildConfig: ProjectBuildConfigInternal,
     currentBundle: BundleOptionsInternal,
     logger: LoggerBase
 ): {
@@ -18,12 +18,12 @@ export function getRollupConfig(
     outputOptions: rollup.OutputOptions;
 } {
     // const isTsEntry = /\.tsx?$/i.test(currentBundle._entryFilePath);
-    let moduleName = projectConfig.libraryName;
-    if (!moduleName && projectConfig._packageName) {
-        if (projectConfig._packageName.startsWith('@')) {
-            moduleName = projectConfig._packageName.substring(1).split('/').join('.');
+    let moduleName = projectBuildConfig.libraryName;
+    if (!moduleName && projectBuildConfig._packageName) {
+        if (projectBuildConfig._packageName.startsWith('@')) {
+            moduleName = projectBuildConfig._packageName.substring(1).split('/').join('.');
         } else {
-            moduleName = projectConfig._packageName.split('/').join('.');
+            moduleName = projectBuildConfig._packageName.split('/').join('.');
         }
         moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -32,8 +32,8 @@ export function getRollupConfig(
     }
 
     let amdId: { [key: string]: string } | undefined;
-    if (projectConfig._packageName) {
-        amdId = { id: projectConfig._packageName };
+    if (projectBuildConfig._packageName) {
+        amdId = { id: projectBuildConfig._packageName };
     }
 
     // library target
@@ -63,7 +63,7 @@ export function getRollupConfig(
     }
 
     const externals = rollupExternalMap.externals || [];
-    if (projectConfig.platformTarget === 'node') {
+    if (projectBuildConfig.platformTarget === 'node') {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
         const getBuiltins = require('builtins');
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -77,10 +77,10 @@ export function getRollupConfig(
 
     if (
         currentBundle.dependenciesAsExternals !== false &&
-        projectConfig._packageJson &&
-        projectConfig._packageJson.dependencies
+        projectBuildConfig._packageJson &&
+        projectBuildConfig._packageJson.dependencies
     ) {
-        Object.keys(projectConfig._packageJson.dependencies)
+        Object.keys(projectBuildConfig._packageJson.dependencies)
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
                 externals.push(e);
@@ -89,10 +89,10 @@ export function getRollupConfig(
 
     if (
         currentBundle.peerDependenciesAsExternals !== false &&
-        projectConfig._packageJson &&
-        projectConfig._packageJson.peerDependencies
+        projectBuildConfig._packageJson &&
+        projectBuildConfig._packageJson.peerDependencies
     ) {
-        Object.keys(projectConfig._packageJson.peerDependencies)
+        Object.keys(projectBuildConfig._packageJson.peerDependencies)
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
                 externals.push(e);
@@ -135,7 +135,7 @@ export function getRollupConfig(
         if (currentBundle.includeCommonJs) {
             let commonjsOption = {
                 extensions: ['.js'],
-                sourceMap: projectConfig.sourceMap
+                sourceMap: projectBuildConfig.sourceMap
             };
 
             if (typeof currentBundle.includeCommonJs === 'object') {
@@ -180,11 +180,11 @@ export function getRollupConfig(
         globals,
         exports: 'named',
         file: currentBundle._outputFilePath,
-        sourcemap: projectConfig.sourceMap
+        sourcemap: projectBuildConfig.sourceMap
     };
 
-    if (projectConfig._bannerText) {
-        outputOptions.banner = projectConfig._bannerText;
+    if (projectBuildConfig._bannerText) {
+        outputOptions.banner = projectBuildConfig._bannerText;
     }
 
     return {

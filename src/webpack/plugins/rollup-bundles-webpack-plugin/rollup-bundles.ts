@@ -11,27 +11,28 @@ import { getRollupConfig } from './get-rollup-config';
 import { minifyJsFile } from './minify-js-file';
 
 export async function performRollupBundles(
-    projectConfig: ProjectBuildConfigInternal,
+    projectBuildConfig: ProjectBuildConfigInternal,
     logger: LoggerBase
 ): Promise<void> {
-    if (!projectConfig._bundles || !projectConfig._bundles.length) {
+    if (!projectBuildConfig._bundles || !projectBuildConfig._bundles.length) {
         return;
     }
 
-    const bundles = projectConfig._bundles;
+    const bundles = projectBuildConfig._bundles;
 
+    const projectName = projectBuildConfig._projectName;
     for (const currentBundle of bundles) {
         const entryFilePath = currentBundle._entryFilePath;
         const entryFileExists = await pathExists(entryFilePath);
 
         if (!entryFileExists) {
             throw new Error(
-                `The entry file path: ${entryFilePath} doesn't exist. Please correct value in 'projects[${projectConfig._name}].bundles[${currentBundle._index}].entry'.`
+                `The entry file path: ${entryFilePath} doesn't exist. Please correct value in 'projects[${projectName}].bundles[${currentBundle._index}].entry'.`
             );
         }
 
         // main bundling
-        const rollupOptions = getRollupConfig(projectConfig, currentBundle, logger);
+        const rollupOptions = getRollupConfig(projectBuildConfig, currentBundle, logger);
 
         let scriptTargetText = '';
         if (currentBundle._destScriptTarget) {
@@ -44,7 +45,7 @@ export async function performRollupBundles(
         await bundle.write(rollupOptions.outputOptions);
 
         // Remapping sourcemaps
-        // const shouldReMapSourceMap = projectConfig.sourceMap && !/\.tsx?$/i.test(entryFilePath);
+        // const shouldReMapSourceMap = projectBuildConfig.sourceMap && !/\.tsx?$/i.test(entryFilePath);
         // (path.dirname(entryFilePath) !== srcDir)
         // if (shouldReMapSourceMap) {
         //     const chain = await sorcery.load(currentBundle._outputFilePath);
@@ -59,13 +60,13 @@ export async function performRollupBundles(
             await minifyJsFile(
                 currentBundle._outputFilePath,
                 minFilePath,
-                projectConfig.sourceMap as boolean,
+                projectBuildConfig.sourceMap as boolean,
                 // buildOptions.logLevel === 'debug',
                 logger
             );
 
             // Remapping sourcemaps
-            // if (projectConfig.sourceMap) {
+            // if (projectBuildConfig.sourceMap) {
             //     const chain = await sorcery.load(currentBundle._outputFilePath);
             //     await chain.write();
             // }

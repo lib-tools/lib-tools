@@ -6,7 +6,7 @@ import { LogLevelString, Logger } from '../../../utils';
 import { performRollupBundles } from './rollup-bundles';
 
 export interface RollupBundlesWebpackPluginebpackPluginOptions {
-    projectConfig: ProjectBuildConfigInternal;
+    projectBuildConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -26,20 +26,20 @@ export class RollupBundlesWebpackPlugin {
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () =>
-            performRollupBundles(this.options.projectConfig, this.logger)
+            performRollupBundles(this.options.projectBuildConfig, this.logger)
         );
     }
 
     // private async performBuildTask(): Promise<void> {
-    //     const projectConfig = this.options.projectConfig;
+    //     const projectBuildConfig = this.options.projectBuildConfig;
 
-    //     // await preformTsTranspilations(projectConfig, this.logger);
+    //     // await preformTsTranspilations(projectBuildConfig, this.logger);
 
-    //     // if (projectConfig.styles) {
-    //     //     await processStyles(projectConfig, logger);
+    //     // if (projectBuildConfig.styles) {
+    //     //     await processStyles(projectBuildConfig, logger);
     //     // }
 
-    //     await performBundles(projectConfig, this.logger);
-    //     // await copyPackageJsonFile(projectConfig, this.logger);
+    //     await performBundles(projectBuildConfig, this.logger);
+    //     // await copyPackageJsonFile(projectBuildConfig, this.logger);
     // }
 }
