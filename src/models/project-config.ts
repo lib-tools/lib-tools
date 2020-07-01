@@ -18,7 +18,7 @@ export interface ProjectConfig {
      * The task configurations.
      */
     tasks?: {
-        build: ProjectBuildConfig;
+        build?: ProjectBuildConfig;
     };
 }
 
