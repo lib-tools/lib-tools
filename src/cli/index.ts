@@ -4,9 +4,9 @@ import { colorize } from '../utils/colorize';
 
 import { getBuildCommandModule } from './build/build-command-module';
 
-const cliVersion = global.libCli.version;
-const cliIsGlobal = global.libCli.isGlobal;
-const cliIsLink = global.libCli.isLink;
+const cliVersion = (global.libCli as { version: string }).version;
+const cliIsGlobal = (global.libCli as { isGlobal: boolean }).isGlobal;
+const cliIsLink = (global.libCli as { isLink: boolean }).isLink;
 
 function initYargs(args?: string[]): yargs.Argv {
     const cliUsage = `${colorize(`lib-tools ${cliVersion}`, 'white')}\n
@@ -19,7 +19,7 @@ Usage:
 
     const yargsInstance = yargs
         .usage(cliUsage)
-        .example('lib build', 'Bundle and pack the project(s)')
+        .example('lib build', 'Bundle the project(s)')
         .example('lib -h', 'Show help')
         .version(false)
         .option('h', {
