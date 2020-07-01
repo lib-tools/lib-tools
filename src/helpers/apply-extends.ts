@@ -199,7 +199,8 @@ async function getBaseProjectConfigForFileExtends(
             return {
                 ...foundBaseProject,
                 _name: '',
-                _configPath: extendsFilePath
+                _configPath: extendsFilePath,
+                _workspaceRoot: projectConfig._workspaceRoot
             };
         }
     } catch (err) {
