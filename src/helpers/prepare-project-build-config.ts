@@ -9,6 +9,7 @@ import {
     BundleOptionsInternal,
     PackageJsonLike,
     ProjectBuildConfigInternal,
+    ProjectConfigInternal,
     StyleParsedEntry,
     TsTranspilationOptionsInternal
 } from '../models/internals';
@@ -30,11 +31,13 @@ const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 export async function prepareProjectBuildConfig(
     projectBuildConfig: ProjectBuildConfig,
     buildOptions: BuildOptionsInternal,
-    workspaceRoot: string,
-    projectRoot: string,
-    projectName: string
+    projectConfig: ProjectConfigInternal
 ): Promise<ProjectBuildConfigInternal> {
     const projectBuildConfigCloned = JSON.parse(JSON.stringify(projectBuildConfig)) as ProjectBuildConfig;
+    const configPath = projectConfig._configPath;
+    const workspaceRoot = projectConfig._workspaceRoot;
+    const projectRoot = projectConfig._projectRoot;
+    const projectName = projectConfig._projectName;
 
     // apply env
     applyEnvOverrides(projectBuildConfigCloned, buildOptions.environment);
@@ -120,7 +123,10 @@ export async function prepareProjectBuildConfig(
 
     const projectBuildConfigInternal: ProjectBuildConfigInternal = {
         ...projectBuildConfigCloned,
+        _configPath: configPath,
+        _workspaceRoot: workspaceRoot,
         _projectRoot: projectRoot,
+        _projectName: projectName,
         _outputPath: outputPath,
         _packageJsonPath: packageJsonPath,
         _packageJson: packageJson,
@@ -146,10 +152,10 @@ export async function prepareProjectBuildConfig(
     }
 
     // TsTranspilations
-    await prepareTsTranspilations(projectBuildConfigInternal, workspaceRoot, projectName);
+    await prepareTsTranspilations(projectBuildConfigInternal);
 
     // Bundles
-    initBundleOptions(projectBuildConfigInternal, projectName);
+    initBundleOptions(projectBuildConfigInternal);
 
     // Styles
     if (
@@ -245,24 +251,22 @@ function replaceTokensForBanner(input: string, packageName: string, packageVersi
     return str;
 }
 
-async function prepareTsTranspilations(
-    projectConfig: ProjectBuildConfigInternal,
-    workspaceRoot: string,
-    projectName: string
-): Promise<void> {
-    const projectRoot = projectConfig._projectRoot;
+async function prepareTsTranspilations(projectBuildConfig: ProjectBuildConfigInternal): Promise<void> {
+    const workspaceRoot = projectBuildConfig._workspaceRoot;
+    const projectRoot = projectBuildConfig._projectRoot;
+    const projectName = projectBuildConfig._projectName;
     const tsTranspilationInternals: TsTranspilationOptionsInternal[] = [];
 
-    if (projectConfig.tsTranspilations && Array.isArray(projectConfig.tsTranspilations)) {
-        const tsTranspilations = projectConfig.tsTranspilations;
+    if (projectBuildConfig.tsTranspilations && Array.isArray(projectBuildConfig.tsTranspilations)) {
+        const tsTranspilations = projectBuildConfig.tsTranspilations;
         for (let i = 0; i < tsTranspilations.length; i++) {
             const tsTranspilation = tsTranspilations[i];
             let tsConfigPath = '';
             if (tsTranspilation.tsConfig) {
                 tsConfigPath = path.resolve(projectRoot, tsTranspilation.tsConfig);
             } else {
-                if (projectConfig.tsConfig && projectConfig._tsConfigPath) {
-                    tsConfigPath = projectConfig._tsConfigPath;
+                if (projectBuildConfig.tsConfig && projectBuildConfig._tsConfigPath) {
+                    tsConfigPath = projectBuildConfig._tsConfigPath;
                 } else if (i > 0 && tsTranspilationInternals[i - 1]._tsConfigPath) {
                     tsConfigPath = tsTranspilationInternals[i - 1]._tsConfigPath;
                 } else if (i === 0) {
@@ -281,14 +285,14 @@ async function prepareTsTranspilations(
                 tsConfigPath,
                 tsTranspilation,
                 1,
-                projectConfig
+                projectBuildConfig
             );
             tsTranspilationInternals.push(tsTranspilationInternal);
         }
-    } else if (projectConfig.tsTranspilations) {
+    } else if (projectBuildConfig.tsTranspilations) {
         let tsConfigPath: string | null = null;
-        if (projectConfig.tsConfig && projectConfig._tsConfigPath) {
-            tsConfigPath = projectConfig._tsConfigPath;
+        if (projectBuildConfig.tsConfig && projectBuildConfig._tsConfigPath) {
+            tsConfigPath = projectBuildConfig._tsConfigPath;
         } else {
             tsConfigPath = await detectTsConfigPathForLib(workspaceRoot, projectRoot);
         }
@@ -304,7 +308,7 @@ async function prepareTsTranspilations(
                 outDir: 'esm2015'
             },
             0,
-            projectConfig
+            projectBuildConfig
         );
         tsTranspilationInternals.push(esm2015Transpilation);
 
@@ -316,30 +320,32 @@ async function prepareTsTranspilations(
                 declaration: false
             },
             1,
-            projectConfig
+            projectBuildConfig
         );
         tsTranspilationInternals.push(esm5Transpilation);
     }
 
-    projectConfig._tsTranspilations = tsTranspilationInternals;
+    projectBuildConfig._tsTranspilations = tsTranspilationInternals;
 }
 
-function initBundleOptions(projectConfig: ProjectBuildConfigInternal, projectName: string): void {
+function initBundleOptions(projectBuildConfig: ProjectBuildConfigInternal): void {
     const bundleInternals: BundleOptionsInternal[] = [];
-    if (projectConfig.bundles && Array.isArray(projectConfig.bundles)) {
-        const bundles = projectConfig.bundles;
+    const projectName = projectBuildConfig._projectName;
+
+    if (projectBuildConfig.bundles && Array.isArray(projectBuildConfig.bundles)) {
+        const bundles = projectBuildConfig.bundles;
         for (let i = 0; i < bundles.length; i++) {
             const bundlePartial = bundles[i];
-            bundleInternals.push(initBundleTarget(bundleInternals, bundlePartial, i, projectConfig, projectName));
+            bundleInternals.push(initBundleTarget(bundleInternals, bundlePartial, i, projectBuildConfig));
         }
-    } else if (projectConfig.bundles) {
-        let shouldBundlesDefault = projectConfig.tsTranspilations === true;
+    } else if (projectBuildConfig.bundles) {
+        let shouldBundlesDefault = projectBuildConfig.tsTranspilations === true;
         if (
             !shouldBundlesDefault &&
-            projectConfig._tsTranspilations &&
-            projectConfig._tsTranspilations.length >= 2 &&
-            projectConfig._tsTranspilations[0].target === 'es2015' &&
-            projectConfig._tsTranspilations[1].target === 'es5'
+            projectBuildConfig._tsTranspilations &&
+            projectBuildConfig._tsTranspilations.length >= 2 &&
+            projectBuildConfig._tsTranspilations[0].target === 'es2015' &&
+            projectBuildConfig._tsTranspilations[1].target === 'es5'
         ) {
             shouldBundlesDefault = true;
         }
@@ -351,13 +357,7 @@ function initBundleOptions(projectConfig: ProjectBuildConfigInternal, projectNam
                 tsTranspilationIndex: 0
             };
 
-            const es2015BundleInternal = initBundleTarget(
-                bundleInternals,
-                es2015BundlePartial,
-                0,
-                projectConfig,
-                projectName
-            );
+            const es2015BundleInternal = initBundleTarget(bundleInternals, es2015BundlePartial, 0, projectBuildConfig);
             bundleInternals.push(es2015BundleInternal);
 
             const es5BundlePartial: Partial<BundleOptionsInternal> = {
@@ -366,26 +366,14 @@ function initBundleOptions(projectConfig: ProjectBuildConfigInternal, projectNam
                 tsTranspilationIndex: 1
             };
 
-            const es5BundleInternal = initBundleTarget(
-                bundleInternals,
-                es5BundlePartial,
-                1,
-                projectConfig,
-                projectName
-            );
+            const es5BundleInternal = initBundleTarget(bundleInternals, es5BundlePartial, 1, projectBuildConfig);
             bundleInternals.push(es5BundleInternal);
 
             const umdBundlePartial: Partial<BundleOptionsInternal> = {
                 libraryTarget: 'umd',
                 entryRoot: 'prevBundleOutput'
             };
-            const umdBundleInternal = initBundleTarget(
-                bundleInternals,
-                umdBundlePartial,
-                2,
-                projectConfig,
-                projectName
-            );
+            const umdBundleInternal = initBundleTarget(bundleInternals, umdBundlePartial, 2, projectBuildConfig);
             bundleInternals.push(umdBundleInternal);
         } else {
             throw new Error(
@@ -394,7 +382,7 @@ function initBundleOptions(projectConfig: ProjectBuildConfigInternal, projectNam
         }
     }
 
-    projectConfig._bundles = bundleInternals;
+    projectBuildConfig._bundles = bundleInternals;
 }
 
 async function detectTsConfigPathForLib(workspaceRoot: string, projectRoot: string): Promise<string | null> {
@@ -409,12 +397,12 @@ export async function initTsTranspilationOptions(
     tsConfigPath: string,
     tsTranspilation: TsTranspilationOptions & Partial<TsTranspilationOptionsInternal>,
     i: number,
-    projectConfig: ProjectBuildConfigInternal
+    projectBuildConfig: ProjectBuildConfigInternal
 ): Promise<TsTranspilationOptionsInternal> {
     const tsConfigJson = readTsConfigFile(tsConfigPath);
     const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
 
-    const outputRootDir = projectConfig._outputPath;
+    const outputRootDir = projectBuildConfig._outputPath;
     const compilerOptions = tsCompilerConfig.options;
 
     // scriptTarget
@@ -461,12 +449,12 @@ export async function initTsTranspilationOptions(
 
     // typingsOutDir
     if (declaration) {
-        tsTranspilation._typingsOutDir = projectConfig._packageJsonOutDir || tsOutDir;
+        tsTranspilation._typingsOutDir = projectBuildConfig._packageJsonOutDir || tsOutDir;
     }
 
     // detect entry
-    if (projectConfig.main) {
-        tsTranspilation._detectedEntryName = projectConfig.main.replace(/\.(js|jsx|ts|tsx)$/i, '');
+    if (projectBuildConfig.main) {
+        tsTranspilation._detectedEntryName = projectBuildConfig.main.replace(/\.(js|jsx|ts|tsx)$/i, '');
     } else {
         // const flatModuleOutFile =
         //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleOutFile
@@ -497,10 +485,10 @@ export async function initTsTranspilationOptions(
     }
 
     // package entry points
-    if (projectConfig._packageJsonOutDir && tsTranspilation._detectedEntryName) {
-        projectConfig._packageEntryPoints = projectConfig._packageEntryPoints || {};
-        const packageEntryPoints = projectConfig._packageEntryPoints;
-        const packageJsonOutDir = projectConfig._packageJsonOutDir;
+    if (projectBuildConfig._packageJsonOutDir && tsTranspilation._detectedEntryName) {
+        projectBuildConfig._packageEntryPoints = projectBuildConfig._packageEntryPoints || {};
+        const packageEntryPoints = projectBuildConfig._packageEntryPoints;
+        const packageJsonOutDir = projectBuildConfig._packageJsonOutDir;
 
         const entryFileAbs = path.resolve(tsOutDir, `${tsTranspilation._detectedEntryName}.js`);
 
@@ -524,9 +512,9 @@ export async function initTsTranspilationOptions(
         }
 
         if (declaration && tsTranspilation._typingsOutDir) {
-            if (projectConfig._nestedPackage && projectConfig._packageNameWithoutScope) {
-                const typingEntryName = projectConfig._packageNameWithoutScope.substr(
-                    projectConfig._packageNameWithoutScope.lastIndexOf('/') + 1
+            if (projectBuildConfig._nestedPackage && projectBuildConfig._packageNameWithoutScope) {
+                const typingEntryName = projectBuildConfig._packageNameWithoutScope.substr(
+                    projectBuildConfig._packageNameWithoutScope.lastIndexOf('/') + 1
                 );
 
                 packageEntryPoints.typings = normalizeRelativePath(
@@ -559,34 +547,35 @@ export function initBundleTarget(
     bundles: BundleOptionsInternal[],
     currentBundle: Partial<BundleOptionsInternal>,
     i: number,
-    projectConfig: ProjectBuildConfigInternal,
-    projectName: string
+    projectBuildConfig: ProjectBuildConfigInternal
 ): BundleOptionsInternal {
+    const projectName = projectBuildConfig._projectName;
+
     if (!currentBundle.libraryTarget) {
         throw new Error(`The 'projects[${projectName}].bundles[${i}].libraryTarget' value is required.`);
     }
 
-    const projectRoot = projectConfig._projectRoot;
-    const outputPath = projectConfig._outputPath;
+    const projectRoot = projectBuildConfig._projectRoot;
+    const outputPath = projectBuildConfig._outputPath;
 
     // externals
-    if (currentBundle.externals == null && projectConfig.externals) {
-        currentBundle.externals = JSON.parse(JSON.stringify(projectConfig.externals));
+    if (currentBundle.externals == null && projectBuildConfig.externals) {
+        currentBundle.externals = JSON.parse(JSON.stringify(projectBuildConfig.externals));
     }
 
     // dependenciesAsExternals
-    if (currentBundle.dependenciesAsExternals == null && projectConfig.dependenciesAsExternals != null) {
-        currentBundle.dependenciesAsExternals = projectConfig.dependenciesAsExternals;
+    if (currentBundle.dependenciesAsExternals == null && projectBuildConfig.dependenciesAsExternals != null) {
+        currentBundle.dependenciesAsExternals = projectBuildConfig.dependenciesAsExternals;
     }
 
     // peerDependenciesAsExternals
-    if (currentBundle.peerDependenciesAsExternals == null && projectConfig.peerDependenciesAsExternals != null) {
-        currentBundle.peerDependenciesAsExternals = projectConfig.peerDependenciesAsExternals;
+    if (currentBundle.peerDependenciesAsExternals == null && projectBuildConfig.peerDependenciesAsExternals != null) {
+        currentBundle.peerDependenciesAsExternals = projectBuildConfig.peerDependenciesAsExternals;
     }
 
     // includeCommonJs
-    if (currentBundle.includeCommonJs == null && projectConfig.includeCommonJs != null) {
-        currentBundle.includeCommonJs = projectConfig.includeCommonJs;
+    if (currentBundle.includeCommonJs == null && projectBuildConfig.includeCommonJs != null) {
+        currentBundle.includeCommonJs = projectBuildConfig.includeCommonJs;
     }
 
     if (currentBundle.entryRoot === 'prevBundleOutput') {
@@ -605,7 +594,7 @@ export function initBundleTarget(
         currentBundle._sourceScriptTarget = foundBundleTarget._destScriptTarget;
         currentBundle._destScriptTarget = foundBundleTarget._destScriptTarget;
     } else if (currentBundle.entryRoot === 'tsTranspilationOutput') {
-        if (!projectConfig._tsTranspilations || !projectConfig._tsTranspilations.length) {
+        if (!projectBuildConfig._tsTranspilations || !projectBuildConfig._tsTranspilations.length) {
             throw new Error(
                 `To use 'tsTranspilationOutDir', the 'projects[${projectName}].tsTranspilations' option is required.`
             );
@@ -614,15 +603,15 @@ export function initBundleTarget(
         let foundTsTranspilation: TsTranspilationOptionsInternal;
 
         if (currentBundle.tsTranspilationIndex == null) {
-            foundTsTranspilation = projectConfig._tsTranspilations[0];
+            foundTsTranspilation = projectBuildConfig._tsTranspilations[0];
         } else {
-            if (currentBundle.tsTranspilationIndex > projectConfig._tsTranspilations.length - 1) {
+            if (currentBundle.tsTranspilationIndex > projectBuildConfig._tsTranspilations.length - 1) {
                 throw new Error(
                     `No _tsTranspilations found, please correct value in 'projects[${projectName}].bundles[${i}].tsTranspilationIndex'.`
                 );
             }
 
-            foundTsTranspilation = projectConfig._tsTranspilations[currentBundle.tsTranspilationIndex];
+            foundTsTranspilation = projectBuildConfig._tsTranspilations[currentBundle.tsTranspilationIndex];
         }
 
         const entryRootDir = foundTsTranspilation._tsOutDirRootResolved;
@@ -639,7 +628,7 @@ export function initBundleTarget(
         currentBundle._sourceScriptTarget = foundTsTranspilation._scriptTarget;
         currentBundle._destScriptTarget = foundTsTranspilation._scriptTarget;
     } else {
-        const entryFile = currentBundle.entry || projectConfig.main;
+        const entryFile = currentBundle.entry || projectBuildConfig.main;
         if (!entryFile) {
             throw new Error(`The 'projects[${projectName}].bundles[${i}].entry' value is required.`);
         }
@@ -649,10 +638,10 @@ export function initBundleTarget(
         if (/\.tsx?$/i.test(entryFile)) {
             if (currentBundle.tsConfig) {
                 currentBundle._tsConfigPath = path.resolve(projectRoot, currentBundle.tsConfig);
-            } else if (projectConfig._tsConfigPath) {
-                currentBundle._tsConfigPath = projectConfig._tsConfigPath;
-                currentBundle._tsConfigJson = projectConfig._tsConfigJson;
-                currentBundle._tsCompilerConfig = projectConfig._tsCompilerConfig;
+            } else if (projectBuildConfig._tsConfigPath) {
+                currentBundle._tsConfigPath = projectBuildConfig._tsConfigPath;
+                currentBundle._tsConfigJson = projectBuildConfig._tsConfigJson;
+                currentBundle._tsCompilerConfig = projectBuildConfig._tsCompilerConfig;
             }
         }
     }
@@ -701,14 +690,17 @@ export function initBundleTarget(
         bundleOutFilePath = path.resolve(outputPath, bundleOutFilePath);
 
         if (isDir) {
-            const outFileName = projectConfig._packageNameWithoutScope.replace(/\//gm, '-');
+            const outFileName = projectBuildConfig._packageNameWithoutScope.replace(/\//gm, '-');
             bundleOutFilePath = path.resolve(bundleOutFilePath, `${outFileName}.js`);
         }
     } else {
-        const outFileName = projectConfig._packageNameWithoutScope.replace(/\//gm, '-');
+        const outFileName = projectBuildConfig._packageNameWithoutScope.replace(/\//gm, '-');
 
         if (currentBundle.libraryTarget === 'umd' || currentBundle.libraryTarget === 'cjs') {
-            if (bundles.length > 1 || (projectConfig._tsTranspilations && projectConfig._tsTranspilations.length > 0)) {
+            if (
+                bundles.length > 1 ||
+                (projectBuildConfig._tsTranspilations && projectBuildConfig._tsTranspilations.length > 0)
+            ) {
                 bundleOutFilePath = path.resolve(
                     outputPath,
                     `bundles/${outFileName}.${currentBundle.libraryTarget}.js`
@@ -735,10 +727,10 @@ export function initBundleTarget(
     }
 
     // package entry points
-    if (projectConfig._packageJsonOutDir) {
-        projectConfig._packageEntryPoints = projectConfig._packageEntryPoints || {};
-        const packageEntryPoints = projectConfig._packageEntryPoints;
-        const packageJsonOutDir = projectConfig._packageJsonOutDir;
+    if (projectBuildConfig._packageJsonOutDir) {
+        projectBuildConfig._packageEntryPoints = projectBuildConfig._packageEntryPoints || {};
+        const packageEntryPoints = projectBuildConfig._packageEntryPoints;
+        const packageJsonOutDir = projectBuildConfig._packageJsonOutDir;
         const scriptTarget = currentBundle._destScriptTarget;
 
         if (currentBundle.libraryTarget === 'esm' && scriptTarget === ts.ScriptTarget.ES2015) {
