@@ -13,11 +13,11 @@ Usage:
         builder: (yargv: yargs.Argv) =>
             yargv
                 .usage(buildCommandUsage)
-                .example('lib build', 'Build the project(s) using default configuration.')
+                .example('lib build', 'Build the project(s).')
                 .help('h')
                 .option('config', {
                     alias: 'c',
-                    describe: 'Build config file location.',
+                    describe: 'The lib.json config file location.',
                     type: 'string'
                 })
                 .option('env', {
@@ -47,10 +47,6 @@ Usage:
                 .option('watch', {
                     describe: 'Build with watch mode.',
                     type: 'boolean'
-                })
-                .option('poll', {
-                    describe: 'Turn on file watching polling by specifying a poll interval in milliseconds.',
-                    type: 'number'
                 })
                 .option('beep', {
                     describe: 'Beep when build completed.',
