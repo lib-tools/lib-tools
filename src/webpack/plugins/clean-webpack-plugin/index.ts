@@ -13,8 +13,7 @@ import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizeRelat
 const globPromise = promisify(glob);
 
 export interface CleanWebpackPluginOptions {
-    projectConfig: ProjectBuildConfigInternal;
-    workspaceRoot: string;
+    projectBuildConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -555,16 +554,16 @@ export class CleanWebpackPlugin {
     }
 
     private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
-        const projectConfig = options.projectConfig;
-        const workspaceRoot = options.workspaceRoot;
-        let outputPath = projectConfig._outputPath;
-        if (projectConfig._nestedPackage) {
-            const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
-            const nestedPackageSuffix = projectConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
+        const projectBuildConfig = options.projectBuildConfig;
+        const workspaceRoot = projectBuildConfig._workspaceRoot;
+        let outputPath = projectBuildConfig._outputPath;
+        if (projectBuildConfig._nestedPackage) {
+            const nestedPackageStartIndex = projectBuildConfig._packageNameWithoutScope.indexOf('/') + 1;
+            const nestedPackageSuffix = projectBuildConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
             outputPath = path.resolve(outputPath, nestedPackageSuffix);
         }
 
-        const cleanConfigOptions = typeof projectConfig.clean === 'object' ? projectConfig.clean : {};
+        const cleanConfigOptions = typeof projectBuildConfig.clean === 'object' ? projectBuildConfig.clean : {};
 
         const cleanOptions: CleanOptionsInternal = {
             ...cleanConfigOptions,
@@ -578,7 +577,7 @@ export class CleanWebpackPlugin {
 
         let skipCleanOutDir = false;
 
-        if (projectConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
+        if (projectBuildConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
             skipCleanOutDir = true;
         }
 
