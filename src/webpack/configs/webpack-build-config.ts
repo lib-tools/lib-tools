@@ -202,7 +202,16 @@ async function getWebpackBuildConfigInternal(
     }
 
     // styles
-    // TODO:
+    if (projectBuildConfig._styleParsedEntries && projectBuildConfig._styleParsedEntries.length > 0) {
+        const pluginModule = await import('../plugins/styles-bundle-webpack-plugin');
+        const StyleBundleWebpackPlugin = pluginModule.StyleBundleWebpackPlugin;
+        plugins.push(
+            new StyleBundleWebpackPlugin({
+                projectBuildConfig,
+                logLevel: buildOptions.logLevel
+            })
+        );
+    }
 
     // Rollup bundles plugin
     if (projectBuildConfig._bundles && projectBuildConfig._bundles.length > 0) {
