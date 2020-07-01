@@ -6,7 +6,7 @@ import { LogLevelString, Logger } from '../../../utils';
 import { preformTsTranspilations } from './ts-transpilations';
 
 export interface TsTranspilationsWebpackPluginOptions {
-    projectConfig: ProjectBuildConfigInternal;
+    projectBuildConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -26,7 +26,7 @@ export class TsTranspilationsWebpackPlugin {
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () =>
-            preformTsTranspilations(this.options.projectConfig, this.logger)
+            preformTsTranspilations(this.options.projectBuildConfig, this.logger)
         );
     }
 }
