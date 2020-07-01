@@ -55,6 +55,10 @@ export interface BundleOptionsInternal extends BundleOptions {
 }
 
 export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
+    _workspaceRoot: string;
+    _configPath: string;
+
+    _projectName: string;
     _projectRoot: string;
     _outputPath: string;
 
