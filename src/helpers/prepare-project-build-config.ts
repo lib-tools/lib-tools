@@ -29,18 +29,21 @@ import { validateOutputPath } from './validate-output-path';
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
 export async function prepareProjectBuildConfig(
-    projectBuildConfig: ProjectBuildConfig,
-    buildOptions: BuildOptionsInternal,
-    projectConfig: ProjectConfigInternal
+    projectConfig: ProjectConfigInternal,
+    buildOptions: BuildOptionsInternal
 ): Promise<ProjectBuildConfigInternal> {
-    const projectBuildConfigCloned = JSON.parse(JSON.stringify(projectBuildConfig)) as ProjectBuildConfig;
+    if (!projectConfig.tasks || !projectConfig.tasks.build) {
+        throw new Error('No build task in configuration.');
+    }
+
+    const projectBuildConfig = JSON.parse(JSON.stringify(projectConfig.tasks.build)) as ProjectBuildConfig;
     const configPath = projectConfig._configPath;
     const workspaceRoot = projectConfig._workspaceRoot;
     const projectRoot = projectConfig._projectRoot;
     const projectName = projectConfig._projectName;
 
     // apply env
-    applyEnvOverrides(projectBuildConfigCloned, buildOptions.environment);
+    applyEnvOverrides(projectBuildConfig, buildOptions.environment);
 
     const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
     if (!packageJsonPath) {
@@ -97,12 +100,12 @@ export async function prepareProjectBuildConfig(
         projectName,
         packageName,
         packageVersion,
-        projectBuildConfigCloned.banner
+        projectBuildConfig.banner
     );
 
     let outputPath: string;
-    if (projectBuildConfigCloned.outputPath) {
-        outputPath = path.resolve(workspaceRoot, projectBuildConfigCloned.outputPath);
+    if (projectBuildConfig.outputPath) {
+        outputPath = path.resolve(workspaceRoot, projectBuildConfig.outputPath);
     } else {
         outputPath = `dist/packages/${packageNameWithoutScope}`;
     }
@@ -110,8 +113,8 @@ export async function prepareProjectBuildConfig(
     validateOutputPath(outputPath, workspaceRoot, projectRoot, projectName);
 
     let packageJsonOutDir: string;
-    if (projectBuildConfigCloned.packageJsonOutDir) {
-        packageJsonOutDir = path.resolve(outputPath, projectBuildConfigCloned.packageJsonOutDir);
+    if (projectBuildConfig.packageJsonOutDir) {
+        packageJsonOutDir = path.resolve(outputPath, projectBuildConfig.packageJsonOutDir);
     } else {
         if (nestedPackage) {
             const nestedPath = packageNameWithoutScope.substr(packageNameWithoutScope.indexOf('/') + 1);
@@ -122,7 +125,7 @@ export async function prepareProjectBuildConfig(
     }
 
     const projectBuildConfigInternal: ProjectBuildConfigInternal = {
-        ...projectBuildConfigCloned,
+        ...projectBuildConfig,
         _configPath: configPath,
         _workspaceRoot: workspaceRoot,
         _projectRoot: projectRoot,
