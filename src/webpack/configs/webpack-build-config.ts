@@ -163,6 +163,7 @@ export async function getWebpackBuildConfig(
         const wpConfig = (await getWebpackBuildConfigInternal(
             projectBuildConfigInternal,
             buildOptions,
+            workspaceRoot,
             projectName
         )) as Configuration | null;
         if (wpConfig) {
@@ -176,6 +177,7 @@ export async function getWebpackBuildConfig(
 async function getWebpackBuildConfigInternal(
     projectConfig: ProjectBuildConfigInternal,
     buildOptions: BuildOptionsInternal,
+    workspaceRoot: string,
     projectName: string
 ): Promise<Configuration> {
     const projectRoot = projectConfig._projectRoot;
@@ -201,6 +203,7 @@ async function getWebpackBuildConfigInternal(
         plugins.push(
             new CleanWebpackPlugin({
                 projectConfig,
+                workspaceRoot,
                 logLevel: buildOptions.logLevel
             })
         );
