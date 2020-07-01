@@ -124,10 +124,13 @@ export async function toProjectBuildConfigInternal(
         }
     }
 
+    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
+
     const projectBuildConfigInternal: ProjectBuildConfigInternal = {
         ...projectBuildConfig,
         _configPath: configPath,
         _workspaceRoot: workspaceRoot,
+        _nodeModulesPath: nodeModulesPath,
         _projectRoot: projectRoot,
         _projectName: projectName,
         _outputPath: outputPath,
