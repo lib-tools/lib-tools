@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 
-import { ProjectConfigBuildInternal } from '../../../models/internals';
+import { ProjectBuildConfigInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 import { copyPackageJsonFile } from './copy-package-json-file';
 
 export interface PackageJsonFileWebpackPluginOptions {
-    projectConfig: ProjectConfigBuildInternal;
+    projectBuildConfig: ProjectBuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -26,7 +26,7 @@ export class PackageJsonFileWebpackPlugin {
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () =>
-            copyPackageJsonFile(this.options.projectConfig, this.logger)
+            copyPackageJsonFile(this.options.projectBuildConfig, this.logger)
         );
     }
 }

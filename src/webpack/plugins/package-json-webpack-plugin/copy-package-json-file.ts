@@ -9,21 +9,21 @@ import { LoggerBase } from '../../../utils';
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
 export async function copyPackageJsonFile(
-    projectConfig: ProjectBuildConfigInternal,
+    projectBuildConfig: ProjectBuildConfigInternal,
     logger: LoggerBase
 ): Promise<void> {
-    if (!projectConfig.packageJsonCopy) {
+    if (!projectBuildConfig.packageJsonCopy) {
         return;
     }
 
     logger.info('Copying and updating package.json');
 
     // merge config
-    // const rootPackageJson: PackageJsonLike = projectConfig._rootPackageJson || {};
+    // const rootPackageJson: PackageJsonLike = projectBuildConfig._rootPackageJson || {};
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     const packageJson: PackageJsonLike = {
-        ...JSON.parse(JSON.stringify(projectConfig._packageJson)),
-        ...(projectConfig._packageEntryPoints || {})
+        ...JSON.parse(JSON.stringify(projectBuildConfig._packageJson)),
+        ...(projectBuildConfig._packageEntryPoints || {})
     };
 
     if (packageJson.devDependencies) {
@@ -31,52 +31,52 @@ export async function copyPackageJsonFile(
     }
 
     if (
-        projectConfig._rootPackageJson &&
-        projectConfig._rootPackageJson.description &&
+        projectBuildConfig._rootPackageJson &&
+        projectBuildConfig._rootPackageJson.description &&
         (packageJson.description === '' || packageJson.description === '[PLACEHOLDER]')
     ) {
-        packageJson.description = projectConfig._rootPackageJson.description;
+        packageJson.description = projectBuildConfig._rootPackageJson.description;
     }
 
     if (
-        projectConfig._rootPackageJson &&
-        projectConfig._rootPackageJson.keywords &&
+        projectBuildConfig._rootPackageJson &&
+        projectBuildConfig._rootPackageJson.keywords &&
         packageJson.keywords &&
         !packageJson.keywords.length
     ) {
-        packageJson.keywords = projectConfig._rootPackageJson.keywords;
+        packageJson.keywords = projectBuildConfig._rootPackageJson.keywords;
     }
 
     if (
-        projectConfig._rootPackageJson &&
-        projectConfig._rootPackageJson.author &&
+        projectBuildConfig._rootPackageJson &&
+        projectBuildConfig._rootPackageJson.author &&
         (packageJson.author === '' || packageJson.author === '[PLACEHOLDER]')
     ) {
-        packageJson.author = projectConfig._rootPackageJson.author;
+        packageJson.author = projectBuildConfig._rootPackageJson.author;
     }
 
     if (
-        projectConfig._rootPackageJson &&
-        projectConfig._rootPackageJson.license &&
+        projectBuildConfig._rootPackageJson &&
+        projectBuildConfig._rootPackageJson.license &&
         (packageJson.license === '' || packageJson.license === '[PLACEHOLDER]')
     ) {
-        packageJson.license = projectConfig._rootPackageJson.license;
+        packageJson.license = projectBuildConfig._rootPackageJson.license;
     }
 
     if (
-        projectConfig._rootPackageJson &&
-        projectConfig._rootPackageJson.repository &&
+        projectBuildConfig._rootPackageJson &&
+        projectBuildConfig._rootPackageJson.repository &&
         (packageJson.repository === '' || packageJson.repository === '[PLACEHOLDER]')
     ) {
-        packageJson.repository = projectConfig._rootPackageJson.repository;
+        packageJson.repository = projectBuildConfig._rootPackageJson.repository;
     }
 
     if (
-        projectConfig._rootPackageJson &&
-        projectConfig._rootPackageJson.homepage &&
+        projectBuildConfig._rootPackageJson &&
+        projectBuildConfig._rootPackageJson.homepage &&
         (packageJson.homepage === '' || packageJson.homepage === '[PLACEHOLDER]')
     ) {
-        packageJson.homepage = projectConfig._rootPackageJson.homepage;
+        packageJson.homepage = projectBuildConfig._rootPackageJson.homepage;
     }
 
     if (packageJson.sideEffects == null) {
@@ -84,12 +84,12 @@ export async function copyPackageJsonFile(
     }
 
     if (packageJson.version == null) {
-        packageJson.version = projectConfig._packageVersion;
+        packageJson.version = projectBuildConfig._packageVersion;
     }
 
-    if (projectConfig.replaceVersionPlaceholder !== false) {
+    if (projectBuildConfig.replaceVersionPlaceholder !== false) {
         if (versionPlaceholderRegex.test(packageJson.version as string)) {
-            packageJson.version = projectConfig._packageVersion;
+            packageJson.version = projectBuildConfig._packageVersion;
         }
 
         if (packageJson.peerDependencies) {
@@ -98,7 +98,10 @@ export async function copyPackageJsonFile(
             for (const key of peerKeys) {
                 const peerPkgVer = peerDependencies[key] as string;
                 if (versionPlaceholderRegex.test(peerPkgVer)) {
-                    peerDependencies[key] = peerPkgVer.replace(versionPlaceholderRegex, projectConfig._packageVersion);
+                    peerDependencies[key] = peerPkgVer.replace(
+                        versionPlaceholderRegex,
+                        projectBuildConfig._packageVersion
+                    );
                 }
             }
 
@@ -108,7 +111,7 @@ export async function copyPackageJsonFile(
 
     // write package config
     await writeFile(
-        path.resolve(projectConfig._packageJsonOutDir, 'package.json'),
+        path.resolve(projectBuildConfig._packageJsonOutDir, 'package.json'),
         JSON.stringify(packageJson, null, 2)
     );
 }
