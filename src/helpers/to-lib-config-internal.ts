@@ -1,3 +1,5 @@
+import * as path from 'path';
+
 import { LibConfig } from '../models';
 import { LibConfigInternal, ProjectConfigInternal } from '../models/internals';
 
@@ -15,12 +17,14 @@ export function toLibConfigInternal(
 
     for (const key of keys) {
         const project = libConfig.projects[key];
+        const projectRoot = path.resolve(workspaceRoot, project.root || '');
 
         const projectInternal: ProjectConfigInternal = {
             ...project,
             _configPath: configPath,
             _workspaceRoot: workspaceRoot,
-            _name: key
+            _projectName: key,
+            _projectRoot: projectRoot
         };
 
         libConfigInternal.projects[key] = projectInternal;
