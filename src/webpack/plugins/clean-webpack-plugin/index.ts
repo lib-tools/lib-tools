@@ -14,6 +14,7 @@ const globPromise = promisify(glob);
 
 export interface CleanWebpackPluginOptions {
     projectConfig: ProjectBuildConfigInternal;
+    workspaceRoot: string;
     logLevel?: LogLevelString;
 }
 
@@ -555,8 +556,7 @@ export class CleanWebpackPlugin {
 
     private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
         const projectConfig = options.projectConfig;
-
-        const workspaceRoot = path.dirname(projectConfig._configPath);
+        const workspaceRoot = options.workspaceRoot;
         let outputPath = projectConfig._outputPath;
         if (projectConfig._nestedPackage) {
             const nestedPackageStartIndex = projectConfig._packageNameWithoutScope.indexOf('/') + 1;
