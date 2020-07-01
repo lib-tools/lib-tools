@@ -1,10 +1,10 @@
-import { OverridableProjectConfig } from '../models';
+import { OverridableConfig } from '../models';
 
 export function applyEnvOverrides<TConfigBase>(
-    projectConfig: OverridableProjectConfig<TConfigBase>,
+    overridableConfig: OverridableConfig<TConfigBase>,
     env: { [key: string]: boolean | string }
 ): void {
-    if (!projectConfig.envOverrides || Object.keys(projectConfig.envOverrides).length === 0) {
+    if (!overridableConfig.envOverrides || Object.keys(overridableConfig.envOverrides).length === 0) {
         return;
     }
 
@@ -36,15 +36,15 @@ export function applyEnvOverrides<TConfigBase>(
             buildTargets.push(key);
         });
 
-    Object.keys(projectConfig.envOverrides).forEach((buildTargetKey: string) => {
+    Object.keys(overridableConfig.envOverrides).forEach((buildTargetKey: string) => {
         const targetName = buildTargetKey;
         const targets = targetName.split(',');
         targets.forEach((t) => {
             t = t.trim();
-            if (buildTargets.indexOf(t) > -1 && projectConfig.envOverrides) {
-                const newConfig = projectConfig.envOverrides[t];
+            if (buildTargets.indexOf(t) > -1 && overridableConfig.envOverrides) {
+                const newConfig = overridableConfig.envOverrides[t];
                 if (newConfig && typeof newConfig === 'object') {
-                    overrideProjectConfig(projectConfig, newConfig);
+                    overrideProjectConfig(overridableConfig, newConfig);
                 }
             }
         });
@@ -52,7 +52,7 @@ export function applyEnvOverrides<TConfigBase>(
 }
 
 function overrideProjectConfig<TConfigBase>(
-    oldConfig: OverridableProjectConfig<TConfigBase>,
+    oldConfig: OverridableConfig<TConfigBase>,
     newConfig: Partial<TConfigBase>
 ): void {
     if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
