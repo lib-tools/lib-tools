@@ -2,9 +2,8 @@ import { BuildOptionsInternal, ProjectBuildConfigInternal } from '../../../model
 import { LogLevelString, Logger } from '../../../utils';
 
 export interface ProjectBuildInfoWebpackPluginOptions {
-    projectConfig: ProjectBuildConfigInternal;
+    projectBuildConfig: ProjectBuildConfigInternal;
     buildOptions: BuildOptionsInternal;
-    projectName: string;
     logLevel?: LogLevelString;
 }
 
@@ -23,7 +22,7 @@ export class ProjectBuildInfoWebpackPlugin {
     }
 
     apply(): void {
-        let msg = `Processing ${this.options.projectName}`;
+        let msg = `Processing ${this.options.projectBuildConfig._projectName}`;
         const envStr = Object.keys(this.options.buildOptions.environment).length
             ? JSON.stringify(this.options.buildOptions.environment)
             : '';
