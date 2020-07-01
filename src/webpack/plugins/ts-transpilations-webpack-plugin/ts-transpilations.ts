@@ -4,22 +4,21 @@ import * as spawn from 'cross-spawn';
 import { pathExists, writeFile } from 'fs-extra';
 import { ScriptTarget } from 'typescript';
 
-import { TypescriptCompileError } from '../../../models/errors';
-import { ProjectConfigBuildInternal, TsTranspilationOptionsInternal } from '../../../models/internals';
+import { ProjectBuildConfigInternal, TsTranspilationOptionsInternal } from '../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizeRelativePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
 
 export async function preformTsTranspilations(
-    projectConfig: ProjectConfigBuildInternal,
+    projectBuildConfig: ProjectBuildConfigInternal,
     logger: LoggerBase
 ): Promise<void> {
-    if (!projectConfig._tsTranspilations || !projectConfig._tsTranspilations.length) {
+    if (!projectBuildConfig._tsTranspilations || !projectBuildConfig._tsTranspilations.length) {
         return;
     }
 
     let tsc = 'tsc';
-    const nodeModulesPath = projectConfig._nodeModulesPath;
+    const nodeModulesPath = projectBuildConfig._nodeModulesPath;
     if (nodeModulesPath) {
         if (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) {
             tsc = path.join(nodeModulesPath, '.bin/ngc');
@@ -28,7 +27,7 @@ export async function preformTsTranspilations(
         }
     }
 
-    for (const tsTranspilation of projectConfig._tsTranspilations) {
+    for (const tsTranspilation of projectBuildConfig._tsTranspilations) {
         const tsConfigPath = tsTranspilation._tsConfigPath;
         const compilerOptions = tsTranspilation._tsCompilerConfig.options;
         const commandArgs: string[] = ['-p', tsConfigPath];
@@ -79,7 +78,7 @@ export async function preformTsTranspilations(
             child.on('error', reject);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
-                    afterTsTranspileTask(tsTranspilation, projectConfig, tsc, logger)
+                    afterTsTranspileTask(tsTranspilation, projectBuildConfig, tsc, logger)
                         .then(() => {
                             resolve();
                         })
@@ -87,7 +86,7 @@ export async function preformTsTranspilations(
                             reject(err);
                         });
                 } else {
-                    reject(new TypescriptCompileError(errors.join('\n')));
+                    reject(new Error(errors.join('\n')));
                 }
             });
         });
@@ -96,29 +95,29 @@ export async function preformTsTranspilations(
 
 async function afterTsTranspileTask(
     tsTranspilation: TsTranspilationOptionsInternal,
-    projectConfig: ProjectConfigBuildInternal,
+    projectBuildConfig: ProjectBuildConfigInternal,
     tsc: string,
     logger: LoggerBase
 ): Promise<void> {
-    const outputRootDir = projectConfig._outputPath;
+    const outputRootDir = projectBuildConfig._outputPath;
 
     // Replace version
     if (
-        projectConfig.replaceVersionPlaceholder !== false &&
-        projectConfig._packageVersion &&
+        projectBuildConfig.replaceVersionPlaceholder !== false &&
+        projectBuildConfig._packageVersion &&
         (tsTranspilation._index === 0 ||
-            (tsTranspilation._index > 0 && projectConfig._prevTsTranspilationVersionReplaced))
+            (tsTranspilation._index > 0 && projectBuildConfig._prevTsTranspilationVersionReplaced))
     ) {
         logger.debug('Checking version placeholder');
 
         const hasVersionReplaced = await replaceVersion(
             tsTranspilation._tsOutDirRootResolved,
-            projectConfig._packageVersion,
+            projectBuildConfig._packageVersion,
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/version.js')}`,
             logger
         );
-        if (hasVersionReplaced && !projectConfig._prevTsTranspilationVersionReplaced) {
-            projectConfig._prevTsTranspilationVersionReplaced = true;
+        if (hasVersionReplaced && !projectBuildConfig._prevTsTranspilationVersionReplaced) {
+            projectBuildConfig._prevTsTranspilationVersionReplaced = true;
         }
     }
 
@@ -137,9 +136,9 @@ async function afterTsTranspileTask(
         }
 
         let stylePreprocessorIncludePaths: string[] = [];
-        if (projectConfig.stylePreprocessorOptions && projectConfig.stylePreprocessorOptions.includePaths) {
-            stylePreprocessorIncludePaths = projectConfig.stylePreprocessorOptions.includePaths.map((p) =>
-                path.resolve(projectConfig._projectRoot, p)
+        if (projectBuildConfig.stylePreprocessorOptions && projectBuildConfig.stylePreprocessorOptions.includePaths) {
+            stylePreprocessorIncludePaths = projectBuildConfig.stylePreprocessorOptions.includePaths.map((p) =>
+                path.resolve(projectBuildConfig._projectRoot, p)
             );
         }
 
@@ -148,8 +147,8 @@ async function afterTsTranspileTask(
         const inlineResourcesModule = await import('./ng-resource-inlining/inline-resources');
 
         await inlineResourcesModule.inlineResources(
-            projectConfig._workspaceRoot,
-            projectConfig._projectRoot,
+            projectBuildConfig._workspaceRoot,
+            projectBuildConfig._projectRoot,
             tsTranspilation._tsOutDirRootResolved,
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/*.js')}`,
             stylePreprocessorIncludePaths,
@@ -189,22 +188,22 @@ async function afterTsTranspileTask(
 
     // Re-export
     if (
-        projectConfig._nestedPackage &&
+        projectBuildConfig._nestedPackage &&
         tsTranspilation._declaration &&
         tsTranspilation._typingsOutDir &&
         tsTranspilation._detectedEntryName
     ) {
         let reExportName = tsTranspilation._detectedEntryName;
-        if (projectConfig._nestedPackage && projectConfig._packageNameWithoutScope) {
-            reExportName = projectConfig._packageNameWithoutScope.substr(
-                projectConfig._packageNameWithoutScope.lastIndexOf('/') + 1
+        if (projectBuildConfig._nestedPackage && projectBuildConfig._packageNameWithoutScope) {
+            reExportName = projectBuildConfig._packageNameWithoutScope.substr(
+                projectBuildConfig._packageNameWithoutScope.lastIndexOf('/') + 1
             );
         }
 
         const relPath = normalizeRelativePath(path.relative(outputRootDir, tsTranspilation._typingsOutDir));
 
         // add banner to index
-        const bannerContent = projectConfig._bannerText ? `${projectConfig._bannerText}\n` : '';
+        const bannerContent = projectBuildConfig._bannerText ? `${projectBuildConfig._bannerText}\n` : '';
 
         logger.debug('Re-exporting typing files to output root');
 
@@ -219,7 +218,7 @@ async function afterTsTranspileTask(
                 tsTranspilation._tsConfigJson.angularCompilerOptions &&
                 tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleId
                     ? tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleId
-                    : projectConfig._packageName;
+                    : projectBuildConfig._packageName;
 
             const metadataJson = {
                 __symbolic: 'module',
