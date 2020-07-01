@@ -150,7 +150,7 @@ async function getBaseProjectConfigForFileExtends(
                 );
             }
 
-            const libConifgInternal = toLibConfigInternal(libConfig, extendsFilePath);
+            const libConifgInternal = toLibConfigInternal(libConfig, extendsFilePath, projectConfig._workspaceRoot);
             const foundBaseProjectInternal = libConifgInternal.projects[projectNameToExtend];
 
             if (foundBaseProjectInternal._name === projectConfig._name) {
