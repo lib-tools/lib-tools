@@ -34,7 +34,7 @@ async function applyProjectConfigExtendsInternal(
 
     const currentConfigFile =
         projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
-    const configErrorLocation = `projects[${projectConfig._name}].extends`;
+    const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
     let baseProjectConfig: ProjectConfigInternal | null;
 
     if (projectConfig.extends.startsWith('project:')) {
@@ -56,10 +56,6 @@ async function applyProjectConfigExtendsInternal(
         await applyProjectConfigExtendsInternal(clonedBaseProject, projectCollection, rootConfigPath);
 
         delete clonedBaseProject.extends;
-    }
-
-    if (clonedBaseProject._name) {
-        delete clonedBaseProject._name;
     }
 
     if (clonedBaseProject._configPath) {
@@ -85,7 +81,7 @@ function getBaseProjectConfigForProjectExtends(
 
     const currentConfigFile =
         projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
-    const configErrorLocation = `projects[${projectConfig._name}].extends`;
+    const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
 
     const projectNameToExtend = projectConfig.extends.substr('project:'.length).trim();
     if (!projectNameToExtend) {
@@ -101,7 +97,7 @@ function getBaseProjectConfigForProjectExtends(
         );
     }
 
-    if (foundBaseProject._name === projectConfig._name) {
+    if (foundBaseProject._projectName === projectConfig._projectName) {
         throw new Error(
             `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
@@ -120,7 +116,7 @@ async function getBaseProjectConfigForFileExtends(
 
     const currentConfigFile =
         projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
-    const configErrorLocation = `projects[${projectConfig._name}].extends`;
+    const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
 
     const parts = projectConfig.extends.split(':');
     if (parts.length < 2 || parts.length > 3) {
@@ -153,7 +149,7 @@ async function getBaseProjectConfigForFileExtends(
             const libConifgInternal = toLibConfigInternal(libConfig, extendsFilePath, projectConfig._workspaceRoot);
             const foundBaseProjectInternal = libConifgInternal.projects[projectNameToExtend];
 
-            if (foundBaseProjectInternal._name === projectConfig._name) {
+            if (foundBaseProjectInternal._projectName === projectConfig._projectName) {
                 throw new Error(
                     `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
                 );
@@ -177,8 +173,10 @@ async function getBaseProjectConfigForFileExtends(
 
             return {
                 ...foundBaseProjectInternal,
-                _name: '',
-                _configPath: extendsFilePath
+                _configPath: extendsFilePath,
+                _workspaceRoot: projectConfig._workspaceRoot,
+                _projectName: projectConfig._projectName,
+                _projectRoot: projectConfig._projectRoot
             };
         } else {
             // Standalone project config
@@ -198,9 +196,10 @@ async function getBaseProjectConfigForFileExtends(
 
             return {
                 ...foundBaseProject,
-                _name: '',
                 _configPath: extendsFilePath,
-                _workspaceRoot: projectConfig._workspaceRoot
+                _workspaceRoot: projectConfig._workspaceRoot,
+                _projectName: projectConfig._projectName,
+                _projectRoot: projectConfig._projectRoot
             };
         }
     } catch (err) {
