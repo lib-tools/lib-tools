@@ -1,9 +1,9 @@
 import * as path from 'path';
 
 import { readFile } from 'fs-extra';
+import * as postcss from 'postcss';
 import * as resolve from 'resolve';
 import { SassException, Options as SassOptions, Result as SassResult } from 'sass';
-import * as postcssTypes from 'postcss';
 
 import { MagicStringInstance, StyleUrlsInfo, findResourcePath } from './shared';
 
@@ -20,13 +20,9 @@ const resolveAsync = (id: string, opts: resolve.AsyncOpts): Promise<string | nul
 };
 
 let sassModulePath: string | null = null;
-let postcssModulePath: string | null = null;
-let cssnanoModulePath: string | null = null;
 let sass: {
     render(options: SassOptions, callback: (exception: SassException, result: SassResult) => void): void;
 };
-
-let postcss: (plugins?: postcssTypes.AcceptedPlugin[]) => postcssTypes.Processor;
 
 export async function inlineStyleUrls(
     workspaceRoot: string,
@@ -54,7 +50,7 @@ export async function inlineStyleUrls(
                     .replace(/\/$/, '');
 
                 let styleContentStr = styleContentBuffer.toString();
-                styleContentStr = await processPostCss(styleContentStr, styleSourceFilePath, workspaceRoot);
+                styleContentStr = await processPostCss(styleContentStr, styleSourceFilePath);
                 componentResources.set(componentKey, styleContentStr);
 
                 return styleContentStr;
@@ -88,14 +84,8 @@ async function readStyleContent(
             sassModulePath = p ? path.dirname(p) : '';
         }
 
-        if (!sassModulePath) {
-            throw new Error(
-                `To compile scss/sass files, install sass package with 'npm i -D sass' or 'npm i -D node-sass'.`
-            );
-        }
-
         if (!sass) {
-            sass = require(sassModulePath);
+            sass = sassModulePath ? require(sassModulePath) : require('sass');
         }
 
         const result = await new Promise<{
@@ -127,49 +117,27 @@ async function readStyleContent(
     return styleContent;
 }
 
-async function processPostCss(css: string, from: string, workspaceRoot: string): Promise<string> {
-    if (cssnanoModulePath == null) {
-        const p = await resolveAsync('cssnano', {
-            basedir: workspaceRoot
-        });
+async function processPostCss(css: string, from: string): Promise<string> {
+    // return `${css}`.replace(/([\n\r]\s*)+/gm, ' ').replace(/"/g, '\\"');
+    // Or
+    const result = await postcss([
+        // postcssUrl({
+        //     url: 'inline'
+        // }),
 
-        cssnanoModulePath = p ? path.dirname(p) : '';
-    }
+        // autoprefixer,
 
-    if (cssnanoModulePath) {
-        const p = await resolveAsync('postcss', {
-            basedir: workspaceRoot
-        });
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        require('cssnano')({
+            safe: true,
+            mergeLonghand: false,
+            discardComments: {
+                removeAll: true
+            }
+        })
+    ]).process(css, {
+        from
+    });
 
-        postcssModulePath = p ? path.dirname(p) : '';
-    }
-
-    if (postcssModulePath && cssnanoModulePath) {
-        if (!postcss) {
-            postcss = require('postcss');
-        }
-
-        const result = await postcss([
-            // postcssUrl({
-            //     url: 'inline'
-            // }),
-
-            // autoprefixer,
-
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            require(cssnanoModulePath)({
-                safe: true,
-                mergeLonghand: false,
-                discardComments: {
-                    removeAll: true
-                }
-            })
-        ]).process(css, {
-            from
-        });
-
-        return result.css;
-    } else {
-        return `${css}`.replace(/([\n\r]\s*)+/gm, ' ').replace(/"/g, '\\"');
-    }
+    return result.css;
 }

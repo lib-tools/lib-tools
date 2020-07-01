@@ -76,14 +76,7 @@ export async function inlineResources(
         const magicString = new MagicString(content);
 
         if (foundTemplateUrlInfoes.length) {
-            await inlineTemplateUrls(
-                workspaceRoot,
-                foundTemplateUrlInfoes,
-                magicString,
-                srcDir,
-                searchRootDir,
-                componentResources
-            );
+            await inlineTemplateUrls(foundTemplateUrlInfoes, magicString, srcDir, searchRootDir, componentResources);
         }
 
         if (foundStyleUrlsInfoes.length) {
