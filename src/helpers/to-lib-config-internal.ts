@@ -1,7 +1,11 @@
 import { LibConfig } from '../models';
 import { LibConfigInternal, ProjectConfigInternal } from '../models/internals';
 
-export function toLibConfigInternal(libConfig: LibConfig, configPath: string): LibConfigInternal {
+export function toLibConfigInternal(
+    libConfig: LibConfig,
+    configPath: string,
+    workspaceRoot: string
+): LibConfigInternal {
     const libConfigInternal: LibConfigInternal = {
         _configPath: configPath,
         projects: {}
@@ -15,6 +19,7 @@ export function toLibConfigInternal(libConfig: LibConfig, configPath: string): L
         const projectInternal: ProjectConfigInternal = {
             ...project,
             _configPath: configPath,
+            _workspaceRoot: workspaceRoot,
             _name: key
         };
 
