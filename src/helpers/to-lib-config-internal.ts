@@ -17,6 +17,11 @@ export function toLibConfigInternal(
 
     for (const key of keys) {
         const project = libConfig.projects[key];
+
+        if (project.root && path.isAbsolute(project.root)) {
+            throw new Error(`The 'projects[${key}].root' must be relative path.`);
+        }
+
         const projectRoot = path.resolve(workspaceRoot, project.root || '');
 
         const projectInternal: ProjectConfigInternal = {
