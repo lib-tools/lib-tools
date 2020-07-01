@@ -9,52 +9,47 @@ import { getWebpackBuildConfig } from '../../webpack/configs';
 
 export async function cliBuild(argv: { [key: string]: unknown }): Promise<number> {
     const startTime = global.libCli && global.libCli.startTime > 0 ? global.libCli.startTime : Date.now();
-    const commandArgv = { ...argv };
     let environment: string | { [key: string]: boolean | string } | undefined;
 
-    if (commandArgv.environment) {
-        environment = commandArgv.environment as { [key: string]: boolean | string } | string;
-        delete commandArgv.environment;
+    if (argv.environment) {
+        environment = argv.environment as { [key: string]: boolean | string } | string;
+        delete argv.environment;
     }
 
-    if (commandArgv.env) {
+    if (argv.env) {
         if (!environment) {
-            environment = commandArgv.env as { [key: string]: boolean | string } | string;
+            environment = argv.env as { [key: string]: boolean | string } | string;
         }
 
-        delete commandArgv.env;
+        delete argv.env;
     }
 
     const logger = new Logger({
-        logLevel:
-            commandArgv.logLevel && typeof commandArgv.logLevel === 'string'
-                ? (commandArgv.logLevel as LogLevelString)
-                : 'info',
+        logLevel: argv.logLevel ? (argv.logLevel as LogLevelString) : 'info',
         debugPrefix: 'DEBUG:',
         warnPrefix: 'WARNING:'
     });
 
     let configPath = '';
-    if (commandArgv.config && typeof commandArgv.config === 'string') {
-        configPath = path.isAbsolute(commandArgv.config)
-            ? path.resolve(commandArgv.config)
-            : path.resolve(process.cwd(), commandArgv.config);
+    if (argv.config) {
+        const configStr = argv.config as string;
+        configPath = path.isAbsolute(configStr) ? path.resolve(configStr) : path.resolve(process.cwd(), configStr);
     } else {
         configPath = path.resolve(process.cwd(), 'lib.json');
     }
 
-    const watch = commandArgv.watch ? true : false;
+    const watch = argv.watch ? true : false;
     let webpackConfigs: webpack.Configuration[] = [];
 
     try {
-        webpackConfigs = await getWebpackBuildConfig(configPath, environment, commandArgv);
+        webpackConfigs = await getWebpackBuildConfig(configPath, environment, argv);
     } catch (err) {
         logger.error(`${err.message || err}\n`);
 
         return -1;
     }
 
-    if (webpackConfigs.length === 0) {
+    if (!webpackConfigs.length) {
         logger.error('No project is available to build.\n');
 
         return -1;
@@ -80,7 +75,7 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
         }
     }
 
-    if (commandArgv.beep && process.stdout.isTTY) {
+    if (argv.beep && process.stdout.isTTY) {
         process.stdout.write('\x07');
     }
 
