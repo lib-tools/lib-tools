@@ -28,7 +28,7 @@ import { validateOutputPath } from './validate-output-path';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
-export async function prepareProjectBuildConfig(
+export async function toProjectBuildConfigInternal(
     projectConfig: ProjectConfigInternal,
     buildOptions: BuildOptionsInternal
 ): Promise<ProjectBuildConfigInternal> {
