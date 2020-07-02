@@ -4,26 +4,9 @@ process.title = 'lib-tools';
 
 const startTime = Date.now();
 
-const fs = require('fs');
 const path = require('path');
-const util = require('util');
-
+const fs = require('fs-extra');
 const resolve = require('resolve');
-
-const realpathAsync = util.promisify(fs.realpath);
-const statAsync = util.promisify(fs.stat);
-
-const resolveAsync = (id, opts) => {
-    return new Promise((res) => {
-        resolve(id, opts, (err, resolvedPath) => {
-            if (err) {
-                res(null);
-            } else {
-                res(resolvedPath);
-            }
-        });
-    });
-};
 
 function exit(code) {
     if (process.platform === 'win32' && process.stdout.bufferSize) {
@@ -39,67 +22,40 @@ function exit(code) {
 
 // main
 async function main() {
-    const localCli = await resolveAsync('lib-tools', {
-        basedir: process.cwd()
+    const localCliResolvedPath = await new Promise((res) => {
+        resolve(
+            'lib-tools',
+            {
+                basedir: process.cwd()
+            },
+            (err, resolvedPath) => {
+                if (err) {
+                    res(null);
+                } else {
+                    res(resolvedPath);
+                }
+            }
+        );
     });
 
-    let isGlobal = true;
-    let isLink = false;
-    let tempCliPath;
+    const packageJsonPath = path.resolve(__dirname, '../package.json');
+    const packageJson = await fs.readJson(packageJsonPath);
+    const version = packageJson.version;
 
-    if (localCli) {
-        const localCliRealPath = await realpathAsync(localCli);
-        if (localCliRealPath !== localCli) {
+    let isGlobal = false;
+    let isLink = false;
+    let cliPath;
+
+    if (localCliResolvedPath) {
+        const localCliRealPath = await fs.realpath(localCliResolvedPath);
+        if (localCliRealPath !== localCliResolvedPath) {
             isLink = true;
         }
 
-        tempCliPath = path.dirname(localCli);
-        isGlobal = false;
+        cliPath = path.resolve(path.dirname(localCliResolvedPath), './cli');
     } else {
-        tempCliPath = path.resolve(__dirname, '..');
         isGlobal = true;
-    }
 
-    let packageJsonPath = '';
-
-    try {
-        const packageJsonFileStat = await statAsync(path.resolve(tempCliPath, './package.json'));
-        if (packageJsonFileStat.isFile()) {
-            const nodeModulesStat = await statAsync(path.resolve(tempCliPath, 'node_modules'));
-            if (nodeModulesStat.isDirectory()) {
-                packageJsonPath = path.resolve(tempCliPath, './package.json');
-            }
-        }
-    } catch (err) {
-        // Do nothing
-    }
-
-    if (!packageJsonPath) {
-        try {
-            const packageJsonFileStat = await statAsync(path.resolve(tempCliPath, '..', './package.json'));
-            if (packageJsonFileStat.isFile()) {
-                packageJsonPath = path.resolve(tempCliPath, '..', './package.json');
-            }
-        } catch (err) {
-            // Do nothing
-        }
-    }
-
-    if (!packageJsonPath) {
-        console.error('Could not detect package.json file path.');
-        process.exitCode = -1;
-
-        return;
-    }
-
-    const packageJson = require(packageJsonPath);
-    const version = packageJson.version;
-    let cli;
-
-    if (localCli) {
-        const localCliPath = path.resolve(path.dirname(localCli), './cli');
-        cli = require(localCliPath);
-    } else {
         const updateNotifier = require('update-notifier');
         updateNotifier({
             pkg: packageJson
@@ -107,15 +63,10 @@ async function main() {
             defer: false
         });
 
-        try {
-            const cliFileStat = await statAsync(path.resolve(__dirname, '../src/cli/index.js'));
-            if (cliFileStat.isFile()) {
-                cli = require('../src/cli');
-            } else {
-                cli = require('../dist/src/cli');
-            }
-        } catch (err) {
-            cli = require('../dist/src/cli');
+        if (await fs.pathExists(path.resolve(__dirname, '../src/cli/index.js'))) {
+            cliPath = '../src/cli';
+        } else {
+            cliPath = '../dist/src/cli';
         }
     }
 
@@ -129,15 +80,17 @@ async function main() {
         startTime
     };
 
-    if ('default' in cli) {
-        cli = cli.default;
-    }
+    const cli = require(cliPath);
 
     try {
-        await cli();
+        if ('default' in cli) {
+            await cli.default();
+        } else {
+            await cli();
+        }
     } catch (err) {
         process.exitCode = -1;
-        console.error(`${err.stack || err.message || err}`);
+        console.error(err);
         exit(process.exitCode);
     }
 }
