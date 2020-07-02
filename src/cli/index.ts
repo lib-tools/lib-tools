@@ -60,7 +60,7 @@ export default async function (): Promise<number> {
         // eslint-disable-next-line no-console
         console.log(
             `${colorize(
-                `lib-tools ${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
+                `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
                 'white'
             )}\n`
         );
