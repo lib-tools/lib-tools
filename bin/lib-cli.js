@@ -1,7 +1,5 @@
 'use strict';
 
-process.title = 'lib-tools';
-
 const startTime = Date.now();
 
 const path = require('path');
@@ -25,6 +23,8 @@ async function main() {
     const packageJson = await fs.readJson(packageJsonPath);
     const packageName = packageJson.name;
     const version = packageJson.version;
+
+    process.title = `${packageName} v${version}`;
 
     const localCliResolvedPath = await new Promise((res) => {
         resolve(
