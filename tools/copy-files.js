@@ -1,10 +1,5 @@
 #!/usr/bin/env node
 
-/* eslint-env node*/
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 'use strict';
 
 const fs = require('fs-extra');
@@ -21,15 +16,13 @@ packageJson.main = 'src/index.js';
 packageJson.typings = 'src/index.d.ts';
 
 if (packageJson.devDependencies) {
-    if (packageJson.peerDependencies) {
-        packageJson.devDependencies = { ...packageJson.peerDependencies };
-    } else {
-        delete packageJson.devDependencies;
-    }
+    delete packageJson.devDependencies;
 }
+
 if (packageJson.scripts) {
     delete packageJson.scripts;
 }
+
 fs.writeFileSync(path.resolve(destDir, 'package.json'), JSON.stringify(packageJson, null, 2));
 
 // copy files
