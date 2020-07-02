@@ -19,8 +19,6 @@ export async function copyPackageJsonFile(
     logger.info('Copying and updating package.json');
 
     // merge config
-    // const rootPackageJson: PackageJsonLike = projectBuildConfig._rootPackageJson || {};
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     const packageJson: PackageJsonLike = {
         ...JSON.parse(JSON.stringify(projectBuildConfig._packageJson)),
         ...(projectBuildConfig._packageEntryPoints || {})

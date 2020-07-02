@@ -19,8 +19,9 @@ export class PackageJsonFileWebpackPlugin {
 
     constructor(private readonly options: PackageJsonFileWebpackPluginOptions) {
         this.logger = new Logger({
-            name: `[${this.name}]`,
-            logLevel: this.options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info',
+            debugPrefix: `[${this.name}]`,
+            infoPrefix: ''
         });
     }
 
