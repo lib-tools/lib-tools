@@ -29,7 +29,7 @@ function _generateSchema(input, typeSymbol, output) {
 }
 
 function generateSchemas() {
-    const defaultSchemaOutDir = path.resolve(__dirname, '../dist/src/schemas');
+    const defaultSchemaOutDir = path.resolve(__dirname, '../dist/schemas');
     const tsConfigInput = path.resolve(__dirname, './tsconfig.schema.json');
 
     fs.ensureDirSync(defaultSchemaOutDir);
