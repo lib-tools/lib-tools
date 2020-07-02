@@ -1,0 +1,17 @@
+{
+  "$schema": "../../dist/schemas/schema.json#",
+  "projects": {
+    "copy-files": {
+      "root": "./",
+      "tasks": {
+        "build": {
+          "outputPath": "dist",
+          "copy": [
+            "package.json",
+            "README.md"
+          ]
+        }
+      }
+    }
+  }
+}
