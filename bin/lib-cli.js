@@ -20,11 +20,15 @@ function exit(code) {
     process.exit(code);
 }
 
-// main
 async function main() {
+    const packageJsonPath = path.resolve(__dirname, '../package.json');
+    const packageJson = await fs.readJson(packageJsonPath);
+    const packageName = packageJson.name;
+    const version = packageJson.version;
+
     const localCliResolvedPath = await new Promise((res) => {
         resolve(
-            'lib-tools',
+            packageName,
             {
                 basedir: process.cwd()
             },
@@ -37,10 +41,6 @@ async function main() {
             }
         );
     });
-
-    const packageJsonPath = path.resolve(__dirname, '../package.json');
-    const packageJson = await fs.readJson(packageJsonPath);
-    const version = packageJson.version;
 
     let isGlobal = false;
     let isLink = false;
@@ -73,6 +73,7 @@ async function main() {
     const location = path.dirname(packageJsonPath);
 
     global.libCli = {
+        packageName,
         version,
         isGlobal,
         isLink,
@@ -83,10 +84,16 @@ async function main() {
     const cli = require(cliPath);
 
     try {
+        let resultCode;
         if ('default' in cli) {
-            await cli.default();
+            resultCode = await cli.default();
         } else {
-            await cli();
+            resultCode = await cli();
+        }
+
+        process.exitCode = resultCode;
+        if (resultCode < 0) {
+            exit(resultCode);
         }
     } catch (err) {
         process.exitCode = -1;
