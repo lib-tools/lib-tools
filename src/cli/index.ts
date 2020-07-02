@@ -34,7 +34,7 @@ Usage:
             type: 'boolean',
             global: false
         })
-        .command(getBuildCommandModule(cliVersion));
+        .command(getBuildCommandModule());
 
     return yargsInstance;
 }
