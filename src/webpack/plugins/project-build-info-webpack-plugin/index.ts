@@ -1,10 +1,8 @@
-import { BuildOptionsInternal, ProjectBuildConfigInternal } from '../../../models/internals';
-import { LogLevelString, Logger } from '../../../utils';
+import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { Logger } from '../../../utils';
 
 export interface ProjectBuildInfoWebpackPluginOptions {
     projectBuildConfig: ProjectBuildConfigInternal;
-    buildOptions: BuildOptionsInternal;
-    logLevel?: LogLevelString;
 }
 
 export class ProjectBuildInfoWebpackPlugin {
@@ -16,20 +14,12 @@ export class ProjectBuildInfoWebpackPlugin {
 
     constructor(private readonly options: ProjectBuildInfoWebpackPluginOptions) {
         this.logger = new Logger({
-            name: `[${this.name}]`,
-            logLevel: this.options.logLevel || 'info'
+            logLevel: 'info'
         });
     }
 
     apply(): void {
-        let msg = `Processing ${this.options.projectBuildConfig._projectName}`;
-        const envStr = Object.keys(this.options.buildOptions.environment).length
-            ? JSON.stringify(this.options.buildOptions.environment)
-            : '';
-        if (envStr) {
-            msg += `env: ${envStr}`;
-        }
-
+        const msg = `Building ${this.options.projectBuildConfig._projectName}`;
         this.logger.info(msg);
     }
 }
