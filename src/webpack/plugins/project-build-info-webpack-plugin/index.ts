@@ -1,8 +1,9 @@
 import { ProjectBuildConfigInternal } from '../../../models/internals';
-import { Logger } from '../../../utils';
+import { LogLevelString, Logger } from '../../../utils';
 
 export interface ProjectBuildInfoWebpackPluginOptions {
     projectBuildConfig: ProjectBuildConfigInternal;
+    logLevel?: LogLevelString;
 }
 
 export class ProjectBuildInfoWebpackPlugin {
@@ -14,7 +15,7 @@ export class ProjectBuildInfoWebpackPlugin {
 
     constructor(private readonly options: ProjectBuildInfoWebpackPluginOptions) {
         this.logger = new Logger({
-            logLevel: 'info'
+            logLevel: this.options.logLevel || 'info'
         });
     }
 
