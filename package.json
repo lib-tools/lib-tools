@@ -27,6 +27,7 @@
     "lint": "eslint -c .eslintrc.json --ext .js,.ts .",
     "compile": "tsc --project tsconfig.build.json",
     "build": "rimraf -- dist && tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version",
+    "show-help": "node -r source-map-support/register dist/bin/lib --help",
     "samples:copy-files:build": "node -r source-map-support/register ./dist/bin/lib build --config=samples/copy-files/lib.json --verbose"
   },
   "dependencies": {
