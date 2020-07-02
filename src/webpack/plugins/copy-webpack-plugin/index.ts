@@ -32,8 +32,9 @@ export class CopyWebpackPlugin {
 
     constructor(private readonly options: CopyWebpackPluginOptions) {
         this.logger = new Logger({
-            name: `[${this.name}]`,
-            logLevel: this.options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info',
+            debugPrefix: `[${this.name}]`,
+            infoPrefix: ''
         });
     }
 
@@ -158,7 +159,12 @@ export class CopyWebpackPlugin {
 
                     const absoluteTo = path.resolve(outputPath, processedAsset.relativeTo);
 
-                    this.logger.debug(`Emitting ${processedAsset.relativeTo} to disk`);
+                    if (this.options.logLevel === 'debug') {
+                        this.logger.debug(`Emitting ${processedAsset.relativeTo} to disk`);
+                    } else {
+                        this.logger.info(`Copying ${processedAsset.relativeTo}`);
+                    }
+
                     await copy(processedAsset.absoluteFrom, absoluteTo);
 
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -177,14 +183,17 @@ export class CopyWebpackPlugin {
                     ++this.newWrittenCount;
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 } else if (!compilation.assets[processedAsset.relativeTo]) {
-                    this.logger.debug(
-                        `Emitting ${processedAsset.relativeTo}${
+                    if (this.options.logLevel === 'debug') {
+                        const msg = `Emitting ${processedAsset.relativeTo}${
                             compiler.outputFileSystem.constructor.name === 'MemoryFileSystem' &&
                             !this.options.forceWriteToDisk
                                 ? ' to memory'
                                 : ''
-                        }`
-                    );
+                        }`;
+                        this.logger.debug(msg);
+                    } else {
+                        this.logger.info(`Copying ${processedAsset.relativeTo}`);
+                    }
 
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     compilation.assets[processedAsset.relativeTo] = {
