@@ -41,8 +41,9 @@ export class CleanWebpackPlugin {
         this.options = this.prepareCleanOptions(options);
 
         this.logger = new Logger({
-            name: `[${this.name}]`,
-            logLevel: this.options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info',
+            debugPrefix: `[${this.name}]`,
+            infoPrefix: ''
         });
     }
 
@@ -466,8 +467,12 @@ export class CleanWebpackPlugin {
                 continue;
             }
 
+            let cleanOutDir = true;
+
             // validation
             if (!isSamePaths(pathToClean, outputPath)) {
+                cleanOutDir = false;
+
                 if (isSamePaths(path.parse(pathToClean).root, pathToClean)) {
                     throw new Error(`Cleaning the root directory is not permitted, path: ${pathToClean}.`);
                 }
@@ -505,36 +510,17 @@ export class CleanWebpackPlugin {
 
             const relToWorkspace = normalizeRelativePath(path.relative(workspaceRoot, pathToClean));
 
-            let retryDelete = false;
-
-            // if (this.options.host) {
-            //     const host = this.options.host;
-            //     const resolvedPath = normalize(pathToClean);
-
-            //     try {
-            //         const exists = await host.exists(resolvedPath).toPromise();
-            //         if (exists) {
-            //             this.logger.debug(`Deleting ${relToWorkspace}`);
-
-            //             await host.delete(resolvedPath).toPromise();
-            //         }
-            //     } catch (deleteError) {
-            //         if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
-            //             retryDelete = true;
-            //         } else {
-            //             throw deleteError;
-            //         }
-            //     }
-            // }
-
-            // (!this.options.host || retryDelete) &&
-            if (retryDelete && (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk)) {
+            if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
                 const exists = await pathExists(pathToClean);
                 if (exists) {
-                    if (!retryDelete) {
+                    if (this.options.logLevel === 'debug') {
                         this.logger.debug(`Deleting ${relToWorkspace}`);
+                    } else if (cleanOutDir) {
+                        this.logger.info('Deleting output directory');
                     }
+
                     let retryDeleteCount = 0;
+                    let retryDelete = false;
 
                     do {
                         try {
