@@ -11,10 +11,6 @@ export interface BuildOptions {
      */
     filter?: string | string[];
     /**
-     * Display compilation progress in percentage.
-     */
-    progress?: boolean;
-    /**
      * Logging level for output logging.
      */
     logLevel?: 'debug' | 'info' | 'warn' | 'none';
