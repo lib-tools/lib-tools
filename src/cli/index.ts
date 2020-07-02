@@ -39,7 +39,7 @@ Usage:
             }
 
             yi.showHelp();
-            console.error(`\n${colorize(msg, 'red')}\n`);
+            console.error(`\n${colorize(msg, 'red')}`);
 
             process.exit(1);
         })
@@ -77,11 +77,11 @@ export default async function (): Promise<number> {
         return 0;
     }
 
-    if (command === 'help' || argv.help) {
-        yargsInstance.showHelp();
+    // if (command === 'help') {
+    //     yargsInstance.showHelp();
 
-        return 0;
-    }
+    //     return 0;
+    // }
 
     return 0;
 }
