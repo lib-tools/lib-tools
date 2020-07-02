@@ -15,12 +15,13 @@ export class ProjectBuildInfoWebpackPlugin {
 
     constructor(private readonly options: ProjectBuildInfoWebpackPluginOptions) {
         this.logger = new Logger({
-            logLevel: this.options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info',
+            infoPrefix: ''
         });
     }
 
     apply(): void {
-        const msg = `Building ${this.options.projectBuildConfig._projectName}`;
+        const msg = `Building project ${this.options.projectBuildConfig._projectName}`;
         this.logger.info(msg);
     }
 }
