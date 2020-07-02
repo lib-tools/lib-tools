@@ -4,12 +4,13 @@ import { colorize } from '../utils/colorize';
 
 import { getBuildCommandModule } from './build/build-command-module';
 
+const cliPackageName = global.libCli ? global.libCli.packageName : '';
 const cliVersion = global.libCli ? global.libCli.version : '';
 const cliIsGlobal = global.libCli ? global.libCli.isGlobal : false;
 const cliIsLink = global.libCli ? global.libCli.isLink : false;
 
 function initYargs(args?: string[]): yargs.Argv {
-    const cliUsage = `${colorize(`lib-tools ${cliVersion}`, 'white')}\n
+    const cliUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
 Usage:
   lib [options...]`;
 
