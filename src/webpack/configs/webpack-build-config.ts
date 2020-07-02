@@ -21,8 +21,6 @@ export async function getWebpackBuildConfig(
     env?: string | { [key: string]: boolean | string },
     argv?: BuildCommandOptions & { [key: string]: unknown }
 ): Promise<Configuration[]> {
-    // const startTime = argv && argv._startTime && typeof argv._startTime === 'number' ? argv._startTime : Date.now();
-
     if (!configPath) {
         throw new Error("The 'configPath' parameter is required.");
     }
