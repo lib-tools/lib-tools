@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "types": [],
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "../out-tsc/schemas"
+  },
+  "include": [
+    "../src/models/*.ts"
+  ]
+}
