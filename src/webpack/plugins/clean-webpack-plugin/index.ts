@@ -92,7 +92,6 @@ export class CleanWebpackPlugin {
 
             this.logger.debug('The before build cleaning started');
 
-            // if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk && !this.options.host) {
             if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk) {
                 this.logger.debug(
                     `No persisted output file system: '${compiler.outputFileSystem.constructor.name}', skipping`
@@ -138,7 +137,6 @@ export class CleanWebpackPlugin {
                 return;
             }
 
-            // if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk && !this.options.host) {
             if (!this.isPersistedOutputFileSystem && !this.options.forceCleanToDisk) {
                 this.logger.debug(
                     `No persisted output file system: '${compiler.outputFileSystem.constructor.name}', skipping`
@@ -232,10 +230,6 @@ export class CleanWebpackPlugin {
             });
         }
 
-        // const outputPathFragements: Path[] = [];
-        // const outputDirFragements: Path[] = [];
-        // const outputPathFragementsInitialized = false;
-
         // calculate excludes
         const patternsToExclude: string[] = [];
         const pathsToExclude: string[] = [];
@@ -279,23 +273,6 @@ export class CleanWebpackPlugin {
                             }
                         }
                     }
-                    // else if (this.options.host) {
-                    //     const host = this.options.host;
-                    //     const resolvedPath = normalize(excludePath);
-                    //     const exists = await host.exists(resolvedPath).toPromise();
-                    //     if (exists) {
-                    //         const isDir = await host.isDirectory(resolvedPath).toPromise();
-                    //         if (isDir) {
-                    //             if (!existedDirsToExclude.includes(excludePath)) {
-                    //                 existedDirsToExclude.push(excludePath);
-                    //             }
-                    //         } else {
-                    //             if (!existedFilesToExclude.includes(excludePath)) {
-                    //                 existedFilesToExclude.push(excludePath);
-                    //             }
-                    //         }
-                    //     }
-                    // }
                 })
             );
         }
@@ -325,53 +302,6 @@ export class CleanWebpackPlugin {
                     })
                 );
             }
-            // else if (this.options.host) {
-            //     const host = this.options.host;
-            //     if (!outputPathFragementsInitialized) {
-            //         await this.calculateOutputPathRecursive(
-            //             host,
-            //             outputPathFragements,
-            //             outputDirFragements,
-            //             normalize(outputPath)
-            //         );
-            //         outputPathFragementsInitialized = true;
-            //     }
-
-            //     if (outputPathFragements.length > 0) {
-            //         for (const p of outputPathFragements) {
-            //             const sysPath = getSystemPath(p);
-            //             const absPath = path.isAbsolute(sysPath)
-            //                 ? path.resolve(sysPath)
-            //                 : path.resolve(outputPath, sysPath);
-            //             const relToOutDir = normalizeRelativePath(path.relative(outputPath, absPath));
-
-            //             if (relToOutDir) {
-            //                 let il = patternsToExclude.length;
-            //                 let found = false;
-
-            //                 while (il--) {
-            //                     const ignoreGlob = patternsToExclude[il];
-            //                     if (minimatch(relToOutDir, ignoreGlob, { dot: true, matchBase: true })) {
-            //                         found = true;
-            //                         break;
-            //                     }
-            //                 }
-
-            //                 if (found) {
-            //                     if (outputDirFragements.includes(p)) {
-            //                         if (!existedDirsToExclude.includes(absPath)) {
-            //                             existedDirsToExclude.push(absPath);
-            //                         }
-            //                     } else {
-            //                         if (!existedFilesToExclude.includes(absPath)) {
-            //                             existedFilesToExclude.push(absPath);
-            //                         }
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
         }
 
         const pathsToClean: string[] = [];
@@ -396,36 +326,6 @@ export class CleanWebpackPlugin {
                             }
                         });
                     }
-                    // else if (this.options.host) {
-                    //     const host = this.options.host;
-
-                    //     if (!outputPathFragementsInitialized) {
-                    //         await this.calculateOutputPathRecursive(
-                    //             host,
-                    //             outputPathFragements,
-                    //             outputDirFragements,
-                    //             normalize(outputPath)
-                    //         );
-                    //         outputPathFragementsInitialized = true;
-                    //     }
-
-                    //     if (outputPathFragements.length > 0) {
-                    //         outputPathFragements.forEach((p) => {
-                    //             const sysPath = getSystemPath(p);
-                    //             const absPath = path.isAbsolute(sysPath)
-                    //                 ? path.resolve(sysPath)
-                    //                 : path.resolve(outputPath, sysPath);
-                    //             const relToOutDir = normalizeRelativePath(path.relative(outputPath, absPath));
-                    //             if (relToOutDir) {
-                    //                 if (minimatch(relToOutDir, cleanPattern, { dot: true, matchBase: true })) {
-                    //                     if (!pathsToClean.includes(absPath)) {
-                    //                         pathsToClean.push(absPath);
-                    //                     }
-                    //                 }
-                    //             }
-                    //         });
-                    //     }
-                    // }
                 }
             })
         );
@@ -515,8 +415,12 @@ export class CleanWebpackPlugin {
                 if (exists) {
                     if (this.options.logLevel === 'debug') {
                         this.logger.debug(`Deleting ${relToWorkspace}`);
-                    } else if (cleanOutDir) {
-                        this.logger.info('Deleting output directory');
+                    } else {
+                        if (cleanOutDir) {
+                            this.logger.info(`Deleting output directory: '${relToWorkspace}'`);
+                        } else {
+                            this.logger.debug(`Deleting ${relToWorkspace}`);
+                        }
                     }
 
                     let retryDeleteCount = 0;
