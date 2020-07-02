@@ -2,8 +2,11 @@ import * as yargs from 'yargs';
 
 import { colorize } from '../../utils/colorize';
 
-export function getBuildCommandModule(cliVersion: string): yargs.CommandModule {
-    const buildCommandUsage = `${colorize(`lib-tools ${cliVersion}`, 'white')}\n
+const cliPackageName = global.libCli ? global.libCli.packageName : '';
+const cliVersion = global.libCli ? global.libCli.version : '';
+
+export function getBuildCommandModule(): yargs.CommandModule {
+    const buildCommandUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
 Usage:
   lib build [options...]`;
 
