@@ -26,7 +26,8 @@
     "rimraf": "rimraf",
     "lint": "eslint -c .eslintrc.json --ext .js,.ts .",
     "compile": "tsc --project tsconfig.build.json",
-    "build": "rimraf -- dist && tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version"
+    "build": "rimraf -- dist && tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version",
+    "samples:copy-files:build": "node -r source-map-support/register ./dist/bin/lib build --config=samples/copy-files/lib.json --verbose"
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
@@ -78,6 +79,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.2",
+    "source-map-support": "^0.5.19",
     "typescript": "~3.9.5",
     "typescript-json-schema": "^0.42.0"
   },
