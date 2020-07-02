@@ -9,20 +9,17 @@ const cliVersion = global.libCli ? global.libCli.version : '';
 const cliIsGlobal = global.libCli ? global.libCli.isGlobal : false;
 const cliIsLink = global.libCli ? global.libCli.isLink : false;
 
-function initYargs(args?: string[]): yargs.Argv {
+function initYargs(): yargs.Argv {
     const cliUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
 Usage:
-  lib [options...]`;
-
-    if (args) {
-        yargs.parse(args);
-    }
-
+  lib [command] [options...]`;
     const yargsInstance = yargs
         .usage(cliUsage)
-        .example('lib build', 'Bundle the project(s)')
-        .example('lib -h', 'Show help')
+        .example('lib build', 'Build the project(s)')
+        .example('lib test', 'Test the project(s)')
+        .example('lib --help', 'Show help')
         .version(false)
+        .help('help')
         .option('h', {
             alias: 'help',
             describe: 'Show help',
@@ -34,25 +31,27 @@ Usage:
             type: 'boolean',
             global: false
         })
-        .command(getBuildCommandModule());
+        .command(getBuildCommandModule())
+        .showHelpOnFail(false)
+        .fail((msg, err, yi) => {
+            if (err) {
+                throw err;
+            }
+
+            yi.showHelp();
+            console.error(`\n${colorize(msg, 'red')}\n`);
+
+            process.exit(1);
+        })
+        .strict();
 
     return yargsInstance;
 }
 
 export default async function (): Promise<number> {
-    let args = process.argv.slice(2);
-    let isHelpCommand = false;
-    if (args.includes('help')) {
-        isHelpCommand = true;
-        args = args.filter((p: string) => p !== 'help');
-        args.push('-h');
-    } else if (args.includes('--help')) {
-        isHelpCommand = true;
-        args = args.filter((p: string) => p !== '--help');
-        args.push('-h');
-    }
+    const yargsInstance = initYargs();
+    yargsInstance.parse();
 
-    const yargsInstance = initYargs(args);
     const command = yargsInstance.argv._[0] ? yargsInstance.argv._[0].toLowerCase() : undefined;
     const argv = yargsInstance.argv;
 
@@ -78,13 +77,11 @@ export default async function (): Promise<number> {
         return 0;
     }
 
-    if (command === 'help' || argv.help || isHelpCommand) {
+    if (command === 'help' || argv.help) {
         yargsInstance.showHelp();
 
         return 0;
     }
-
-    yargsInstance.showHelp();
 
     return 0;
 }
