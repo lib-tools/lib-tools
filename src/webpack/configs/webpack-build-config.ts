@@ -163,11 +163,8 @@ async function getWebpackBuildConfigInternal(
     buildOptions: BuildOptionsInternal
 ): Promise<Configuration> {
     const plugins: Plugin[] = [
-        // Info plugin
         new ProjectBuildInfoWebpackPlugin({
-            projectBuildConfig,
-            buildOptions,
-            logLevel: buildOptions.logLevel
+            projectBuildConfig
         })
     ];
 
