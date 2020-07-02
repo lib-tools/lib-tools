@@ -35,10 +35,6 @@ Usage:
                     describe: 'Filter project config by name(s).',
                     type: 'array'
                 })
-                .option('progress', {
-                    describe: 'Display compilation progress in percentage.',
-                    type: 'boolean'
-                })
                 .option('logLevel', {
                     describe: 'Log level for output logging.',
                     type: 'string'
