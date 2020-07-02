@@ -21,10 +21,12 @@
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
   "scripts": {
+    "eslint": "eslint",
     "tsc": "tsc",
     "rimraf": "rimraf",
+    "lint": "eslint -c .eslintrc.json --ext .js,.ts .",
     "compile": "tsc --project tsconfig.build.json",
-    "build": "rimraf -- dist && tsc --project tsconfig.build.json && node tools/copy-files.js && node dist/bin/lib --version"
+    "build": "rimraf -- dist && tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version"
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
@@ -76,7 +78,8 @@
     "eslint-plugin-prettier": "^3.1.4",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.2",
-    "typescript": "~3.9.5"
+    "typescript": "~3.9.5",
+    "typescript-json-schema": "^0.42.0"
   },
   "optionalDependencies": {
     "sass": "^1.26.9"
