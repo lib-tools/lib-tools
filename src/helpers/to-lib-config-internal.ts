@@ -13,10 +13,11 @@ export function toLibConfigInternal(
         projects: {}
     };
 
-    const keys = Object.keys(libConfig);
+    const projects = libConfig.projects;
+    const keys = Object.keys(projects);
 
     for (const key of keys) {
-        const project = libConfig.projects[key];
+        const project = projects[key];
 
         if (project.root && path.isAbsolute(project.root)) {
             throw new Error(`The 'projects[${key}].root' must be relative path.`);

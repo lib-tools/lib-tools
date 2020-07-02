@@ -6,5 +6,4 @@ export * from './read-project-config-schema';
 export * from './run-webpack';
 export * from './to-lib-config-internal';
 export * from './to-project-build-config-internal';
-export * from './validate-output-path';
 export * from './webpack-to-string-stats-options';

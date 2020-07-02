@@ -11,7 +11,7 @@ export async function readLibConfigSchema(): Promise<{ [key: string]: unknown }>
         return cache.libConfigSchema;
     }
 
-    const schemaRootPath = path.resolve(__dirname, '../schemas');
+    const schemaRootPath = path.resolve(__dirname, '../../schemas');
     const schema = await readJson(path.resolve(schemaRootPath, 'schema.json'));
 
     if (schema.$schema) {

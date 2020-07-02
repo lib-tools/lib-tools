@@ -11,7 +11,7 @@ export async function readProjectConfigSchema(): Promise<{ [key: string]: unknow
         return cache.projectConfigSchema;
     }
 
-    const schemaRootPath = path.resolve(__dirname, '../schemas');
+    const schemaRootPath = path.resolve(__dirname, '../../schemas');
     const schema = await readJson(path.resolve(schemaRootPath, 'project-config-schema.json'));
 
     if (schema.$schema) {

@@ -24,7 +24,6 @@ import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-conten
 import { readPackageJson } from './read-package-json';
 import { readTsConfigFile } from './read-ts-config-file';
 import { toTsScriptTarget } from './to-ts-script-target';
-import { validateOutputPath } from './validate-output-path';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
 
@@ -103,24 +102,71 @@ export async function toProjectBuildConfigInternal(
         projectBuildConfig.banner
     );
 
-    let outputPath: string;
+    let outputPathAbs: string | null = null;
+
     if (projectBuildConfig.outputPath) {
-        outputPath = path.resolve(workspaceRoot, projectBuildConfig.outputPath);
+        const configErrorLocation = `projects[${projectName}].outputPath`;
+        if (path.isAbsolute(projectBuildConfig.outputPath)) {
+            throw new Error(`The '${configErrorLocation}' must be relative path.`);
+        }
+
+        outputPathAbs = path.resolve(projectRoot, projectBuildConfig.outputPath);
+
+        if (isSamePaths(workspaceRoot, outputPathAbs)) {
+            throw new Error(`The '${configErrorLocation}' must not be the same as workspace root directory.`);
+        }
+
+        if (isSamePaths(projectRoot, outputPathAbs)) {
+            throw new Error(`The '${configErrorLocation}' must not be the same as project root directory.`);
+        }
+
+        if (outputPathAbs === path.parse(outputPathAbs).root) {
+            throw new Error(`The '${configErrorLocation}' must not be the same as system root directory.`);
+        }
+
+        const projectRootRoot = path.parse(projectRoot).root;
+        if (outputPathAbs === projectRootRoot) {
+            throw new Error(`The '${configErrorLocation}' must not be the same as system root directory.`);
+        }
+
+        if (isInFolder(outputPathAbs, workspaceRoot)) {
+            throw new Error(
+                `The workspace root folder must not be inside output directory. Change outputPath in 'projects[${projectName}].outputPath'.`
+            );
+        }
+
+        if (isInFolder(outputPathAbs, projectRoot)) {
+            throw new Error(
+                `The project root folder must not be inside output directory. Change outputPath in 'projects[${projectName}].outputPath'.`
+            );
+        }
     } else {
-        outputPath = `dist/packages/${packageNameWithoutScope}`;
+        const tempOutputPath = path.resolve(projectRoot, `dist/packages/${packageNameWithoutScope}`);
+        if (
+            !isSamePaths(workspaceRoot, tempOutputPath) &&
+            !isSamePaths(projectRoot, tempOutputPath) &&
+            !isInFolder(tempOutputPath, workspaceRoot) &&
+            !isInFolder(tempOutputPath, projectRoot)
+        ) {
+            outputPathAbs = tempOutputPath;
+        }
     }
 
-    validateOutputPath(outputPath, workspaceRoot, projectRoot, projectName);
+    if (!outputPathAbs) {
+        throw new Error(
+            `The outputPath could not be automatically detected. Set outputPath in 'projects[${projectName}].outputPath' manually.`
+        );
+    }
 
     let packageJsonOutDir: string;
     if (projectBuildConfig.packageJsonOutDir) {
-        packageJsonOutDir = path.resolve(outputPath, projectBuildConfig.packageJsonOutDir);
+        packageJsonOutDir = path.resolve(outputPathAbs, projectBuildConfig.packageJsonOutDir);
     } else {
         if (nestedPackage) {
             const nestedPath = packageNameWithoutScope.substr(packageNameWithoutScope.indexOf('/') + 1);
-            packageJsonOutDir = path.resolve(outputPath, nestedPath);
+            packageJsonOutDir = path.resolve(outputPathAbs, nestedPath);
         } else {
-            packageJsonOutDir = outputPath;
+            packageJsonOutDir = outputPathAbs;
         }
     }
 
@@ -133,7 +179,7 @@ export async function toProjectBuildConfigInternal(
         _nodeModulesPath: nodeModulesPath,
         _projectRoot: projectRoot,
         _projectName: projectName,
-        _outputPath: outputPath,
+        _outputPath: outputPathAbs,
         _packageJsonPath: packageJsonPath,
         _packageJson: packageJson,
         _packageName: packageName,
