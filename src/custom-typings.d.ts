@@ -1,11 +1,12 @@
 declare namespace NodeJS {
     export interface Global {
         libCli?: {
-            startTime: number;
+            packageName: string;
             version: string;
             isGlobal: boolean;
             isLink: boolean;
             location: string;
+            startTime: number;
         };
     }
 }
