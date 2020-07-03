@@ -15,6 +15,11 @@ export interface ProjectConfig {
     root?: string;
 
     /**
+     * Set true to skip for processing tasks.
+     */
+    skip?: boolean;
+
+    /**
      * The task configurations.
      */
     tasks?: {
