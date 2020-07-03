@@ -21,7 +21,7 @@ export class ProjectBuildInfoWebpackPlugin {
     }
 
     apply(): void {
-        const msg = `Building project ${this.options.projectBuildConfig._projectName}`;
+        const msg = `Preparing project ${this.options.projectBuildConfig._projectName} for build`;
         this.logger.info(msg);
     }
 }
