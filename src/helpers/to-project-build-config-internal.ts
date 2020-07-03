@@ -154,20 +154,16 @@ export async function toProjectBuildConfigInternal(
 
     if (!outputPathAbs) {
         throw new Error(
-            `The outputPath could not be automatically detected. Set outputPath in 'projects[${projectName}].outputPath' manually.`
+            `The outputPath could not be automatically detected. Set value in 'projects[${projectName}].outputPath' manually.`
         );
     }
 
     let packageJsonOutDir: string;
-    if (projectBuildConfig.packageJsonOutDir) {
-        packageJsonOutDir = path.resolve(outputPathAbs, projectBuildConfig.packageJsonOutDir);
+    if (nestedPackage) {
+        const nestedPath = packageNameWithoutScope.substr(packageNameWithoutScope.indexOf('/') + 1);
+        packageJsonOutDir = path.resolve(outputPathAbs, nestedPath);
     } else {
-        if (nestedPackage) {
-            const nestedPath = packageNameWithoutScope.substr(packageNameWithoutScope.indexOf('/') + 1);
-            packageJsonOutDir = path.resolve(outputPathAbs, nestedPath);
-        } else {
-            packageJsonOutDir = outputPathAbs;
-        }
+        packageJsonOutDir = outputPathAbs;
     }
 
     const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
