@@ -286,10 +286,6 @@ export interface ProjectBuildConfigBase {
      * Bundle target options.
      */
     bundles?: BundleOptions[] | boolean;
-    /**
-     * Prepare package.json file for publish.
-     */
-    preparePackageJson?: boolean;
 }
 
 /**
