@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pathExists, readFile } from 'fs-extra';
 import * as ts from 'typescript';
 
-import { ProjectBuildConfig, StyleEntry, TsTranspilationOptions } from '../models';
+import { AssetEntry, ProjectBuildConfig, StyleEntry, TsTranspilationOptions } from '../models';
 import {
     BuildOptionsInternal,
     BundleOptionsInternal,
@@ -168,6 +168,23 @@ export async function toProjectBuildConfigInternal(
 
     const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
 
+    let copyAssets: (string | AssetEntry)[] | null = null;
+    if (projectBuildConfig.copy && Array.isArray(projectBuildConfig.copy)) {
+        copyAssets = projectBuildConfig.copy;
+    } else if (projectBuildConfig.copy == null || projectBuildConfig.copy !== false) {
+        const filesToCopy: string[] = [];
+        const foundReadMeFile = await findUp(['README.md'], projectRoot, workspaceRoot);
+        if (foundReadMeFile) {
+            filesToCopy.push(path.relative(projectRoot, foundReadMeFile));
+        }
+        const foundLicenseFile = await findUp(['LICENSE', 'LICENSE.txt'], projectRoot, workspaceRoot);
+        if (foundLicenseFile) {
+            filesToCopy.push(path.relative(projectRoot, foundLicenseFile));
+        }
+
+        copyAssets = filesToCopy;
+    }
+
     const projectBuildConfigInternal: ProjectBuildConfigInternal = {
         ...projectBuildConfig,
         _configPath: configPath,
@@ -187,6 +204,7 @@ export async function toProjectBuildConfigInternal(
         _rootPackageJsonPath: rootPackageJsonPath,
         _rootPackageJson: rootPackageJson,
         _bannerText: bannerText,
+        _copyAssets: copyAssets,
         _packageJsonOutDir: packageJsonOutDir
     };
 
