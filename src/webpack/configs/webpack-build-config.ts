@@ -15,6 +15,7 @@ import { BuildOptionsInternal, ProjectBuildConfigInternal, ProjectConfigInternal
 import { formatValidationError, readJsonWithComments, validateSchema } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
+import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
 
 export async function getWebpackBuildConfig(
     configPath: string,
@@ -221,20 +222,8 @@ async function getWebpackBuildConfigInternal(
         );
     }
 
-    // Copy package.json plugin
-    if (projectBuildConfig.packageJsonCopy) {
-        const pluginModule = await import('../plugins/package-json-webpack-plugin');
-        const PackageJsonFileWebpackPlugin = pluginModule.PackageJsonFileWebpackPlugin;
-        plugins.push(
-            new PackageJsonFileWebpackPlugin({
-                projectBuildConfig,
-                logLevel: buildOptions.logLevel
-            })
-        );
-    }
-
     // Copy plugin
-    if (projectBuildConfig.copy && Array.isArray(projectBuildConfig.copy) && projectBuildConfig.copy.length > 0) {
+    if (projectBuildConfig.copy && projectBuildConfig.copy.length > 0) {
         const pluginModule = await import('../plugins/copy-webpack-plugin');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
         plugins.push(
@@ -248,6 +237,14 @@ async function getWebpackBuildConfigInternal(
             })
         );
     }
+
+    // package.json plugin
+    plugins.push(
+        new PackageJsonFileWebpackPlugin({
+            projectBuildConfig,
+            logLevel: buildOptions.logLevel
+        })
+    );
 
     const webpackConfig: Configuration = {
         name: projectBuildConfig._projectName,
