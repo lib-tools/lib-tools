@@ -1,0 +1,31 @@
+@mixin app-util-styles($config) {
+    $enable-clearfix-util-classes: map-get($config, 'enable-clearfix-util-classes');
+    $enable-sr-reader-util-classes: map-get($config, 'enable-sr-reader-util-classes');
+
+    @if $enable-clearfix-util-classes {
+        .clearfix {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .clearfix:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    }
+
+    @if $enable-sr-reader-util-classes {
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../dist/schemas/schema.json#",
+  "projects": {
+    "css-scss-styles-pack-demo": {
+      "root": "./",
+      "tasks": {
+        "build": {
+          "styles": [{
+            "input": "src/styles.scss",
+            "bundleName": "styles.css"
+          }]
+
+        }
+      }
+    }
+  }
+}

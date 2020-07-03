@@ -1,0 +1,37 @@
+@import 'reset';
+@import 'util';
+
+@function styles-config(
+    $reboot: true,
+    $box-sizing-to-border-box: false,
+
+    $font-family-base: '-apple-system, BlinkMacSystemFont, "Segoe UI",Roboto, RobotoDraft, "San Francisco", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    $font-size-base: 14px,
+    $line-height-base: 20px,
+    $font-weight-base: 400,
+
+    $enable-clearfix-util-classes: false,
+    $enable-sr-reader-util-classes: false) {
+        $config: (
+            reboot: $reboot,
+            box-sizing-to-border-box: $box-sizing-to-border-box,
+            font-family-base: $font-family-base,
+            font-size-base: $font-size-base,
+            line-height-base: $line-height-base,
+            font-weight-base: $font-weight-base,
+
+            enable-clearfix-util-classes: $enable-clearfix-util-classes,
+            enable-sr-reader-util-classes: $enable-sr-reader-util-classes,
+        );
+
+        @return  $config;
+    }
+
+@mixin styles-core($config: null) {
+    @if $config==null {
+        $config: styles-config();
+    }
+
+    @include styles-reset($config);
+    @include util-styles($config);
+}
