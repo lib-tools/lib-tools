@@ -89,7 +89,6 @@ export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
     _bundles?: BundleOptionsInternal[];
 
     // package.json
-    _preparePackageJson: boolean;
     _packageJsonOutDir: string;
     _packageEntryPoints?: { [key: string]: string };
 }
