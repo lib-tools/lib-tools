@@ -1,7 +1,7 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
 import { BundleOptions, ProjectBuildConfig, TsTranspilationOptions } from '../project-build-config';
-import { PackageEntrypoints, PackageJsonLike } from './package-jon-like';
+import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleParsedEntry {
     paths: string[];
@@ -88,6 +88,8 @@ export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
 
     _bundles?: BundleOptionsInternal[];
 
+    // package.json
+    _preparePackageJson: boolean;
     _packageJsonOutDir: string;
-    _packageEntryPoints?: PackageEntrypoints;
+    _packageEntryPoints?: { [key: string]: string };
 }
