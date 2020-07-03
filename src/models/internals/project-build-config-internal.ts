@@ -1,6 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { BundleOptions, ProjectBuildConfig, TsTranspilationOptions } from '../project-build-config';
+import { AssetEntry, BundleOptions, ProjectBuildConfig, TsTranspilationOptions } from '../project-build-config';
 import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleParsedEntry {
@@ -57,7 +57,6 @@ export interface BundleOptionsInternal extends BundleOptions {
 export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
     _workspaceRoot: string;
     _configPath: string;
-
     _nodeModulesPath: string | null;
 
     _projectName: string;
@@ -87,6 +86,8 @@ export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
     _styleParsedEntries?: StyleParsedEntry[];
 
     _bundles?: BundleOptionsInternal[];
+
+    _copyAssets: (string | AssetEntry)[] | null;
 
     // package.json
     _packageJsonOutDir: string;
