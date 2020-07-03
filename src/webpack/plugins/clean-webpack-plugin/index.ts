@@ -20,7 +20,6 @@ export interface CleanWebpackPluginOptions {
 interface CleanOptionsInternal extends CleanOptions {
     workspaceRoot: string;
     outputPath: string;
-    cacheDirectries?: string[];
     forceCleanToDisk?: boolean;
     logLevel?: LogLevelString;
 }
@@ -72,9 +71,6 @@ export class CleanWebpackPlugin {
 
             if (
                 !beforeBuildOptions.cleanOutDir &&
-                !beforeBuildOptions.cleanCache &&
-                beforeBuildOptions.cleanCache &&
-                (!this.options.cacheDirectries || !this.options.cacheDirectries.length) &&
                 (!beforeBuildOptions.paths || (beforeBuildOptions.paths && !beforeBuildOptions.paths.length))
             ) {
                 this.beforeRunCleaned = true;
@@ -224,12 +220,6 @@ export class CleanWebpackPlugin {
             });
         }
 
-        if (this.options.cacheDirectries && this.options.cacheDirectries.length) {
-            this.options.cacheDirectries.forEach((p) => {
-                rawPathsToClean.push(p);
-            });
-        }
-
         // calculate excludes
         const patternsToExclude: string[] = [];
         const pathsToExclude: string[] = [];
@@ -330,8 +320,6 @@ export class CleanWebpackPlugin {
             })
         );
 
-        const cachePaths = this.options.cacheDirectries || [];
-
         for (const pathToClean of pathsToClean) {
             if (
                 existedFilesToExclude.includes(pathToClean) ||
@@ -398,8 +386,7 @@ export class CleanWebpackPlugin {
 
                 if (
                     (!isInFolder(outputPath, pathToClean) || isSamePaths(outputPath, pathToClean)) &&
-                    !this.options.allowOutsideOutDir &&
-                    !cachePaths.includes(pathToClean)
+                    !this.options.allowOutsideOutDir
                 ) {
                     throw new Error(
                         `Cleaning outside of output directory is disabled, path to clean: ${pathToClean}.` +
@@ -475,10 +462,6 @@ export class CleanWebpackPlugin {
             beforeBuildOption.cleanOutDir = false;
         } else if (beforeBuildOption.cleanOutDir == null) {
             beforeBuildOption.cleanOutDir = true;
-        }
-
-        if (beforeBuildOption.cleanCache == null) {
-            beforeBuildOption.cleanCache = true;
         }
 
         cleanOptions.beforeBuild = beforeBuildOption;
