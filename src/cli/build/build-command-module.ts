@@ -32,7 +32,7 @@ Usage:
                     type: 'boolean'
                 })
                 .option('filter', {
-                    describe: 'Filter project config by name(s).',
+                    describe: 'Filter project to build by name(s).',
                     type: 'array'
                 })
                 .option('logLevel', {
@@ -52,7 +52,7 @@ Usage:
                     type: 'boolean'
                 })
                 .option('version', {
-                    describe: "Set or override library package(s) version.'.",
+                    describe: 'Set or override library package(s) version.',
                     type: 'string'
                 }),
         handler: (null as unknown) as () => {
