@@ -36,10 +36,6 @@ export class PackageJsonFileWebpackPlugin {
     }
 
     async copyPackageJsonFile(): Promise<void> {
-        if (!this.projectBuildConfig._preparePackageJson) {
-            return;
-        }
-
         this.logger.info('Preparing package.json file for publish');
 
         const packageJson = JSON.parse(JSON.stringify(this.projectBuildConfig._packageJson)) as PackageJsonLike;
