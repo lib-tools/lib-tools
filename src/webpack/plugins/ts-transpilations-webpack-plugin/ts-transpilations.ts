@@ -103,7 +103,6 @@ async function afterTsTranspileTask(
 
     // Replace version
     if (
-        projectBuildConfig.replaceVersionPlaceholder !== false &&
         projectBuildConfig._packageVersion &&
         (tsTranspilation._index === 0 ||
             (tsTranspilation._index > 0 && projectBuildConfig._prevTsTranspilationVersionReplaced))
