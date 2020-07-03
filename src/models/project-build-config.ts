@@ -224,9 +224,9 @@ export interface ProjectBuildConfigBase {
     /**
      * Copy options.
      */
-    copy?: (string | AssetEntry)[];
+    copy?: (string | AssetEntry)[] | boolean;
     /**
-     * List of global style entries.
+     * List of style entries to bundle.
      */
     styles?: (string | StyleEntry)[];
     /**
@@ -238,22 +238,22 @@ export interface ProjectBuildConfigBase {
      */
     tsConfig?: string;
     /**
-     * Banner text to add at the top of each generated files. It can be text file name or raw text.
+     * Banner text to add at the top of each generated files. It can be text file path or raw text.
      */
     banner?: string;
     /**
      * If true, sourcemaps will be generated.
      */
     sourceMap?: boolean;
-    /**
-     * If true, this project config will be skipped by the build process.
-     */
-    skip?: boolean;
 
     /**
      * Typescript transpilation options.
      */
     tsTranspilations?: TsTranspilationOptions[] | boolean;
+    /**
+     * Bundle target options.
+     */
+    bundles?: BundleOptions[] | boolean;
     /**
      * The main entry point file for package.json.
      */
@@ -278,10 +278,6 @@ export interface ProjectBuildConfigBase {
      * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
      */
     peerDependenciesAsExternals?: boolean;
-    /**
-     * Bundle target options.
-     */
-    bundles?: BundleOptions[] | boolean;
 }
 
 /**
