@@ -5,6 +5,10 @@
       "root": "./",
       "tasks": {
         "build": {
+          "outputPath": "dist",
+          "copy": [
+
+          ],
           "styles": [{
             "input": "src/styles.scss",
             "bundleName": "styles.css"
