@@ -9,11 +9,7 @@ export interface BeforeBuildCleanOptions {
      */
     cleanOutDir?: boolean;
     /**
-     * If true, delete cache directories before build.
-     */
-    cleanCache?: boolean;
-    /**
-     * Paths to be deleted.
+     * File or directory paths to be deleted.
      */
     paths?: string[];
     /**
@@ -27,7 +23,7 @@ export interface BeforeBuildCleanOptions {
  */
 export interface AfterEmitCleanOptions {
     /**
-     * Paths to be deleted.
+     * File or directory paths to be deleted.
      */
     paths?: string[];
     /**
