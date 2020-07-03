@@ -406,25 +406,11 @@ export class CleanWebpackPlugin {
                         if (cleanOutDir) {
                             this.logger.info(`Deleting output directory ${relToWorkspace}`);
                         } else {
-                            this.logger.debug(`Deleting ${relToWorkspace}`);
+                            this.logger.info(`Deleting ${relToWorkspace}`);
                         }
                     }
 
-                    let retryDeleteCount = 0;
-                    let retryDelete = false;
-
-                    do {
-                        try {
-                            await remove(pathToClean);
-                            retryDelete = false;
-                        } catch (deleteError) {
-                            retryDelete = true;
-                            ++retryDeleteCount;
-                            if (retryDeleteCount >= 3) {
-                                throw deleteError;
-                            }
-                        }
-                    } while (retryDelete && retryDeleteCount < 3);
+                    await remove(pathToClean);
                 }
             }
         }
