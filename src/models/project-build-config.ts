@@ -287,17 +287,9 @@ export interface ProjectBuildConfigBase {
      */
     bundles?: BundleOptions[] | boolean;
     /**
-     * The output root directory for package.json file.
+     * Prepare package.json file for publish.
      */
-    packageJsonOutDir?: string;
-    /**
-     * Copy package.json file to output path.
-     */
-    packageJsonCopy?: boolean;
-    /**
-     * If true, replaces version placeholder with package version.
-     */
-    replaceVersionPlaceholder?: boolean;
+    preparePackageJson?: boolean;
 }
 
 /**
