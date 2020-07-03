@@ -36,17 +36,22 @@ export class PackageJsonFileWebpackPlugin {
     }
 
     async copyPackageJsonFile(): Promise<void> {
-        if (!this.projectBuildConfig._shouldCopyPackageJson) {
+        if (!this.projectBuildConfig._preparePackageJson) {
             return;
         }
 
-        this.logger.info('Copying and updating package.json file');
+        this.logger.info('Preparing package.json file for publish');
 
-        // merge config
-        const packageJson: PackageJsonLike = {
-            ...JSON.parse(JSON.stringify(this.projectBuildConfig._packageJson)),
-            ...(this.projectBuildConfig._packageEntryPoints || {})
-        };
+        const packageJson = JSON.parse(JSON.stringify(this.projectBuildConfig._packageJson)) as PackageJsonLike;
+
+        // Update entry points
+        if (this.projectBuildConfig._packageEntryPoints) {
+            const packageEntryPoints = this.projectBuildConfig._packageEntryPoints;
+            Object.keys(packageEntryPoints).forEach((key) => {
+                this.logger.debug(`Updating package entry point '${key}' in package.json`);
+                packageJson[key] = packageEntryPoints[key];
+            });
+        }
 
         const rootPackageJson = this.projectBuildConfig._rootPackageJson;
         const packageJsonPathAreEqual =
@@ -54,6 +59,7 @@ export class PackageJsonFileWebpackPlugin {
         const nestedPackage = this.projectBuildConfig._nestedPackage;
 
         if (packageJson.devDependencies) {
+            this.logger.debug(`Removing 'devDependencies' from package.json`);
             delete packageJson.devDependencies;
         }
 
@@ -64,6 +70,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.description === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.description))
             ) {
+                this.logger.debug(`Updating 'description' field in package.json`);
                 packageJson.description = rootPackageJson.description;
             }
 
@@ -72,6 +79,7 @@ export class PackageJsonFileWebpackPlugin {
                 rootPackageJson.keywords.length &&
                 ((packageJson.keywords && !packageJson.keywords.length) || (!nestedPackage && !packageJson.keywords))
             ) {
+                this.logger.debug(`Updating 'keywords' field in package.json`);
                 packageJson.keywords = [...rootPackageJson.keywords];
             }
 
@@ -81,6 +89,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.author === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.author))
             ) {
+                this.logger.debug(`Updating 'author' field in package.json`);
                 packageJson.author =
                     typeof rootPackageJson.author === 'string' ? rootPackageJson.author : { ...rootPackageJson.author };
             }
@@ -91,6 +100,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.license === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.license))
             ) {
+                this.logger.debug(`Updating 'license' field in package.json`);
                 packageJson.license = rootPackageJson.license;
             }
 
@@ -100,6 +110,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.repository === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.repository))
             ) {
+                this.logger.debug(`Updating 'repository' field in package.json`);
                 packageJson.repository =
                     typeof rootPackageJson.repository === 'string'
                         ? rootPackageJson.repository
@@ -112,6 +123,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.bugs === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.bugs))
             ) {
+                this.logger.debug(`Updating 'bugs' field in package.json`);
                 packageJson.bugs =
                     typeof rootPackageJson.bugs === 'string' ? rootPackageJson.bugs : { ...rootPackageJson.bugs };
             }
@@ -122,6 +134,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.homepage === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.homepage))
             ) {
+                this.logger.debug(`Updating 'homepage' field in package.json`);
                 packageJson.homepage = rootPackageJson.homepage;
             }
         }
@@ -131,28 +144,40 @@ export class PackageJsonFileWebpackPlugin {
             ((this.projectBuildConfig._tsTranspilations && this.projectBuildConfig._tsTranspilations.length) ||
                 (this.projectBuildConfig._bundles && this.projectBuildConfig._bundles.length))
         ) {
+            this.logger.debug(`Updating 'sideEffects' field in package.json`);
             packageJson.sideEffects = false;
         }
 
         if (!packageJson.version) {
+            this.logger.debug(`Updating 'version' field in package.json`);
             packageJson.version = this.projectBuildConfig._packageVersion;
-        }
-
-        if (versionPlaceholderRegex.test(packageJson.version) || placeholderRegExp.test(packageJson.version)) {
+        } else if (versionPlaceholderRegex.test(packageJson.version) || placeholderRegExp.test(packageJson.version)) {
+            this.logger.debug(`Updating 'version' field in package.json`);
             packageJson.version = this.projectBuildConfig._packageVersion;
         }
 
         if (packageJson.peerDependencies) {
+            let logged = false;
             const peerDependencies = packageJson.peerDependencies;
             const peerKeys = Object.keys(peerDependencies);
             for (const key of peerKeys) {
                 const peerPkgVer = peerDependencies[key];
                 if (versionPlaceholderRegex.test(peerPkgVer)) {
+                    if (!logged) {
+                        this.logger.debug(`Replacing version placeholder in package.json -> peerDependencies`);
+                        logged = true;
+                    }
+
                     peerDependencies[key] = peerPkgVer.replace(
                         versionPlaceholderRegex,
                         this.projectBuildConfig._packageVersion
                     );
                 } else if (placeholderRegExp.test(peerPkgVer)) {
+                    if (!logged) {
+                        this.logger.debug(`Replacing version placeholder in package.json -> peerDependencies`);
+                        logged = true;
+                    }
+
                     peerDependencies[key] = peerPkgVer.replace(
                         placeholderRegExp,
                         this.projectBuildConfig._packageVersion
@@ -164,6 +189,7 @@ export class PackageJsonFileWebpackPlugin {
         }
 
         // write package config
+        this.logger.debug(`Writting package.json file to disk`);
         await ensureDir(this.projectBuildConfig._packageJsonOutDir);
         await writeFile(
             path.resolve(this.projectBuildConfig._packageJsonOutDir, 'package.json'),
