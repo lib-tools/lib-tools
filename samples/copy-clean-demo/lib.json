@@ -6,6 +6,11 @@
       "tasks": {
         "build": {
           "outputPath": "dist",
+          "clean": {
+            "beforeBuild": {
+              "cleanOutDir": true
+            }
+          },
           "copy": [
             "README.md",
             "LICENSE"
