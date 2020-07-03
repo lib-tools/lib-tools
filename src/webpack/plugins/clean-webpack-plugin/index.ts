@@ -417,7 +417,7 @@ export class CleanWebpackPlugin {
                         this.logger.debug(`Deleting ${relToWorkspace}`);
                     } else {
                         if (cleanOutDir) {
-                            this.logger.info(`Deleting output directory: '${relToWorkspace}'`);
+                            this.logger.info(`Deleting output directory ${relToWorkspace}`);
                         } else {
                             this.logger.debug(`Deleting ${relToWorkspace}`);
                         }
