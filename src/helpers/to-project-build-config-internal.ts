@@ -831,20 +831,20 @@ async function parseStyleEntries(
     const entries = Array.isArray(extraEntries) ? extraEntries : [extraEntries];
     const clonedEntries = entries.map((entry) => (typeof entry === 'object' ? { ...entry } : entry));
 
-    const mappedEntries = clonedEntries.map((extraEntry: string | StyleEntry) =>
-        typeof extraEntry === 'object' ? extraEntry : { input: extraEntry }
+    const mappedEntries = clonedEntries.map((styleEntry: string | StyleEntry) =>
+        typeof styleEntry === 'object' ? styleEntry : { input: styleEntry }
     );
 
     const parsedEntries: StyleParsedEntry[] = [];
     const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
 
-    for (const extraEntry of mappedEntries) {
+    for (const styleEntry of mappedEntries) {
         const parsedEntry: StyleParsedEntry = {
             paths: [],
             entry: ''
         };
 
-        const inputs = Array.isArray(extraEntry.input) ? extraEntry.input : [extraEntry.input];
+        const inputs = Array.isArray(styleEntry.input) ? styleEntry.input : [styleEntry.input];
         parsedEntry.paths = [];
         for (const input of inputs) {
             let resolvedPath = path.resolve(projectRoot, input);
@@ -874,20 +874,20 @@ async function parseStyleEntries(
             parsedEntry.paths.push(resolvedPath);
         }
 
-        if (extraEntry.bundleName) {
+        if (styleEntry.bundleName) {
             if (
-                /(\\|\/)$/.test(extraEntry.bundleName) &&
-                !Array.isArray(extraEntry.input) &&
-                typeof extraEntry.input === 'string'
+                /(\\|\/)$/.test(styleEntry.bundleName) &&
+                !Array.isArray(styleEntry.input) &&
+                typeof styleEntry.input === 'string'
             ) {
                 parsedEntry.entry =
-                    extraEntry.bundleName +
-                    path.basename(extraEntry.input).replace(/\.(ts|js|less|sass|scss|styl|css)$/i, '');
+                    styleEntry.bundleName +
+                    path.basename(styleEntry.input).replace(/\.(ts|js|less|sass|scss|styl|css)$/i, '');
             } else {
-                parsedEntry.entry = extraEntry.bundleName.replace(/\.(js|css)$/i, '');
+                parsedEntry.entry = styleEntry.bundleName.replace(/\.(js|css)$/i, '');
             }
-        } else if (!Array.isArray(extraEntry.input) && typeof extraEntry.input === 'string') {
-            parsedEntry.entry = path.basename(extraEntry.input).replace(/\.(js|ts|css|scss|sass|less|styl)$/i, '');
+        } else if (!Array.isArray(styleEntry.input) && typeof styleEntry.input === 'string') {
+            parsedEntry.entry = path.basename(styleEntry.input).replace(/\.(js|ts|css|scss|sass|less|styl)$/i, '');
         } else {
             parsedEntry.entry = defaultEntry;
         }
