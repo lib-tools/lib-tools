@@ -138,14 +138,15 @@ export async function getWebpackBuildConfig(
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
         await applyProjectConfigExtends(projectConfigInternal, libConfigInternal.projects);
 
+        if (projectConfigInternal.skip) {
+            continue;
+        }
+
         if (!projectConfigInternal.tasks || !projectConfigInternal.tasks.build) {
             continue;
         }
 
         const projectBuildConfigInternal = await toProjectBuildConfigInternal(projectConfigInternal, buildOptions);
-        if (projectBuildConfigInternal.skip) {
-            continue;
-        }
 
         const wpConfig = (await getWebpackBuildConfigInternal(
             projectBuildConfigInternal,
@@ -171,11 +172,7 @@ async function getWebpackBuildConfigInternal(
     ];
 
     // Clean plugin
-    let shouldClean = projectBuildConfig.clean || projectBuildConfig.clean !== false;
-    if (projectBuildConfig.clean === false) {
-        shouldClean = false;
-    }
-    if (shouldClean) {
+    if (projectBuildConfig.clean !== false) {
         const pluginModule = await import('../plugins/clean-webpack-plugin');
         const CleanWebpackPlugin = pluginModule.CleanWebpackPlugin;
         plugins.push(
@@ -223,12 +220,12 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Copy plugin
-    if (projectBuildConfig.copy && projectBuildConfig.copy.length > 0) {
+    if (projectBuildConfig._copyAssets && projectBuildConfig._copyAssets.length > 0) {
         const pluginModule = await import('../plugins/copy-webpack-plugin');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
         plugins.push(
             new CopyWebpackPlugin({
-                assets: projectBuildConfig.copy,
+                assets: projectBuildConfig._copyAssets,
                 projectRoot: projectBuildConfig._projectRoot,
                 outputPath: projectBuildConfig._outputPath,
                 allowCopyOutsideOutputPath: true,
