@@ -155,11 +155,12 @@ export class PackageJsonFileWebpackPlugin {
             packageJson.sideEffects = false;
         }
 
-        if (!packageJson.version) {
-            this.packageJsonHasAnyChanges = true;
-            this.logger.debug(`Updating 'version' field in package.json`);
-            packageJson.version = this.projectBuildConfig._packageVersion;
-        } else if (versionPlaceholderRegex.test(packageJson.version) || placeholderRegExp.test(packageJson.version)) {
+        if (
+            !packageJson.version ||
+            packageJson.version !== this.projectBuildConfig._packageVersion ||
+            versionPlaceholderRegex.test(packageJson.version) ||
+            placeholderRegExp.test(packageJson.version)
+        ) {
             this.packageJsonHasAnyChanges = true;
             this.logger.debug(`Updating 'version' field in package.json`);
             packageJson.version = this.projectBuildConfig._packageVersion;
