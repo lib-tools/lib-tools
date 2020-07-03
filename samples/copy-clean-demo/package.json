@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/DagonMetric/lib-tools/issues"
   },
-  "homepage": "https://github.com/DagonMetric/lib-tools"
+  "homepage": "https://github.com/DagonMetric/lib-tools",
+  "devDependencies": {
+    "lib-tools": "^0.0.1-alpha.0"
+  }
 }
