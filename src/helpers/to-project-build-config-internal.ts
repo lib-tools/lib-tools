@@ -26,6 +26,7 @@ import { readTsConfigFile } from './read-ts-config-file';
 import { toTsScriptTarget } from './to-ts-script-target';
 
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
+const supportedStyleExt = /\.(less|sass|scss|styl)$/i;
 
 export async function toProjectBuildConfigInternal(
     projectConfig: ProjectConfigInternal,
@@ -815,24 +816,38 @@ export function initBundleTarget(
 }
 
 async function parseStyleEntries(
-    rawStyleEntries: StyleEntry[],
+    styleEntries: StyleEntry[],
     projectBuildConfig: ProjectBuildConfigInternal,
     projectRoot: string,
     outputPath: string
 ): Promise<StyleParsedEntry[]> {
-    return rawStyleEntries.map((styleEntry) => {
+    return styleEntries.map((styleEntry) => {
+        if (!supportedStyleExt.test(styleEntry.input)) {
+            throw new Error(
+                `Unsupported style input'${styleEntry.input}'. Config location projects[${projectBuildConfig._projectName}].styles.`
+            );
+        }
+
         const inputFilePath = path.resolve(projectRoot, styleEntry.input);
         let outputFilePath: string;
 
         if (styleEntry.output) {
-            if (styleEntry.output.endsWith('/')) {
-                const outputFileName = path.basename(inputFilePath).replace(/\.(less|sass|scss|styl)$/i, '.css');
+            const extName = path.extname(styleEntry.output);
+
+            if (extName && !supportedStyleExt.test(extName)) {
+                throw new Error(
+                    `Unsupported style output'${styleEntry.output}'. Config location projects[${projectBuildConfig._projectName}].styles.`
+                );
+            }
+
+            if (!extName || styleEntry.output.endsWith('/')) {
+                const outputFileName = path.basename(inputFilePath).replace(supportedStyleExt, '.css');
                 outputFilePath = path.resolve(outputPath, styleEntry.output, outputFileName);
             } else {
                 outputFilePath = path.resolve(outputPath, styleEntry.output);
             }
         } else {
-            const outputFileName = path.basename(inputFilePath).replace(/\.(less|sass|scss|styl)$/i, '.css');
+            const outputFileName = path.basename(inputFilePath).replace(supportedStyleExt, '.css');
             outputFilePath = path.resolve(outputPath, outputFileName);
         }
 
@@ -840,6 +855,16 @@ async function parseStyleEntries(
 
         if (styleEntry.includePaths && styleEntry.includePaths.length) {
             includePaths = styleEntry.includePaths.map((includePath: string) => path.resolve(projectRoot, includePath));
+        }
+
+        if (
+            !styleEntry.includePaths &&
+            projectBuildConfig.stylePreprocessorOptions &&
+            projectBuildConfig.stylePreprocessorOptions.includePaths
+        ) {
+            includePaths = projectBuildConfig.stylePreprocessorOptions.includePaths.map((includePath: string) =>
+                path.resolve(projectRoot, includePath)
+            );
         }
 
         let sourceMap: boolean | undefined;
