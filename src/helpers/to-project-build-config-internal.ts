@@ -25,8 +25,9 @@ import { readPackageJson } from './read-package-json';
 import { readTsConfigFile } from './read-ts-config-file';
 import { toTsScriptTarget } from './to-ts-script-target';
 
-const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'i');
-const supportedStyleExt = /\.(less|sass|scss|styl)$/i;
+const versionPlaceholderRegex = /0\.0\.0-PLACEHOLDER/i;
+const supportedStyleInputExt = /\.(less|sass|scss|styl)$/i;
+const supportedStyleOutputExt = /\.css$/i;
 
 export async function toProjectBuildConfigInternal(
     projectConfig: ProjectConfigInternal,
@@ -822,7 +823,7 @@ async function parseStyleEntries(
     outputPath: string
 ): Promise<StyleParsedEntry[]> {
     return styleEntries.map((styleEntry) => {
-        if (!supportedStyleExt.test(styleEntry.input)) {
+        if (!supportedStyleInputExt.test(styleEntry.input)) {
             throw new Error(
                 `Unsupported style input'${styleEntry.input}'. Config location projects[${projectBuildConfig._projectName}].styles.`
             );
@@ -834,20 +835,20 @@ async function parseStyleEntries(
         if (styleEntry.output) {
             const extName = path.extname(styleEntry.output);
 
-            if (extName && !supportedStyleExt.test(extName)) {
-                throw new Error(
-                    `Unsupported style output'${styleEntry.output}'. Config location projects[${projectBuildConfig._projectName}].styles.`
-                );
-            }
-
             if (!extName || styleEntry.output.endsWith('/')) {
-                const outputFileName = path.basename(inputFilePath).replace(supportedStyleExt, '.css');
+                const outputFileName = path.basename(inputFilePath).replace(supportedStyleInputExt, '.css');
                 outputFilePath = path.resolve(outputPath, styleEntry.output, outputFileName);
             } else {
+                if (!supportedStyleOutputExt.test(extName)) {
+                    throw new Error(
+                        `Unsupported style output'${styleEntry.output}'. Config location projects[${projectBuildConfig._projectName}].styles.`
+                    );
+                }
+
                 outputFilePath = path.resolve(outputPath, styleEntry.output);
             }
         } else {
-            const outputFileName = path.basename(inputFilePath).replace(supportedStyleExt, '.css');
+            const outputFileName = path.basename(inputFilePath).replace(supportedStyleInputExt, '.css');
             outputFilePath = path.resolve(outputPath, outputFileName);
         }
 
