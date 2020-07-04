@@ -26,7 +26,7 @@ import { readTsConfigFile } from './read-ts-config-file';
 import { toTsScriptTarget } from './to-ts-script-target';
 
 const versionPlaceholderRegex = /0\.0\.0-PLACEHOLDER/i;
-const supportedStyleInputExt = /\.(less|sass|scss|styl)$/i;
+const supportedStyleInputExt = /\.(sass|scss|css)$/i;
 const supportedStyleOutputExt = /\.css$/i;
 
 export async function toProjectBuildConfigInternal(
