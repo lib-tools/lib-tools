@@ -13,7 +13,6 @@ export interface StyleParsedEntry extends StyleEntry {
     _inputFilePath: string;
     _outputFilePath: string;
     _includePaths?: string[];
-    _sourceMap?: boolean;
 }
 
 export interface AngularCompilerJsonOptions {
