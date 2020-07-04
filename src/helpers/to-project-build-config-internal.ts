@@ -853,39 +853,27 @@ async function parseStyleEntries(
         }
 
         let includePaths: string[] | undefined;
-
-        if (styleEntry.includePaths && styleEntry.includePaths.length) {
-            includePaths = styleEntry.includePaths.map((includePath: string) => path.resolve(projectRoot, includePath));
-        }
-
-        if (
-            !styleEntry.includePaths &&
-            projectBuildConfig.stylePreprocessorOptions &&
-            projectBuildConfig.stylePreprocessorOptions.includePaths
+        if (styleEntry.includePaths) {
+            if (styleEntry.includePaths.length) {
+                includePaths = styleEntry.includePaths.map((includePath: string) =>
+                    path.resolve(projectRoot, includePath)
+                );
+            }
+        } else if (
+            projectBuildConfig.styleOptions &&
+            projectBuildConfig.styleOptions.includePaths &&
+            projectBuildConfig.styleOptions.includePaths.length > 0
         ) {
-            includePaths = projectBuildConfig.stylePreprocessorOptions.includePaths.map((includePath: string) =>
+            includePaths = projectBuildConfig.styleOptions.includePaths.map((includePath: string) =>
                 path.resolve(projectRoot, includePath)
             );
-        }
-
-        let sourceMap: boolean | undefined;
-        if (styleEntry.sourceMap != null) {
-            sourceMap = styleEntry.sourceMap;
-        } else if (projectBuildConfig.sourceMap != null) {
-            sourceMap = projectBuildConfig.sourceMap;
-        }
-
-        // Default
-        if (sourceMap == null) {
-            sourceMap = true;
         }
 
         return {
             ...styleEntry,
             _inputFilePath: inputFilePath,
             _outputFilePath: outputFilePath,
-            _includePaths: includePaths,
-            _sourceMap: sourceMap
+            _includePaths: includePaths
         };
     });
 }
