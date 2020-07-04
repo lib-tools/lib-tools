@@ -75,37 +75,223 @@ export interface AssetEntry {
 /**
  * @additionalProperties false
  */
-export interface StyleEntry {
+export interface AutoPrefixerOptions {
     /**
-     * The input file.
+     * The environment for `Browserslist.
      */
-    input: string;
+    env?: string;
     /**
-     * The output file for bundled css.
+     * Should Autoprefixer use Visual Cascade, if CSS is uncompressed.
      */
-    output?: string;
+    cascade?: boolean;
     /**
-     * If true, enable the outputing of sourcemap.
+     * Should Autoprefixer add prefixes.
      */
-    sourceMap?: boolean;
+    add?: boolean;
     /**
-     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     * Should Autoprefixer [remove outdated] prefixes.
      */
-    includePaths?: string[];
+    remove?: boolean;
     /**
-     * If true, add vendor prefixes to CSS rules.
+     * Should Autoprefixer add prefixes for @supports parameters.
      */
-    vendorPrefixes?: boolean;
+    supports?: boolean;
     /**
-     * If true, minify file will be generated.
+     * Should Autoprefixer add prefixes for flexbox properties.
      */
-    minify?: boolean;
+    flexbox?: boolean | 'no-2009';
+    /**
+     * Should Autoprefixer add IE 10-11 prefixes for Grid Layout properties.
+     */
+    grid?: false | 'autoplace' | 'no-autoplace';
+    /**
+     * Do not raise error on unknown browser version in `Browserslist` config..
+     */
+    ignoreUnknownVersions?: boolean;
 }
 
 /**
  * @additionalProperties false
  */
-export interface StylePreprocessorOptions {
+export interface CleanCSSFormatOptions {
+    /**
+     *  Controls where to insert breaks.
+     */
+    breaks?: {
+        /**
+         * Controls if a line break comes after an at-rule; e.g. `@charset`.
+         */
+        afterAtRule?: boolean;
+
+        /**
+         * Controls if a line break comes after a block begins; e.g. `@media`.
+         */
+        afterBlockBegins?: boolean;
+
+        /**
+         * Controls if a line break comes after a block ends.
+         */
+        afterBlockEnds?: boolean;
+
+        /**
+         * Controls if a line break comes after a comment.
+         */
+        afterComment?: boolean;
+
+        /**
+         * Controls if a line break comes after a property.
+         */
+        afterProperty?: boolean;
+
+        /**
+         * Controls if a line break comes after a rule begins.
+         */
+        afterRuleBegins?: boolean;
+
+        /**
+         * Controls if a line break comes after a rule ends.
+         */
+        afterRuleEnds?: boolean;
+
+        /**
+         * Controls if a line break comes before a block ends.
+         */
+        beforeBlockEnds?: boolean;
+
+        /**
+         * Controls if a line break comes between selectors.
+         */
+        betweenSelectors?: boolean;
+    };
+    /**
+     * Controls the new line character, can be `'\r\n'` or `'\n'`(aliased as `'windows'` and `'unix'` or `'crlf'` and `'lf'`).
+     */
+    breakWith?: string;
+
+    /**
+     * Controls number of characters to indent with.
+     */
+    indentBy?: number;
+
+    /**
+     * Controls a character to indent with, can be `'space'` or `'tab'`.
+     */
+    indentWith?: 'space' | 'tab';
+
+    /**
+     * Controls where to insert spaces.
+     */
+    spaces?: {
+        /**
+         * Controls if spaces come around selector relations; e.g. `div > a`.
+         */
+        aroundSelectorRelation?: boolean;
+
+        /**
+         * Controls if a space comes before a block begins.
+         */
+        beforeBlockBegins?: boolean;
+
+        /**
+         * Controls if a space comes before a value.
+         */
+        beforeValue?: boolean;
+    };
+    /**
+     * Controls maximum line length.
+     */
+    wrapAt?: false | number;
+
+    /**
+     * Controls removing trailing semicolons in rule.
+     */
+    semicolonAfterLastProperty?: boolean;
+}
+
+/**
+ * @additionalProperties false
+ */
+export interface CleanCSSOptions {
+    /**
+     * Controls compatibility mode used.
+     */
+    compatibility?: '*' | 'ie9' | 'ie8' | 'ie7';
+
+    /**
+     * Controls output CSS formatting.
+     */
+    format?: 'beautify' | 'keep-breaks' | CleanCSSFormatOptions | false;
+
+    /**
+     * Controls optimization level used.
+     */
+    level?: 1 | 2;
+
+    /**
+     *  Controls whether an output source map is built.
+     */
+    sourceMap?: boolean;
+
+    /**
+     *  Controls embedding sources inside a source map's `sourcesContent` field.
+     */
+    sourceMapInlineSources?: boolean;
+}
+
+/**
+ * @additionalProperties false
+ */
+export interface StyleEntry {
+    /**
+     * The input style file. Supported formats are .scss, .sass or .css.
+     */
+    input: string;
+    /**
+     * The output file for bundled css. The output can be directory or css file name relative to project `outputPath`.
+     */
+    output?: string;
+    /**
+     * If true, enable the outputing of sourcemap. Default is `true`.
+     */
+    sourceMap?: boolean;
+    /**
+     * Includes the contents in the source map information. Default is `true`.
+     */
+    sourceMapContents?: boolean;
+    /**
+     * Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
+     */
+    vendorPrefixes?: boolean | AutoPrefixerOptions;
+    /**
+     * Set clean-css options or boolean value for minify file generation. Default is `true`.
+     */
+    minify?: boolean | CleanCSSOptions;
+    /**
+     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths?: string[];
+}
+
+/**
+ * @additionalProperties false
+ */
+export interface StyleOptions {
+    /**
+     * If true, enable the outputing of sourcemap. Default is `true`.
+     */
+    sourceMap?: boolean;
+    /**
+     * Includes the contents in the source map information. Default is `true`.
+     */
+    sourceMapContents?: boolean;
+    /**
+     * Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
+     */
+    vendorPrefixes?: boolean | AutoPrefixerOptions;
+    /**
+     * Set clean-css options or boolean value for minify file generation. Default is `true`.
+     */
+    minify?: boolean | CleanCSSOptions;
     /**
      * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
      */
@@ -226,19 +412,15 @@ export interface BundleOptions {
  */
 export interface ProjectBuildConfigBase {
     /**
-     * The output directory for build results.
+     * The output directory for build results. Default is `dist/packages/{project-name}`.
      */
     outputPath?: string;
     /**
-     * Tell the build system which platform environment the application is targeting.
-     */
-    platformTarget?: 'web' | 'node';
-    /**
-     * Clean options.
+     * Clean options or boolean value for deleting output files before build or after build. By default, output directory will be deleted before build. Set `false` to disable cleaning of output directory.
      */
     clean?: CleanOptions | boolean;
     /**
-     * Copy options.
+     * Asset entry array or boolean value for copying files to output directory. By default, README.md and LICENSE files are copied to output directory. Set `false` to disable copying of default files.
      */
     copy?: (string | AssetEntry)[] | boolean;
     /**
@@ -246,9 +428,9 @@ export interface ProjectBuildConfigBase {
      */
     styles?: StyleEntry[];
     /**
-     * Options to pass to style preprocessors.
+     * Default options for styles.
      */
-    stylePreprocessorOptions?: StylePreprocessorOptions;
+    styleOptions?: StyleOptions;
     /**
      * The typescript configuration file to be used.
      */
