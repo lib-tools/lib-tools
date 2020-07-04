@@ -1,12 +1,13 @@
 {
-  "name": "css-scss-styles-pack-demo",
+  "name": "bootstrap-css-demo",
   "version": "0.0.0",
-  "description": "CSS/SCSS styles only build and pack demo.",
+  "description": "SCSS styles build and pack demo with bootstrap.",
   "keywords": [
     "lib-tools",
     "demo",
+    "scss",
     "css",
-    "scss"
+    "bootstrap"
   ],
   "author": "DagonMetric",
   "license": "MIT",

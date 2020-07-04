@@ -1,3 +1,3 @@
-# css-scss-styles-pack-demo
+# Bootstrap CSS Demo
 
-CSS/SCSS styles only build and pack demo.
+SCSS styles build and pack demo with bootstrap.
