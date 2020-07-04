@@ -146,7 +146,6 @@ async function afterTsTranspileTask(
         const inlineResourcesModule = await import('./ng-resource-inlining/inline-resources');
 
         await inlineResourcesModule.inlineResources(
-            projectBuildConfig._workspaceRoot,
             projectBuildConfig._projectRoot,
             tsTranspilation._tsOutDirRootResolved,
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/*.js')}`,
