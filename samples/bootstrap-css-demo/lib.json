@@ -9,7 +9,10 @@
           "styles": [
             {
               "input": "src/scss/bootstrap.scss",
-              "bundleName": "css/bootstrap.css"
+              "output": "css/bootstrap.css",
+              "minify": true,
+              "vendorPrefixes": true,
+              "sourceMap": true
             }
           ]
         }
