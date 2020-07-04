@@ -6,6 +6,12 @@
       "tasks": {
         "build": {
           "outputPath": "dist",
+          "copy": [
+            {
+              "from": "src/scss",
+              "to": "scss/"
+            }
+          ],
           "styles": [
             {
               "input": "src/scss/bootstrap.scss",
