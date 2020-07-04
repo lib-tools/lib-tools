@@ -296,6 +296,10 @@ export interface StyleOptions {
      * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
      */
     includePaths: string[];
+    /**
+     * If true, automatically add style entry points to package.json file. Default is `true`.
+     */
+    addToPackageJson?: boolean;
 }
 
 export interface ExternalsObjectElement {
