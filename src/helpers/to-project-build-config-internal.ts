@@ -875,6 +875,11 @@ async function parseStyleEntries(
             sourceMap = projectBuildConfig.sourceMap;
         }
 
+        // Default
+        if (sourceMap == null) {
+            sourceMap = true;
+        }
+
         return {
             ...styleEntry,
             _inputFilePath: inputFilePath,
