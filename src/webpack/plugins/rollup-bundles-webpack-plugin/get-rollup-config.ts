@@ -3,6 +3,9 @@ import * as rollup from 'rollup';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const builtins = require('builtins')();
+
 import { ExternalsEntry } from '../../../models';
 import { BundleOptionsInternal, ProjectBuildConfigInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
@@ -63,17 +66,13 @@ export function getRollupConfig(
     }
 
     const externals = rollupExternalMap.externals || [];
-    if (projectBuildConfig.platformTarget === 'node') {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
-        const getBuiltins = require('builtins');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const builtinExternals = getBuiltins() as string[];
-        builtinExternals
-            .filter((e) => !externals.includes(e))
-            .forEach((e) => {
-                externals.push(e);
-            });
-    }
+
+    const builtinExternals = builtins as string[];
+    builtinExternals
+        .filter((e) => !externals.includes(e))
+        .forEach((e) => {
+            externals.push(e);
+        });
 
     if (
         currentBundle.dependenciesAsExternals !== false &&
