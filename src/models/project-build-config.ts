@@ -102,6 +102,16 @@ export interface StyleEntry {
     minify?: boolean;
 }
 
+/**
+ * @additionalProperties false
+ */
+export interface StylePreprocessorOptions {
+    /**
+     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths: string[];
+}
+
 export interface ExternalsObjectElement {
     [key: string]:
         | string
@@ -235,6 +245,10 @@ export interface ProjectBuildConfigBase {
      * List of style entries to bundle.
      */
     styles?: StyleEntry[];
+    /**
+     * Options to pass to style preprocessors.
+     */
+    stylePreprocessorOptions?: StylePreprocessorOptions;
     /**
      * The typescript configuration file to be used.
      */
