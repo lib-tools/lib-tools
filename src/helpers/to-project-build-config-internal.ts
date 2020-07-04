@@ -224,16 +224,12 @@ export async function toProjectBuildConfigInternal(
     initBundleOptions(projectBuildConfigInternal);
 
     // Styles
-    if (
-        projectBuildConfigInternal.styles &&
-        Array.isArray(projectBuildConfigInternal.styles) &&
-        projectBuildConfigInternal.styles.length > 0
-    ) {
+    if (projectBuildConfigInternal.styles && projectBuildConfigInternal.styles.length > 0) {
         projectBuildConfigInternal._styleParsedEntries = await parseStyleEntries(
             projectBuildConfigInternal.styles,
-            'styles',
-            workspaceRoot,
-            projectRoot
+            projectBuildConfigInternal,
+            projectRoot,
+            outputPathAbs
         );
     }
 
@@ -819,81 +815,46 @@ export function initBundleTarget(
 }
 
 async function parseStyleEntries(
-    extraEntries: string | (string | StyleEntry)[],
-    defaultEntry: string,
-    workspaceRoot: string,
-    projectRoot: string
+    rawStyleEntries: StyleEntry[],
+    projectBuildConfig: ProjectBuildConfigInternal,
+    projectRoot: string,
+    outputPath: string
 ): Promise<StyleParsedEntry[]> {
-    if (!extraEntries || !extraEntries.length) {
-        return [];
-    }
+    return rawStyleEntries.map((styleEntry) => {
+        const inputFilePath = path.resolve(projectRoot, styleEntry.input);
+        let outputFilePath: string;
 
-    const entries = Array.isArray(extraEntries) ? extraEntries : [extraEntries];
-    const clonedEntries = entries.map((entry) => (typeof entry === 'object' ? { ...entry } : entry));
-
-    const mappedEntries = clonedEntries.map((styleEntry: string | StyleEntry) =>
-        typeof styleEntry === 'object' ? styleEntry : { input: styleEntry }
-    );
-
-    const parsedEntries: StyleParsedEntry[] = [];
-    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
-
-    for (const styleEntry of mappedEntries) {
-        const parsedEntry: StyleParsedEntry = {
-            paths: [],
-            entry: ''
-        };
-
-        const inputs = Array.isArray(styleEntry.input) ? styleEntry.input : [styleEntry.input];
-        parsedEntry.paths = [];
-        for (const input of inputs) {
-            let resolvedPath = path.resolve(projectRoot, input);
-
-            if (
-                nodeModulesPath &&
-                !(await pathExists(resolvedPath)) &&
-                input.startsWith('~node_modules') &&
-                (await pathExists(path.resolve(workspaceRoot, input.substr(1))))
-            ) {
-                resolvedPath = path.resolve(workspaceRoot, input.substr(1));
-            } else if (
-                nodeModulesPath &&
-                !(await pathExists(resolvedPath)) &&
-                input.startsWith('~') &&
-                (await pathExists(path.resolve(nodeModulesPath, input.substr(1))))
-            ) {
-                resolvedPath = path.resolve(nodeModulesPath, input.substr(1));
-            } else if (
-                !(await pathExists(resolvedPath)) &&
-                input.startsWith('~') &&
-                (await pathExists(path.resolve(workspaceRoot, input.substr(1))))
-            ) {
-                resolvedPath = path.resolve(workspaceRoot, input.substr(1));
-            }
-
-            parsedEntry.paths.push(resolvedPath);
-        }
-
-        if (styleEntry.bundleName) {
-            if (
-                /(\\|\/)$/.test(styleEntry.bundleName) &&
-                !Array.isArray(styleEntry.input) &&
-                typeof styleEntry.input === 'string'
-            ) {
-                parsedEntry.entry =
-                    styleEntry.bundleName +
-                    path.basename(styleEntry.input).replace(/\.(ts|js|less|sass|scss|styl|css)$/i, '');
+        if (styleEntry.output) {
+            if (styleEntry.output.endsWith('/')) {
+                const outputFileName = path.basename(inputFilePath).replace(/\.(less|sass|scss|styl)$/i, '.css');
+                outputFilePath = path.resolve(outputPath, styleEntry.output, outputFileName);
             } else {
-                parsedEntry.entry = styleEntry.bundleName.replace(/\.(js|css)$/i, '');
+                outputFilePath = path.resolve(outputPath, styleEntry.output);
             }
-        } else if (!Array.isArray(styleEntry.input) && typeof styleEntry.input === 'string') {
-            parsedEntry.entry = path.basename(styleEntry.input).replace(/\.(js|ts|css|scss|sass|less|styl)$/i, '');
         } else {
-            parsedEntry.entry = defaultEntry;
+            const outputFileName = path.basename(inputFilePath).replace(/\.(less|sass|scss|styl)$/i, '.css');
+            outputFilePath = path.resolve(outputPath, outputFileName);
         }
 
-        parsedEntries.push(parsedEntry);
-    }
+        let includePaths: string[] | undefined;
 
-    return parsedEntries;
+        if (styleEntry.includePaths && styleEntry.includePaths.length) {
+            includePaths = styleEntry.includePaths.map((includePath: string) => path.resolve(projectRoot, includePath));
+        }
+
+        let sourceMap: boolean | undefined;
+        if (styleEntry.sourceMap != null) {
+            sourceMap = styleEntry.sourceMap;
+        } else if (projectBuildConfig.sourceMap != null) {
+            sourceMap = projectBuildConfig.sourceMap;
+        }
+
+        return {
+            ...styleEntry,
+            _inputFilePath: inputFilePath,
+            _outputFilePath: outputFilePath,
+            _includePaths: includePaths,
+            _sourceMap: sourceMap
+        };
+    });
 }
