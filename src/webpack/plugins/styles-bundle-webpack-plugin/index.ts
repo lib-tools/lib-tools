@@ -7,6 +7,7 @@ import * as postcss from 'postcss';
 import * as sass from 'sass';
 import * as webpack from 'webpack';
 
+import { AutoPrefixerOptions, CleanCSSOptions } from '../../../models';
 import { ProjectBuildConfigInternal } from '../../../models/internals';
 import { LogLevelString, Logger, normalizeRelativePath } from '../../../utils';
 
@@ -51,49 +52,56 @@ export class StyleBundleWebpackPlugin {
                     path.relative(projectBuildConfig._workspaceRoot, inputFilePath)
                 );
 
+                let sourceMap = true;
+                if (styleEntry.sourceMap != null) {
+                    sourceMap = styleEntry.sourceMap;
+                } else if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.sourceMap != null) {
+                    sourceMap = projectBuildConfig.styleOptions.sourceMap;
+                }
+
+                let sourceMapContents = true;
+                if (styleEntry.sourceMapContents != null) {
+                    sourceMapContents = styleEntry.sourceMapContents;
+                } else if (
+                    projectBuildConfig.styleOptions &&
+                    projectBuildConfig.styleOptions.sourceMapContents != null
+                ) {
+                    sourceMapContents = projectBuildConfig.styleOptions.sourceMapContents;
+                }
+
                 if (/\.s[ac]ss$/i.test(inputFilePath)) {
-                    if (/\.css$/i.test(outFilePath)) {
-                        if (this.options.logLevel === 'debug') {
-                            this.logger.debug(`Compiling ${inputRelToWorkspace}`);
-                        } else {
-                            this.logger.info(`Compiling ${inputRelToWorkspace}`);
-                        }
-
-                        const result = await new Promise<sass.Result>((res, rej) => {
-                            sass.render(
-                                {
-                                    outputStyle: 'expanded',
-                                    file: inputFilePath,
-                                    outFile: outFilePath,
-                                    sourceMap: styleEntry._sourceMap,
-                                    sourceMapContents: styleEntry._sourceMap ? true : false,
-                                    includePaths: styleEntry._includePaths
-                                },
-                                (err, sassResult) => {
-                                    if (err) {
-                                        rej(err);
-
-                                        return;
-                                    }
-
-                                    res(sassResult);
-                                }
-                            );
-                        });
-
-                        await ensureDir(path.dirname(outFilePath));
-                        await writeFile(outFilePath, result.css);
-                        if (styleEntry._sourceMap && result.map) {
-                            await writeFile(`${outFilePath}.map`, result.map);
-                        }
+                    if (this.options.logLevel === 'debug') {
+                        this.logger.debug(`Compiling ${inputRelToWorkspace}`);
                     } else {
-                        if (this.options.logLevel === 'debug') {
-                            this.logger.debug(`Copying ${inputRelToWorkspace}`);
-                        } else {
-                            this.logger.info(`Copying ${inputRelToWorkspace}`);
-                        }
+                        this.logger.info(`Compiling ${inputRelToWorkspace}`);
+                    }
 
-                        await copy(inputFilePath, outFilePath);
+                    const result = await new Promise<sass.Result>((res, rej) => {
+                        sass.render(
+                            {
+                                outputStyle: 'expanded',
+                                file: inputFilePath,
+                                outFile: outFilePath,
+                                sourceMap,
+                                sourceMapContents,
+                                includePaths: styleEntry._includePaths
+                            },
+                            (err, sassResult) => {
+                                if (err) {
+                                    rej(err);
+
+                                    return;
+                                }
+
+                                res(sassResult);
+                            }
+                        );
+                    });
+
+                    await ensureDir(path.dirname(outFilePath));
+                    await writeFile(outFilePath, result.css);
+                    if (sourceMap && result.map) {
+                        await writeFile(`${outFilePath}.map`, result.map);
                     }
                 } else {
                     if (this.options.logLevel === 'debug') {
@@ -102,43 +110,64 @@ export class StyleBundleWebpackPlugin {
                         this.logger.info(`Copying ${inputRelToWorkspace}`);
                     }
 
+                    await ensureDir(path.dirname(outFilePath));
                     await copy(inputFilePath, outFilePath);
                 }
 
-                if (styleEntry.vendorPrefixes) {
+                let vendorPrefixes: boolean | AutoPrefixerOptions = true;
+                if (styleEntry.vendorPrefixes != null) {
+                    vendorPrefixes = styleEntry.vendorPrefixes;
+                } else if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.vendorPrefixes != null) {
+                    vendorPrefixes = projectBuildConfig.styleOptions.vendorPrefixes;
+                }
+
+                if (vendorPrefixes !== false) {
                     if (this.options.logLevel === 'debug') {
                         this.logger.debug('Adding vendor prefixes to css rules');
                     } else {
                         this.logger.info('Adding vendor prefixes to css rules');
                     }
+
+                    const vendorPrefixesOptions = typeof vendorPrefixes === 'object' ? vendorPrefixes : {};
+
                     const cssContent = await readFile(outFilePath, 'utf-8');
                     const postcssResult = await postcss([
                         autoprefixer({
-                            cascade: false
+                            ...vendorPrefixesOptions
                         })
                     ]).process(cssContent, {
                         from: outFilePath
                     });
                     await writeFile(outFilePath, postcssResult.css);
-                    if (styleEntry._sourceMap && postcssResult.map) {
+                    if (sourceMap && postcssResult.map) {
                         await writeFile(`${outFilePath}.map`, postcssResult.map);
                     }
                 }
 
-                if (styleEntry.minify) {
+                let minify: boolean | CleanCSSOptions = true;
+                if (styleEntry.minify != null) {
+                    minify = styleEntry.minify;
+                } else if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.minify != null) {
+                    minify = projectBuildConfig.styleOptions.minify;
+                }
+
+                if (minify) {
                     if (this.options.logLevel === 'debug') {
                         this.logger.debug('Minifing css rules');
                     } else {
                         this.logger.info('Minifing css rules');
                     }
+
+                    const cleanCssOptions = typeof minify === 'object' ? minify : {};
+                    let cleanCssSourceMap = sourceMap;
+                    if (cleanCssOptions.sourceMap != null) {
+                        cleanCssSourceMap = cleanCssOptions.sourceMap;
+                    }
+
                     const cssContent = await readFile(outFilePath, 'utf-8');
                     const result = new CleanCSS({
-                        // level: 1,
-                        // format: {
-                        //     breakWith: 'lf'
-                        // },
-                        sourceMap: styleEntry._sourceMap,
-                        sourceMapInlineSources: styleEntry._sourceMap,
+                        ...cleanCssOptions,
+                        sourceMap: cleanCssSourceMap,
                         rebaseTo: path.dirname(outFilePath)
                     }).minify(cssContent);
 
@@ -148,7 +177,7 @@ export class StyleBundleWebpackPlugin {
 
                     const minDest = path.resolve(path.dirname(outFilePath), `${path.parse(outFilePath).name}.min.css`);
                     await writeFile(minDest, result.styles);
-                    if (styleEntry._sourceMap && result.sourceMap) {
+                    if (cleanCssSourceMap && result.sourceMap) {
                         await writeFile(`${minDest}.map`, result.sourceMap);
                     }
                 }
