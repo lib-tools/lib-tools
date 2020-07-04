@@ -21,7 +21,6 @@ const templateUrlRegex = /templateUrl:\s*['"`]([^'"`]+?\.[a-zA-Z]+)['"`]/g;
 const styleUrlsRegex = /styleUrls:\s*(\[[^\]]*?\])/gm;
 
 export async function inlineResources(
-    workspaceRoot: string,
     srcDir: string,
     searchRootDir: string,
     searchPattern: string,
@@ -81,7 +80,6 @@ export async function inlineResources(
 
         if (foundStyleUrlsInfoes.length) {
             await inlineStyleUrls(
-                workspaceRoot,
                 foundStyleUrlsInfoes,
                 magicString,
                 srcDir,
