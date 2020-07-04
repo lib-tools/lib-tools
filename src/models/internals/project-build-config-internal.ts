@@ -1,11 +1,19 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { AssetEntry, BundleOptions, ProjectBuildConfig, TsTranspilationOptions } from '../project-build-config';
+import {
+    AssetEntry,
+    BundleOptions,
+    ProjectBuildConfig,
+    StyleEntry,
+    TsTranspilationOptions
+} from '../project-build-config';
 import { PackageJsonLike } from './package-jon-like';
 
-export interface StyleParsedEntry {
-    paths: string[];
-    entry: string;
+export interface StyleParsedEntry extends StyleEntry {
+    _inputFilePath: string;
+    _outputFilePath: string;
+    _includePaths?: string[];
+    _sourceMap?: boolean;
 }
 
 export interface AngularCompilerJsonOptions {
