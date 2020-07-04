@@ -135,8 +135,8 @@ async function afterTsTranspileTask(
         }
 
         let stylePreprocessorIncludePaths: string[] = [];
-        if (projectBuildConfig.stylePreprocessorOptions && projectBuildConfig.stylePreprocessorOptions.includePaths) {
-            stylePreprocessorIncludePaths = projectBuildConfig.stylePreprocessorOptions.includePaths.map((p) =>
+        if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.includePaths) {
+            stylePreprocessorIncludePaths = projectBuildConfig.styleOptions.includePaths.map((p) =>
                 path.resolve(projectBuildConfig._projectRoot, p)
             );
         }
