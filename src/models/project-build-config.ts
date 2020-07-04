@@ -77,23 +77,29 @@ export interface AssetEntry {
  */
 export interface StyleEntry {
     /**
-     * The file to include.
+     * The input file.
      */
-    input: string | string[];
+    input: string;
     /**
-     * The bundle name for this extra entry point.
+     * The output file for bundled css.
      */
-    bundleName?: string;
-}
-
-/**
- * @additionalProperties false
- */
-export interface StylePreprocessorOptions {
+    output?: string;
     /**
-     * An array of paths that LibSass can look in to attempt to resolve your @import declarations.
+     * If true, enable the outputing of sourcemap.
      */
-    includePaths: string[];
+    sourceMap?: boolean;
+    /**
+     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths?: string[];
+    /**
+     * If true, add vendor prefixes to CSS rules.
+     */
+    vendorPrefixes?: boolean;
+    /**
+     * If true, minify file will be generated.
+     */
+    minify?: boolean;
 }
 
 export interface ExternalsObjectElement {
@@ -228,11 +234,7 @@ export interface ProjectBuildConfigBase {
     /**
      * List of style entries to bundle.
      */
-    styles?: (string | StyleEntry)[];
-    /**
-     * Options to pass to style preprocessors.
-     */
-    stylePreprocessorOptions?: StylePreprocessorOptions;
+    styles?: StyleEntry[];
     /**
      * The typescript configuration file to be used.
      */
