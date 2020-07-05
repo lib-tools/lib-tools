@@ -1,3 +1,11 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import { ScriptTarget } from 'typescript';
 
 import { ScriptTargetString } from '../models';
@@ -31,7 +39,6 @@ export function toTsScriptTarget(target?: ScriptTargetString): ScriptTarget | un
         case 'Latest':
         case 'latest':
             return ScriptTarget.Latest;
-
         default:
             return undefined;
     }
