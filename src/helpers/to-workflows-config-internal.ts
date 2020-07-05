@@ -1,3 +1,11 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as path from 'path';
 
 import { WorkflowsConfig } from '../models';
@@ -5,7 +13,8 @@ import { ProjectConfigInternal, WorkflowsConfigInternal } from '../models/intern
 
 export function toWorkflowsConfigInternal(
     workflowsConfig: WorkflowsConfig,
-    configPath: string
+    configPath: string,
+    workspaceRoot: string
 ): WorkflowsConfigInternal {
     const workflowsConfigInternal: WorkflowsConfigInternal = {
         _configPath: configPath,
@@ -22,7 +31,6 @@ export function toWorkflowsConfigInternal(
             throw new Error(`The 'projects[${key}].root' must be relative path.`);
         }
 
-        const workspaceRoot = path.dirname(configPath);
         const projectRoot = path.resolve(workspaceRoot, project.root || '');
 
         const projectInternal: ProjectConfigInternal = {
