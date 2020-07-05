@@ -72,20 +72,22 @@ export interface BuildActionInternal extends BuildAction {
     _rootPackageJsonPath: string | null;
     _rootPackageJson: PackageJsonLike | null;
 
-    _bannerText: string | null;
+    // Assets
+    _copyAssets: (string | AssetEntry)[] | null;
 
+    // styles
+    _styleParsedEntries?: StyleParsedEntry[];
+
+    // transpilation
     _tsConfigPath?: string;
     _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
     _tsTranspilations?: TranspilationEntryInternal[];
     _prevTsTranspilationVersionReplaced?: boolean;
 
-    // styles
-    _styleParsedEntries?: StyleParsedEntry[];
-
+    // Bundle
     _bundles?: BundleEntryInternal[];
-
-    _copyAssets: (string | AssetEntry)[] | null;
+    _bannerText?: string;
 
     // package.json
     _packageJsonOutDir: string;
