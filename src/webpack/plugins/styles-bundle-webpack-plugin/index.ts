@@ -7,7 +7,7 @@ import * as postcss from 'postcss';
 import * as sass from 'sass';
 import * as webpack from 'webpack';
 
-import { AutoPrefixerOptions, CleanCSSOptions } from '../../../models';
+import { AutoPrefixerOptions, CleanCSSOptions, StyleOptions } from '../../../models';
 import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, normalizeRelativePath } from '../../../utils';
 
@@ -44,6 +44,8 @@ export class StyleBundleWebpackPlugin {
             return;
         }
 
+        const styleOptions = buildAction.style as StyleOptions;
+
         await Promise.all(
             buildAction._styleParsedEntries.map(async (styleEntry) => {
                 const inputFilePath = styleEntry._inputFilePath;
@@ -55,15 +57,15 @@ export class StyleBundleWebpackPlugin {
                 let sourceMap = true;
                 if (styleEntry.sourceMap != null) {
                     sourceMap = styleEntry.sourceMap;
-                } else if (buildAction.styleOptions && buildAction.styleOptions.sourceMap != null) {
-                    sourceMap = buildAction.styleOptions.sourceMap;
+                } else if (styleOptions.sourceMap != null) {
+                    sourceMap = styleOptions.sourceMap;
                 }
 
                 let sourceMapContents = true;
                 if (styleEntry.sourceMapContents != null) {
                     sourceMapContents = styleEntry.sourceMapContents;
-                } else if (buildAction.styleOptions && buildAction.styleOptions.sourceMapContents != null) {
-                    sourceMapContents = buildAction.styleOptions.sourceMapContents;
+                } else if (styleOptions.sourceMapContents != null) {
+                    sourceMapContents = styleOptions.sourceMapContents;
                 }
 
                 if (/\.s[ac]ss$/i.test(inputFilePath)) {
@@ -114,8 +116,8 @@ export class StyleBundleWebpackPlugin {
                 let vendorPrefixes: boolean | AutoPrefixerOptions = true;
                 if (styleEntry.vendorPrefixes != null) {
                     vendorPrefixes = styleEntry.vendorPrefixes;
-                } else if (buildAction.styleOptions && buildAction.styleOptions.vendorPrefixes != null) {
-                    vendorPrefixes = buildAction.styleOptions.vendorPrefixes;
+                } else if (styleOptions.vendorPrefixes != null) {
+                    vendorPrefixes = styleOptions.vendorPrefixes;
                 }
 
                 if (vendorPrefixes !== false) {
@@ -144,8 +146,8 @@ export class StyleBundleWebpackPlugin {
                 let minify: boolean | CleanCSSOptions = true;
                 if (styleEntry.minify != null) {
                     minify = styleEntry.minify;
-                } else if (buildAction.styleOptions && buildAction.styleOptions.minify != null) {
-                    minify = buildAction.styleOptions.minify;
+                } else if (styleOptions.minify != null) {
+                    minify = styleOptions.minify;
                 }
 
                 if (minify) {
