@@ -1,10 +1,9 @@
 import { ScriptTarget } from 'typescript';
 
-export function toTsScriptTarget(target: string): ScriptTarget | undefined {
+import { ScriptTargetString } from '../models';
+
+export function toTsScriptTarget(target?: ScriptTargetString): ScriptTarget | undefined {
     switch (target) {
-        case 'ES3':
-        case 'es3':
-            return ScriptTarget.ES3;
         case 'ES5':
         case 'es5':
             return ScriptTarget.ES5;
@@ -32,10 +31,7 @@ export function toTsScriptTarget(target: string): ScriptTarget | undefined {
         case 'Latest':
         case 'latest':
             return ScriptTarget.Latest;
-        case 'JSON':
-        case 'Json':
-        case 'json':
-            return ScriptTarget.JSON;
+
         default:
             return undefined;
     }
