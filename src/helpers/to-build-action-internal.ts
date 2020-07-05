@@ -3,15 +3,15 @@ import * as path from 'path';
 import { pathExists, readFile } from 'fs-extra';
 import * as ts from 'typescript';
 
-import { AssetEntry, BuildAction, StyleEntry, TsTranspilationOptions } from '../models';
+import { AssetEntry, BuildAction, ScriptTranspilationEntry, StyleEntry } from '../models';
 import {
     BuildActionInternal,
     BuildOptionsInternal,
-    BundleOptionsInternal,
     PackageJsonLike,
     ProjectConfigInternal,
-    StyleParsedEntry,
-    TsTranspilationOptionsInternal
+    ScriptBundleEntryInternal,
+    ScriptTranspilationEntryInternal,
+    StyleParsedEntry
 } from '../models/internals';
 import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
 
@@ -93,15 +93,6 @@ export async function toBuildActionInternal(
         nestedPackage = true;
     }
 
-    const bannerText = await getBannerText(
-        workspaceRoot,
-        projectRoot,
-        projectName,
-        packageName,
-        packageVersion,
-        buildAction.banner
-    );
-
     let outputPathAbs: string | null = null;
 
     if (buildAction.outputPath) {
@@ -166,8 +157,6 @@ export async function toBuildActionInternal(
         packageJsonOutDir = outputPathAbs;
     }
 
-    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
-
     let copyAssets: (string | AssetEntry)[] | null = null;
     if (buildAction.copy && Array.isArray(buildAction.copy)) {
         copyAssets = buildAction.copy;
@@ -184,6 +173,8 @@ export async function toBuildActionInternal(
 
         copyAssets = filesToCopy;
     }
+
+    const nodeModulesPath = await findNodeModulesPath(workspaceRoot);
 
     const buildActionInternal: BuildActionInternal = {
         ...buildAction,
@@ -203,34 +194,41 @@ export async function toBuildActionInternal(
         _packageScope: packageScope,
         _rootPackageJsonPath: rootPackageJsonPath,
         _rootPackageJson: rootPackageJson,
-        _bannerText: bannerText,
         _copyAssets: copyAssets,
         _packageJsonOutDir: packageJsonOutDir
     };
 
-    // tsconfig
-    if (buildActionInternal.tsConfig) {
-        const tsConfigPath = path.resolve(projectRoot, buildActionInternal.tsConfig);
-        buildActionInternal._tsConfigPath = tsConfigPath;
-
-        buildActionInternal._tsConfigJson = readTsConfigFile(tsConfigPath);
-        buildActionInternal._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
-    }
-
-    // TsTranspilations
-    await prepareTsTranspilations(buildActionInternal);
-
-    // Bundles
-    initBundleOptions(buildActionInternal);
-
     // Styles
-    if (buildActionInternal.styles && buildActionInternal.styles.length > 0) {
+    if (
+        buildActionInternal.style &&
+        buildActionInternal.style.entries &&
+        buildActionInternal.style.entries.length > 0
+    ) {
         buildActionInternal._styleParsedEntries = await parseStyleEntries(
-            buildActionInternal.styles,
+            buildActionInternal.style.entries,
             buildActionInternal,
             projectRoot,
             outputPathAbs
         );
+    }
+
+    // Script transpilations
+    await prepareScriptTranspilations(buildActionInternal);
+
+    // Bundles
+    prepareScriptBundles(buildActionInternal);
+
+    if (buildAction.scriptBundle && typeof buildAction.scriptBundle === 'object' && buildAction.scriptBundle.banner) {
+        const bannerText = await getBannerText(
+            workspaceRoot,
+            projectRoot,
+            projectName,
+            packageName,
+            packageVersion,
+            buildAction.scriptBundle.banner
+        );
+
+        buildActionInternal._bannerText = bannerText;
     }
 
     return buildActionInternal;
@@ -242,12 +240,8 @@ async function getBannerText(
     projectName: string,
     packageName: string,
     packageVersion: string,
-    banner?: string
-): Promise<string | null> {
-    if (!banner) {
-        return null;
-    }
-
+    banner: string
+): Promise<string> {
     let bannerText = banner;
 
     if (/\.txt$/i.test(bannerText)) {
@@ -265,7 +259,7 @@ async function getBannerText(
     }
 
     if (!bannerText) {
-        return null;
+        return bannerText;
     }
 
     bannerText = addCommentToBanner(bannerText);
@@ -313,26 +307,43 @@ function replaceTokensForBanner(input: string, packageName: string, packageVersi
     return str;
 }
 
-async function prepareTsTranspilations(buildAction: BuildActionInternal): Promise<void> {
+async function prepareScriptTranspilations(buildAction: BuildActionInternal): Promise<void> {
     const workspaceRoot = buildAction._workspaceRoot;
     const projectRoot = buildAction._projectRoot;
     const projectName = buildAction._projectName;
-    const tsTranspilationInternals: TsTranspilationOptionsInternal[] = [];
 
-    if (buildAction.tsTranspilations && Array.isArray(buildAction.tsTranspilations)) {
-        const tsTranspilations = buildAction.tsTranspilations;
-        for (let i = 0; i < tsTranspilations.length; i++) {
-            const tsTranspilation = tsTranspilations[i];
+    // Scripts
+    if (
+        buildAction.scriptTranspilation &&
+        typeof buildAction.scriptTranspilation === 'object' &&
+        buildAction.scriptTranspilation.tsConfig
+    ) {
+        const tsConfigPath = path.resolve(projectRoot, buildAction.scriptTranspilation.tsConfig);
+        buildAction._tsConfigPath = tsConfigPath;
+        buildAction._tsConfigJson = readTsConfigFile(tsConfigPath);
+        buildAction._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
+    }
+
+    const scriptTranspilationEntries: ScriptTranspilationEntryInternal[] = [];
+
+    if (
+        buildAction.scriptTranspilation &&
+        typeof buildAction.scriptTranspilation === 'object' &&
+        buildAction.scriptTranspilation.entries
+    ) {
+        const entries = buildAction.scriptTranspilation.entries;
+        for (let i = 0; i < entries.length; i++) {
+            const tsTranspilation = entries[i];
             let tsConfigPath = '';
             if (tsTranspilation.tsConfig) {
                 tsConfigPath = path.resolve(projectRoot, tsTranspilation.tsConfig);
             } else {
-                if (buildAction.tsConfig && buildAction._tsConfigPath) {
+                if (buildAction._tsConfigPath) {
                     tsConfigPath = buildAction._tsConfigPath;
-                } else if (i > 0 && tsTranspilationInternals[i - 1]._tsConfigPath) {
-                    tsConfigPath = tsTranspilationInternals[i - 1]._tsConfigPath;
+                } else if (i > 0 && scriptTranspilationEntries[i - 1]._tsConfigPath) {
+                    tsConfigPath = scriptTranspilationEntries[i - 1]._tsConfigPath;
                 } else if (i === 0) {
-                    const foundTsConfigPath = await detectTsConfigPathForLib(workspaceRoot, projectRoot);
+                    const foundTsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
                     if (foundTsConfigPath) {
                         tsConfigPath = foundTsConfigPath;
                     }
@@ -343,27 +354,27 @@ async function prepareTsTranspilations(buildAction: BuildActionInternal): Promis
                 throw new Error(`The 'projects[${projectName}].tsTranspilations[${i}].tsConfig' value is required.`);
             }
 
-            const tsTranspilationInternal = await initTsTranspilationOptions(
+            const tsTranspilationInternal = await prepareScriptTranspilationEntry(
                 tsConfigPath,
                 tsTranspilation,
                 1,
                 buildAction
             );
-            tsTranspilationInternals.push(tsTranspilationInternal);
+            scriptTranspilationEntries.push(tsTranspilationInternal);
         }
-    } else if (buildAction.tsTranspilations) {
+    } else if (buildAction.scriptTranspilation) {
         let tsConfigPath: string | null = null;
-        if (buildAction.tsConfig && buildAction._tsConfigPath) {
+        if (buildAction._tsConfigPath) {
             tsConfigPath = buildAction._tsConfigPath;
         } else {
-            tsConfigPath = await detectTsConfigPathForLib(workspaceRoot, projectRoot);
+            tsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
         }
 
         if (!tsConfigPath) {
             throw new Error(`Could not detect tsconfig file for 'projects[${projectName}].`);
         }
 
-        const esm2015Transpilation = await initTsTranspilationOptions(
+        const esm2015Transpilation = await prepareScriptTranspilationEntry(
             tsConfigPath,
             {
                 target: 'es2015',
@@ -372,9 +383,9 @@ async function prepareTsTranspilations(buildAction: BuildActionInternal): Promis
             0,
             buildAction
         );
-        tsTranspilationInternals.push(esm2015Transpilation);
+        scriptTranspilationEntries.push(esm2015Transpilation);
 
-        const esm5Transpilation = await initTsTranspilationOptions(
+        const esm5Transpilation = await prepareScriptTranspilationEntry(
             tsConfigPath,
             {
                 target: 'es5',
@@ -384,83 +395,18 @@ async function prepareTsTranspilations(buildAction: BuildActionInternal): Promis
             1,
             buildAction
         );
-        tsTranspilationInternals.push(esm5Transpilation);
+        scriptTranspilationEntries.push(esm5Transpilation);
     }
 
-    buildAction._tsTranspilations = tsTranspilationInternals;
+    buildAction._scriptTranspilationEntries = scriptTranspilationEntries;
 }
 
-function initBundleOptions(buildAction: BuildActionInternal): void {
-    const bundleInternals: BundleOptionsInternal[] = [];
-    const projectName = buildAction._projectName;
-
-    if (buildAction.bundles && Array.isArray(buildAction.bundles)) {
-        const bundles = buildAction.bundles;
-        for (let i = 0; i < bundles.length; i++) {
-            const bundlePartial = bundles[i];
-            bundleInternals.push(initBundleTarget(bundleInternals, bundlePartial, i, buildAction));
-        }
-    } else if (buildAction.bundles) {
-        let shouldBundlesDefault = buildAction.tsTranspilations === true;
-        if (
-            !shouldBundlesDefault &&
-            buildAction._tsTranspilations &&
-            buildAction._tsTranspilations.length >= 2 &&
-            buildAction._tsTranspilations[0].target === 'es2015' &&
-            buildAction._tsTranspilations[1].target === 'es5'
-        ) {
-            shouldBundlesDefault = true;
-        }
-
-        if (shouldBundlesDefault) {
-            const es2015BundlePartial: Partial<BundleOptionsInternal> = {
-                libraryTarget: 'esm',
-                entryRoot: 'tsTranspilationOutput',
-                tsTranspilationIndex: 0
-            };
-
-            const es2015BundleInternal = initBundleTarget(bundleInternals, es2015BundlePartial, 0, buildAction);
-            bundleInternals.push(es2015BundleInternal);
-
-            const es5BundlePartial: Partial<BundleOptionsInternal> = {
-                libraryTarget: 'esm',
-                entryRoot: 'tsTranspilationOutput',
-                tsTranspilationIndex: 1
-            };
-
-            const es5BundleInternal = initBundleTarget(bundleInternals, es5BundlePartial, 1, buildAction);
-            bundleInternals.push(es5BundleInternal);
-
-            const umdBundlePartial: Partial<BundleOptionsInternal> = {
-                libraryTarget: 'umd',
-                entryRoot: 'prevBundleOutput'
-            };
-            const umdBundleInternal = initBundleTarget(bundleInternals, umdBundlePartial, 2, buildAction);
-            bundleInternals.push(umdBundleInternal);
-        } else {
-            throw new Error(
-                `Counld not detect to bunlde automatically, please correct option in 'projects[${projectName}].bundles'.`
-            );
-        }
-    }
-
-    buildAction._bundles = bundleInternals;
-}
-
-async function detectTsConfigPathForLib(workspaceRoot: string, projectRoot: string): Promise<string | null> {
-    return findUp(
-        ['tsconfig.build.json', 'tsconfig-build.json', 'tsconfig.lib.json', 'tsconfig-lib.json', 'tsconfig.json'],
-        projectRoot,
-        workspaceRoot
-    );
-}
-
-export async function initTsTranspilationOptions(
+export async function prepareScriptTranspilationEntry(
     tsConfigPath: string,
-    tsTranspilation: TsTranspilationOptions & Partial<TsTranspilationOptionsInternal>,
+    tsTranspilation: ScriptTranspilationEntry & Partial<ScriptTranspilationEntryInternal>,
     i: number,
     buildAction: BuildActionInternal
-): Promise<TsTranspilationOptionsInternal> {
+): Promise<ScriptTranspilationEntryInternal> {
     const tsConfigJson = readTsConfigFile(tsConfigPath);
     const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
 
@@ -514,36 +460,31 @@ export async function initTsTranspilationOptions(
         tsTranspilation._typingsOutDir = buildAction._packageJsonOutDir || tsOutDir;
     }
 
-    // detect entry
-    if (buildAction.main) {
-        tsTranspilation._detectedEntryName = buildAction.main.replace(/\.(js|jsx|ts|tsx)$/i, '');
-    } else {
-        // const flatModuleOutFile =
-        //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleOutFile
-        //         ? (tsTranspilation._angularCompilerOptions.flatModuleOutFile as string)
-        //         : null;
+    // const flatModuleOutFile =
+    //     tsTranspilation._angularCompilerOptions && tsTranspilation._angularCompilerOptions.flatModuleOutFile
+    //         ? (tsTranspilation._angularCompilerOptions.flatModuleOutFile as string)
+    //         : null;
 
-        // if (flatModuleOutFile) {
-        //     tsTranspilation._detectedEntryName = flatModuleOutFile.replace(/\.js$/i, '');
-        // } else {
-        //     const tsSrcDir = path.dirname(tsConfigPath);
-        //     if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
-        //         tsTranspilation._detectedEntryName = 'index';
-        //     } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
-        //         tsTranspilation._detectedEntryName = 'main';
-        //     }
-        // }
+    // if (flatModuleOutFile) {
+    //     tsTranspilation._detectedEntryName = flatModuleOutFile.replace(/\.js$/i, '');
+    // } else {
+    //     const tsSrcDir = path.dirname(tsConfigPath);
+    //     if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
+    //         tsTranspilation._detectedEntryName = 'index';
+    //     } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
+    //         tsTranspilation._detectedEntryName = 'main';
+    //     }
+    // }
 
-        const tsSrcDir = path.dirname(tsConfigPath);
-        if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
-            tsTranspilation._detectedEntryName = 'index';
-        } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
-            tsTranspilation._detectedEntryName = 'main';
-        } else if (await pathExists(path.resolve(tsSrcDir, 'public_api.ts'))) {
-            tsTranspilation._detectedEntryName = 'public_api';
-        } else if (await pathExists(path.resolve(tsSrcDir, 'public-api.ts'))) {
-            tsTranspilation._detectedEntryName = 'public-api';
-        }
+    const tsSrcDir = path.dirname(tsConfigPath);
+    if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
+        tsTranspilation._detectedEntryName = 'index';
+    } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
+        tsTranspilation._detectedEntryName = 'main';
+    } else if (await pathExists(path.resolve(tsSrcDir, 'public_api.ts'))) {
+        tsTranspilation._detectedEntryName = 'public_api';
+    } else if (await pathExists(path.resolve(tsSrcDir, 'public-api.ts'))) {
+        tsTranspilation._detectedEntryName = 'public-api';
     }
 
     // package entry points
@@ -605,12 +546,78 @@ export async function initTsTranspilationOptions(
     };
 }
 
-export function initBundleTarget(
-    bundles: BundleOptionsInternal[],
-    currentBundle: Partial<BundleOptionsInternal>,
+async function detectTsConfigPath(workspaceRoot: string, projectRoot: string): Promise<string | null> {
+    return findUp(
+        ['tsconfig.build.json', 'tsconfig-build.json', 'tsconfig.lib.json', 'tsconfig-lib.json', 'tsconfig.json'],
+        projectRoot,
+        workspaceRoot
+    );
+}
+
+function prepareScriptBundles(buildAction: BuildActionInternal): void {
+    const projectName = buildAction._projectName;
+
+    const scriptBundleEntries: ScriptBundleEntryInternal[] = [];
+
+    if (buildAction.scriptBundle && typeof buildAction.scriptBundle === 'object' && buildAction.scriptBundle.entries) {
+        const bundles = buildAction.scriptBundle.entries;
+        for (let i = 0; i < bundles.length; i++) {
+            const bundlePartial = bundles[i];
+            scriptBundleEntries.push(prepareBundleEntry(scriptBundleEntries, bundlePartial, i, buildAction));
+        }
+    } else if (buildAction.scriptBundle) {
+        let shouldBundlesDefault = buildAction.scriptTranspilation === true;
+        if (
+            !shouldBundlesDefault &&
+            buildAction._scriptTranspilationEntries &&
+            buildAction._scriptTranspilationEntries.length >= 2 &&
+            buildAction._scriptTranspilationEntries[0].target === 'es2015' &&
+            buildAction._scriptTranspilationEntries[1].target === 'es5'
+        ) {
+            shouldBundlesDefault = true;
+        }
+
+        if (shouldBundlesDefault) {
+            const es2015BundlePartial: Partial<ScriptBundleEntryInternal> = {
+                libraryTarget: 'esm',
+                entryRoot: 'tsTranspilationOutput',
+                tsTranspilationIndex: 0
+            };
+
+            const es2015BundleInternal = prepareBundleEntry(scriptBundleEntries, es2015BundlePartial, 0, buildAction);
+            scriptBundleEntries.push(es2015BundleInternal);
+
+            const es5BundlePartial: Partial<ScriptBundleEntryInternal> = {
+                libraryTarget: 'esm',
+                entryRoot: 'tsTranspilationOutput',
+                tsTranspilationIndex: 1
+            };
+
+            const es5BundleInternal = prepareBundleEntry(scriptBundleEntries, es5BundlePartial, 1, buildAction);
+            scriptBundleEntries.push(es5BundleInternal);
+
+            const umdBundlePartial: Partial<ScriptBundleEntryInternal> = {
+                libraryTarget: 'umd',
+                entryRoot: 'prevBundleOutput'
+            };
+            const umdBundleInternal = prepareBundleEntry(scriptBundleEntries, umdBundlePartial, 2, buildAction);
+            scriptBundleEntries.push(umdBundleInternal);
+        } else {
+            throw new Error(
+                `Counld not detect to bunlde automatically, please correct option in 'projects[${projectName}].bundles'.`
+            );
+        }
+    }
+
+    buildAction._scriptBundleEntries = scriptBundleEntries;
+}
+
+export function prepareBundleEntry(
+    bundles: ScriptBundleEntryInternal[],
+    currentBundle: Partial<ScriptBundleEntryInternal>,
     i: number,
     buildAction: BuildActionInternal
-): BundleOptionsInternal {
+): ScriptBundleEntryInternal {
     const projectName = buildAction._projectName;
 
     if (!currentBundle.libraryTarget) {
@@ -619,29 +626,30 @@ export function initBundleTarget(
 
     const projectRoot = buildAction._projectRoot;
     const outputPath = buildAction._outputPath;
+    const bundleOptions = typeof buildAction.scriptBundle == 'object' ? buildAction.scriptBundle : {};
 
     // externals
-    if (currentBundle.externals == null && buildAction.externals) {
-        currentBundle.externals = JSON.parse(JSON.stringify(buildAction.externals));
+    if (currentBundle.externals == null && bundleOptions.externals) {
+        currentBundle.externals = JSON.parse(JSON.stringify(bundleOptions.externals));
     }
 
     // dependenciesAsExternals
-    if (currentBundle.dependenciesAsExternals == null && buildAction.dependenciesAsExternals != null) {
-        currentBundle.dependenciesAsExternals = buildAction.dependenciesAsExternals;
+    if (currentBundle.dependenciesAsExternals == null && bundleOptions.dependenciesAsExternals != null) {
+        currentBundle.dependenciesAsExternals = bundleOptions.dependenciesAsExternals;
     }
 
     // peerDependenciesAsExternals
-    if (currentBundle.peerDependenciesAsExternals == null && buildAction.peerDependenciesAsExternals != null) {
-        currentBundle.peerDependenciesAsExternals = buildAction.peerDependenciesAsExternals;
+    if (currentBundle.peerDependenciesAsExternals == null && bundleOptions.peerDependenciesAsExternals != null) {
+        currentBundle.peerDependenciesAsExternals = bundleOptions.peerDependenciesAsExternals;
     }
 
     // includeCommonJs
-    if (currentBundle.includeCommonJs == null && buildAction.includeCommonJs != null) {
-        currentBundle.includeCommonJs = buildAction.includeCommonJs;
+    if (currentBundle.includeCommonJs == null && bundleOptions.includeCommonJs != null) {
+        currentBundle.includeCommonJs = bundleOptions.includeCommonJs;
     }
 
     if (currentBundle.entryRoot === 'prevBundleOutput') {
-        let foundBundleTarget: BundleOptionsInternal | null = null;
+        let foundBundleTarget: ScriptBundleEntryInternal | null = null;
         if (i > 0) {
             foundBundleTarget = bundles[i - 1];
         }
@@ -656,24 +664,24 @@ export function initBundleTarget(
         currentBundle._sourceScriptTarget = foundBundleTarget._destScriptTarget;
         currentBundle._destScriptTarget = foundBundleTarget._destScriptTarget;
     } else if (currentBundle.entryRoot === 'tsTranspilationOutput') {
-        if (!buildAction._tsTranspilations || !buildAction._tsTranspilations.length) {
+        if (!buildAction._scriptTranspilationEntries || !buildAction._scriptTranspilationEntries.length) {
             throw new Error(
                 `To use 'tsTranspilationOutDir', the 'projects[${projectName}].tsTranspilations' option is required.`
             );
         }
 
-        let foundTsTranspilation: TsTranspilationOptionsInternal;
+        let foundTsTranspilation: ScriptTranspilationEntryInternal;
 
         if (currentBundle.tsTranspilationIndex == null) {
-            foundTsTranspilation = buildAction._tsTranspilations[0];
+            foundTsTranspilation = buildAction._scriptTranspilationEntries[0];
         } else {
-            if (currentBundle.tsTranspilationIndex > buildAction._tsTranspilations.length - 1) {
+            if (currentBundle.tsTranspilationIndex > buildAction._scriptTranspilationEntries.length - 1) {
                 throw new Error(
                     `No _tsTranspilations found, please correct value in 'projects[${projectName}].bundles[${i}].tsTranspilationIndex'.`
                 );
             }
 
-            foundTsTranspilation = buildAction._tsTranspilations[currentBundle.tsTranspilationIndex];
+            foundTsTranspilation = buildAction._scriptTranspilationEntries[currentBundle.tsTranspilationIndex];
         }
 
         const entryRootDir = foundTsTranspilation._tsOutDirRootResolved;
@@ -690,7 +698,7 @@ export function initBundleTarget(
         currentBundle._sourceScriptTarget = foundTsTranspilation._scriptTarget;
         currentBundle._destScriptTarget = foundTsTranspilation._scriptTarget;
     } else {
-        const entryFile = currentBundle.entry || buildAction.main;
+        const entryFile = currentBundle.entry || bundleOptions.entry;
         if (!entryFile) {
             throw new Error(`The 'projects[${projectName}].bundles[${i}].entry' value is required.`);
         }
@@ -743,7 +751,10 @@ export function initBundleTarget(
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
 
         if (currentBundle.libraryTarget === 'umd' || currentBundle.libraryTarget === 'cjs') {
-            if (bundles.length > 1 || (buildAction._tsTranspilations && buildAction._tsTranspilations.length > 0)) {
+            if (
+                bundles.length > 1 ||
+                (buildAction._scriptTranspilationEntries && buildAction._scriptTranspilationEntries.length > 0)
+            ) {
                 bundleOutFilePath = path.resolve(
                     outputPath,
                     `bundles/${outFileName}.${currentBundle.libraryTarget}.js`
@@ -804,7 +815,7 @@ async function parseStyleEntries(
     return styleEntries.map((styleEntry) => {
         if (!supportedStyleInputExt.test(styleEntry.input)) {
             throw new Error(
-                `Unsupported style input'${styleEntry.input}'. Config location projects[${buildAction._projectName}].styles.`
+                `Unsupported style input entry '${styleEntry.input}'. Config location projects[${buildAction._projectName}].style.entries.`
             );
         }
 
@@ -820,7 +831,7 @@ async function parseStyleEntries(
             } else {
                 if (!supportedStyleOutputExt.test(extName)) {
                     throw new Error(
-                        `Unsupported style output'${styleEntry.output}'. Config location projects[${buildAction._projectName}].styles.`
+                        `Unsupported style output entry '${styleEntry.output}'. Config location projects[${buildAction._projectName}].style.entries.`
                     );
                 }
 
@@ -838,12 +849,8 @@ async function parseStyleEntries(
                     path.resolve(projectRoot, includePath)
                 );
             }
-        } else if (
-            buildAction.styleOptions &&
-            buildAction.styleOptions.includePaths &&
-            buildAction.styleOptions.includePaths.length > 0
-        ) {
-            includePaths = buildAction.styleOptions.includePaths.map((includePath: string) =>
+        } else if (buildAction.style && buildAction.style.includePaths && buildAction.style.includePaths.length > 0) {
+            includePaths = buildAction.style.includePaths.map((includePath: string) =>
                 path.resolve(projectRoot, includePath)
             );
         }
