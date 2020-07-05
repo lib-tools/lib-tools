@@ -330,7 +330,7 @@ export type ScriptTargetString =
 /**
  * @additionalProperties false
  */
-export interface TranspilationEntry {
+export interface ScriptTranspilationEntry {
     /**
      * Typescript configuration file for this transpilation.
      */
@@ -352,7 +352,7 @@ export interface TranspilationEntry {
 /**
  * @additionalProperties false
  */
-export interface BundleEntry {
+export interface ScriptBundleEntry {
     /**
      * Bundle module format.
      */
@@ -461,7 +461,7 @@ export interface BuildActionBase {
               /**
                * List of transpilation entries.
                */
-              entries?: TranspilationEntry[];
+              entries?: ScriptTranspilationEntry[];
               /**
                * Default typescript configuration file to be used.
                */
@@ -477,7 +477,7 @@ export interface BuildActionBase {
               /**
                * Bundle entries.
                */
-              entries?: BundleEntry[];
+              entries?: ScriptBundleEntry[];
               /**
                * Represents your umd module id.
                */

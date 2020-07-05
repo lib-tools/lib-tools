@@ -1,6 +1,12 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { AssetEntry, BuildAction, BundleEntry, StyleEntry, TranspilationEntry } from '../actions/build-action';
+import {
+    AssetEntry,
+    BuildAction,
+    ScriptBundleEntry,
+    ScriptTranspilationEntry,
+    StyleEntry
+} from '../actions/build-action';
 import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleParsedEntry extends StyleEntry {
@@ -24,7 +30,7 @@ export interface TsConfigJsonOptions {
     angularCompilerOptions?: AngularCompilerJsonOptions;
 }
 
-export interface TranspilationEntryInternal extends TranspilationEntry {
+export interface ScriptTranspilationEntryInternal extends ScriptTranspilationEntry {
     _index: number;
     _tsConfigPath: string;
     _tsConfigJson: TsConfigJsonOptions;
@@ -38,7 +44,7 @@ export interface TranspilationEntryInternal extends TranspilationEntry {
     _customTsOutDir?: string;
 }
 
-export interface BundleEntryInternal extends BundleEntry {
+export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
     _index: number;
     _entryFilePath: string;
     _outputFilePath: string;
@@ -78,15 +84,16 @@ export interface BuildActionInternal extends BuildAction {
     // styles
     _styleParsedEntries?: StyleParsedEntry[];
 
-    // transpilation
+    // tsconfig
     _tsConfigPath?: string;
     _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
-    _tsTranspilations?: TranspilationEntryInternal[];
-    _prevTsTranspilationVersionReplaced?: boolean;
 
-    // Bundle
-    _bundles?: BundleEntryInternal[];
+    // Script transpilations
+    _scriptTranspilationEntries?: ScriptTranspilationEntryInternal[];
+
+    // Script bundles
+    _scriptBundleEntries?: ScriptBundleEntryInternal[];
     _bannerText?: string;
 
     // package.json
