@@ -1,12 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import {
-    AssetEntry,
-    BuildAction,
-    ScriptBundleEntry,
-    ScriptTranspilationEntry,
-    StyleEntry
-} from '../actions/build-action';
+import { AssetEntry, BuildAction, ScriptBundleEntry, ScriptTranspilationEntry, StyleEntry } from '../build-action';
 import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleParsedEntry extends StyleEntry {

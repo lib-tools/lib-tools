@@ -1,4 +1,4 @@
-import { BuildAction } from './actions/build-action';
+import { BuildAction } from './build-action';
 
 /**
  * The project configuration.
