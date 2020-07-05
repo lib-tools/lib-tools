@@ -188,7 +188,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Typescript transpilation plugin
-    if (buildAction._tsTranspilations && buildAction._tsTranspilations.length > 0) {
+    if (buildAction._scriptTranspilationEntries && buildAction._scriptTranspilationEntries.length > 0) {
         const pluginModule = await import('../plugins/ts-transpilations-webpack-plugin');
         const TsTranspilationsWebpackPlugin = pluginModule.TsTranspilationsWebpackPlugin;
         plugins.push(
@@ -212,7 +212,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Rollup bundles plugin
-    if (buildAction._bundles && buildAction._bundles.length > 0) {
+    if (buildAction._scriptBundleEntries && buildAction._scriptBundleEntries.length > 0) {
         const pluginModule = await import('../plugins/rollup-bundles-webpack-plugin');
         const RollupBundlesWebpackPlugin = pluginModule.RollupBundlesWebpackPlugin;
         plugins.push(
