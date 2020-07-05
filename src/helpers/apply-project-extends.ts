@@ -21,6 +21,19 @@ import { toWorkflowsConfigInternal } from './to-workflows-config-internal';
 
 const ajv = new Ajv();
 
+export async function applyProjectExtends(
+    projectConfig: ProjectConfigInternal,
+    projectCollection: { [key: string]: ProjectConfigInternal } = {}
+): Promise<void> {
+    if (!projectConfig.extends || !projectConfig.extends.trim().length) {
+        return;
+    }
+
+    const rootConfigPath = projectConfig._configPath;
+
+    await applyProjectExtendsInternal(projectConfig, projectCollection, rootConfigPath);
+}
+
 async function applyProjectExtendsInternal(
     projectConfig: ProjectConfigInternal,
     projectCollection: { [key: string]: ProjectConfigInternal } = {},
@@ -144,12 +157,12 @@ async function getBaseProjectConfigFromFile(
                 );
             }
 
-            const libConifgInternal = toWorkflowsConfigInternal(
+            const workflowsConfigInternal = toWorkflowsConfigInternal(
                 workflowConfig,
                 extendsFilePath,
                 projectConfig._workspaceRoot
             );
-            const foundBaseProjectInternal = libConifgInternal.projects[projectNameToExtend];
+            const foundBaseProjectInternal = workflowsConfigInternal.projects[projectNameToExtend];
 
             if (foundBaseProjectInternal._projectName === projectConfig._projectName) {
                 throw new Error(
@@ -209,17 +222,4 @@ async function getBaseProjectConfigFromFile(
             `Error in extending project config, could not read file '${extendsFilePath}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
     }
-}
-
-export async function applyProjectExtends(
-    projectConfig: ProjectConfigInternal,
-    projectCollection: { [key: string]: ProjectConfigInternal } = {}
-): Promise<void> {
-    if (!projectConfig.extends || !projectConfig.extends.trim().length) {
-        return;
-    }
-
-    const rootConfigPath = projectConfig._configPath;
-
-    applyProjectExtendsInternal(projectConfig, projectCollection, rootConfigPath);
 }
