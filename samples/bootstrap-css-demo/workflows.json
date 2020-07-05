@@ -3,7 +3,7 @@
   "projects": {
     "bootstrap-css-demo": {
       "root": "./",
-      "tasks": {
+      "actions": {
         "build": {
           "outputPath": "dist",
           "copy": [

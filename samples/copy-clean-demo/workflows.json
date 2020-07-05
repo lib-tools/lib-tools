@@ -3,7 +3,7 @@
   "projects": {
     "copy-clean-demo": {
       "root": "./",
-      "tasks": {
+      "actions": {
         "build": {
           "outputPath": "dist",
           "clean": {
