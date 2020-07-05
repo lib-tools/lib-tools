@@ -146,8 +146,8 @@ export class PackageJsonFileWebpackPlugin {
 
         if (
             packageJson.sideEffects == null &&
-            ((this.buildAction._tsTranspilations && this.buildAction._tsTranspilations.length) ||
-                (this.buildAction._bundles && this.buildAction._bundles.length))
+            ((this.buildAction._scriptTranspilationEntries && this.buildAction._scriptTranspilationEntries.length) ||
+                (this.buildAction._scriptBundleEntries && this.buildAction._scriptBundleEntries.length))
         ) {
             this.packageJsonHasAnyChanges = true;
             this.logger.debug(`Updating 'sideEffects' field in package.json`);
