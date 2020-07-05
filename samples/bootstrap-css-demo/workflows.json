@@ -12,15 +12,18 @@
               "to": "scss/"
             }
           ],
-          "styles": [
-            {
-              "input": "src/scss/bootstrap.scss",
-              "output": "css/bootstrap.css",
-              "minify": true,
-              "vendorPrefixes": true,
-              "sourceMap": true
-            }
-          ]
+          "style": {
+            "entries": [
+              {
+                "input": "src/scss/bootstrap.scss",
+                "output": "css/bootstrap.css",
+                "minify": true,
+                "vendorPrefixes": true,
+                "sourceMap": true
+              }
+            ]
+
+          }
         }
       }
     }
