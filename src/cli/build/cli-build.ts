@@ -35,7 +35,7 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
         const configStr = argv.config as string;
         configPath = path.isAbsolute(configStr) ? path.resolve(configStr) : path.resolve(process.cwd(), configStr);
     } else {
-        configPath = path.resolve(process.cwd(), 'lib.json');
+        configPath = path.resolve(process.cwd(), 'workflows.json');
     }
 
     const watch = argv.watch ? true : false;
