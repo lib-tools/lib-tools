@@ -1,8 +1,8 @@
-import { LibConfig } from '../lib-config';
+import { WorkflowsConfig } from '../workflows-config';
 
 import { ProjectConfigInternal } from './project-config-internal';
 
-export interface LibConfigInternal extends LibConfig {
+export interface WorkflowsConfigInternal extends WorkflowsConfig {
     _configPath: string;
     projects: {
         [key: string]: ProjectConfigInternal;
