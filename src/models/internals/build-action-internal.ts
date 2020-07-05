@@ -49,7 +49,6 @@ export interface BundleOptionsInternal extends BundleOptions {
 
     _sourceScriptTarget?: ScriptTarget;
     _destScriptTarget?: ScriptTarget;
-    _ecmaVersion?: number;
     _supportES2015?: boolean;
 }
 
