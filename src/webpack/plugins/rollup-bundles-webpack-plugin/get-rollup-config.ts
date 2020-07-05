@@ -7,21 +7,22 @@ import resolve from '@rollup/plugin-node-resolve';
 const builtins = require('builtins')();
 
 import { ExternalsEntry } from '../../../models';
-import { BuildActionInternal, BundleOptionsInternal } from '../../../models/internals';
+import { BuildActionInternal, ScriptBundleEntryInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export function getRollupConfig(
     buildAction: BuildActionInternal,
-    currentBundle: BundleOptionsInternal,
+    currentBundle: ScriptBundleEntryInternal,
     logger: LoggerBase
 ): {
     inputOptions: rollup.InputOptions;
     outputOptions: rollup.OutputOptions;
 } {
-    // const isTsEntry = /\.tsx?$/i.test(currentBundle._entryFilePath);
-    let moduleName = buildAction.libraryName;
+    const bundleOptions =
+        buildAction.scriptBundle && typeof buildAction.scriptBundle === 'object' ? buildAction.scriptBundle : {};
+    let moduleName = bundleOptions.libraryName;
     if (!moduleName && buildAction._packageName) {
         if (buildAction._packageName.startsWith('@')) {
             moduleName = buildAction._packageName.substring(1).split('/').join('.');
@@ -134,7 +135,7 @@ export function getRollupConfig(
         if (currentBundle.includeCommonJs) {
             let commonjsOption = {
                 extensions: ['.js'],
-                sourceMap: buildAction.sourceMap
+                sourceMap: bundleOptions.sourceMap
             };
 
             if (typeof currentBundle.includeCommonJs === 'object') {
@@ -179,7 +180,7 @@ export function getRollupConfig(
         globals,
         exports: 'named',
         file: currentBundle._outputFilePath,
-        sourcemap: buildAction.sourceMap
+        sourcemap: bundleOptions.sourceMap
     };
 
     if (buildAction._bannerText) {
