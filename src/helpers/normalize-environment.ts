@@ -1,3 +1,63 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
+function normalizeEnvName(envName: string): string {
+    const envLower = envName.toLowerCase();
+    switch (envLower) {
+        case 'prod':
+        case 'production':
+            return 'prod';
+        case 'dev':
+        case 'development':
+            return 'dev';
+        case 'dll':
+            return 'dll';
+        default:
+            return envName;
+    }
+}
+
+function toBooleanOrString(value: string | boolean | null | undefined): boolean | string {
+    if (value == null) {
+        return false;
+    }
+
+    if (typeof value === 'boolean') {
+        return value;
+    }
+
+    if (value.toLowerCase() === 'false') {
+        return false;
+    }
+
+    if (value.toLowerCase() === 'true') {
+        return true;
+    }
+
+    return value;
+}
+
+function toBoolean(value: string | boolean | null | undefined): boolean {
+    if (value == null) {
+        return false;
+    }
+
+    if (typeof value === 'boolean') {
+        return value;
+    }
+
+    if (value.toLowerCase() === 'false' || value === '0') {
+        return false;
+    }
+
+    return value ? true : false;
+}
+
 export function normalizeEnvironment(
     rawEnvironment: string | { [key: string]: boolean | string } | null,
     prod?: boolean
@@ -110,56 +170,4 @@ export function normalizeEnvironment(
     }
 
     return environment;
-}
-
-function normalizeEnvName(envName: string): string {
-    const envLower = envName.toLowerCase();
-    switch (envLower) {
-        case 'prod':
-        case 'production':
-            return 'prod';
-        case 'dev':
-        case 'development':
-            return 'dev';
-        case 'dll':
-            return 'dll';
-        default:
-            return envName;
-    }
-}
-
-function toBooleanOrString(value: string | boolean | null | undefined): boolean | string {
-    if (value == null) {
-        return false;
-    }
-
-    if (typeof value === 'boolean') {
-        return value;
-    }
-
-    if (value.toLowerCase() === 'false') {
-        return false;
-    }
-
-    if (value.toLowerCase() === 'true') {
-        return true;
-    }
-
-    return value;
-}
-
-function toBoolean(value: string | boolean | null | undefined): boolean {
-    if (value == null) {
-        return false;
-    }
-
-    if (typeof value === 'boolean') {
-        return value;
-    }
-
-    if (value.toLowerCase() === 'false' || value === '0') {
-        return false;
-    }
-
-    return value ? true : false;
 }
