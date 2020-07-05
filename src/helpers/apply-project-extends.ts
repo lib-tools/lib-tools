@@ -14,10 +14,10 @@ import { ProjectConfigStandalone, WorkflowsConfig } from '../models';
 import { ProjectConfigInternal } from '../models/internals';
 import { readJsonWithComments } from '../utils';
 
-import { formatValidationError, validateSchema } from './validate-schema';
-import { readLibConfigSchema } from './read-lib-config-schema';
 import { readProjectConfigSchema } from './read-project-config-schema';
-import { toLibConfigInternal } from './to-lib-config-internal';
+import { readWorkflowsConfigSchema } from './read-workflows-config-schema';
+import { toWorkflowsConfigInternal } from './to-workflows-config-internal';
+import { formatValidationError, validateSchema } from './validate-schema';
 
 async function applyProjectExtendsInternal(
     projectConfig: ProjectConfigInternal,
@@ -142,7 +142,7 @@ async function getBaseProjectConfigFromFile(
                 );
             }
 
-            const libConifgInternal = toLibConfigInternal(
+            const libConifgInternal = toWorkflowsConfigInternal(
                 workflowConfig,
                 extendsFilePath,
                 projectConfig._workspaceRoot
@@ -161,7 +161,7 @@ async function getBaseProjectConfigFromFile(
                     delete workflowConfig.$schema;
                 }
 
-                const libConfigSchema = await readLibConfigSchema();
+                const libConfigSchema = await readWorkflowsConfigSchema();
                 const errors = validateSchema(
                     libConfigSchema,
                     (workflowConfig as unknown) as { [key: string]: unknown }
