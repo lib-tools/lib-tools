@@ -20,7 +20,7 @@ Usage:
                 .help('h')
                 .option('config', {
                     alias: 'c',
-                    describe: 'The lib.json config file location.',
+                    describe: 'The workflows.json config file location.',
                     type: 'string'
                 })
                 .option('env', {
