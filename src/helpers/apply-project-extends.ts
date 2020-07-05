@@ -8,6 +8,7 @@
 
 import * as path from 'path';
 
+import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 
 import { ProjectConfigStandalone, WorkflowsConfig } from '../models';
@@ -17,7 +18,8 @@ import { readJsonWithComments } from '../utils';
 import { readProjectConfigSchema } from './read-project-config-schema';
 import { readWorkflowsConfigSchema } from './read-workflows-config-schema';
 import { toWorkflowsConfigInternal } from './to-workflows-config-internal';
-import { formatValidationError, validateSchema } from './validate-schema';
+
+const ajv = new Ajv();
 
 async function applyProjectExtendsInternal(
     projectConfig: ProjectConfigInternal,
@@ -161,15 +163,12 @@ async function getBaseProjectConfigFromFile(
                     delete workflowConfig.$schema;
                 }
 
-                const libConfigSchema = await readWorkflowsConfigSchema();
-                const errors = validateSchema(
-                    libConfigSchema,
-                    (workflowConfig as unknown) as { [key: string]: unknown }
-                );
-                if (errors.length) {
-                    const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
+                const schema = await readWorkflowsConfigSchema();
+                const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', schema);
+                if (!valid) {
+                    const errorsText = ajv.errorsText();
                     throw new Error(
-                        `Error in extending project config, invalid configuration:\n\n${errMsg}\nConfig file location ${currentConfigFile}.`
+                        `Error in extending project config, invalid configuration:\n\n${errorsText}\nConfig file location ${currentConfigFile}.`
                     );
                 }
             }
@@ -188,12 +187,12 @@ async function getBaseProjectConfigFromFile(
                 delete foundBaseProject.$schema;
             }
 
-            const projectConfigSchema = await readProjectConfigSchema();
-            const errors = validateSchema(projectConfigSchema, foundBaseProject as { [key: string]: unknown });
-            if (errors.length) {
-                const errMsg = errors.map((err) => formatValidationError(projectConfigSchema, err)).join('\n');
+            const schema = await readProjectConfigSchema();
+            const valid = ajv.addSchema(schema, 'projectSchema').validate('projectSchema', schema);
+            if (!valid) {
+                const errorsText = ajv.errorsText();
                 throw new Error(
-                    `Error in extending project config, invalid configuration:\n\n${errMsg}\nConfig file location ${currentConfigFile}.`
+                    `Error in extending project config, invalid configuration:\n\n${errorsText}\nConfig file location ${currentConfigFile}.`
                 );
             }
 
