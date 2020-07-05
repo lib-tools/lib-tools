@@ -479,6 +479,10 @@ export interface ScriptBundleOptions {
      */
     peerDependenciesAsExternals?: boolean;
     /**
+     *  Controls whether an output source map is built.
+     */
+    sourceMap?: boolean;
+    /**
      * Banner text to add at the top of each generated files. It can be text file path or raw text.
      */
     banner?: string;
