@@ -53,5 +53,5 @@ export async function readJsonWithComments(filePath: string): Promise<unknown> {
 
     const contentStr = stripComments(content.toString().replace(/^\uFEFF/, ''));
 
-    return JSON.parse(contentStr);
+    return JSON.parse(contentStr) as unknown;
 }
