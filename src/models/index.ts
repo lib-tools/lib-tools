@@ -3,4 +3,5 @@ export * from './build-options';
 export * from './overridable-config';
 export * from './project-build-config';
 export * from './project-config';
+export * from './project-config-standalone';
 export * from './workflows-config';
