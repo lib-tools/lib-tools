@@ -44,7 +44,7 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
     try {
         webpackConfigs = await getWebpackBuildConfig(configPath, environment, argv);
     } catch (err) {
-        logger.error(`${err.message || err}\n`);
+        logger.error(`${(err as Error).message || err}\n`);
 
         return -1;
     }
