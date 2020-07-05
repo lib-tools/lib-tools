@@ -4,13 +4,15 @@ import * as spawn from 'cross-spawn';
 import { pathExists, writeFile } from 'fs-extra';
 import { ScriptTarget } from 'typescript';
 
-import { BuildActionInternal, TsTranspilationOptionsInternal } from '../../../models/internals';
+import { BuildActionInternal, ScriptTranspilationEntryInternal } from '../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizeRelativePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
 
+let prevTsTranspilationVersionReplaced = false;
+
 export async function preformTsTranspilations(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
-    if (!buildAction._tsTranspilations || !buildAction._tsTranspilations.length) {
+    if (!buildAction._scriptTranspilationEntries || !buildAction._scriptTranspilationEntries.length) {
         return;
     }
 
@@ -24,7 +26,7 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
         }
     }
 
-    for (const tsTranspilation of buildAction._tsTranspilations) {
+    for (const tsTranspilation of buildAction._scriptTranspilationEntries) {
         const tsConfigPath = tsTranspilation._tsConfigPath;
         const compilerOptions = tsTranspilation._tsCompilerConfig.options;
         const commandArgs: string[] = ['-p', tsConfigPath];
@@ -91,7 +93,7 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
 }
 
 async function afterTsTranspileTask(
-    tsTranspilation: TsTranspilationOptionsInternal,
+    tsTranspilation: ScriptTranspilationEntryInternal,
     buildAction: BuildActionInternal,
     tsc: string,
     logger: LoggerBase
@@ -101,8 +103,7 @@ async function afterTsTranspileTask(
     // Replace version
     if (
         buildAction._packageVersion &&
-        (tsTranspilation._index === 0 ||
-            (tsTranspilation._index > 0 && buildAction._prevTsTranspilationVersionReplaced))
+        (tsTranspilation._index === 0 || (tsTranspilation._index > 0 && prevTsTranspilationVersionReplaced))
     ) {
         logger.debug('Checking version placeholder');
 
@@ -112,8 +113,8 @@ async function afterTsTranspileTask(
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/version.js')}`,
             logger
         );
-        if (hasVersionReplaced && !buildAction._prevTsTranspilationVersionReplaced) {
-            buildAction._prevTsTranspilationVersionReplaced = true;
+        if (hasVersionReplaced && !prevTsTranspilationVersionReplaced) {
+            prevTsTranspilationVersionReplaced = true;
         }
     }
 
@@ -132,8 +133,8 @@ async function afterTsTranspileTask(
         }
 
         let stylePreprocessorIncludePaths: string[] = [];
-        if (buildAction.styleOptions && buildAction.styleOptions.includePaths) {
-            stylePreprocessorIncludePaths = buildAction.styleOptions.includePaths.map((p) =>
+        if (buildAction.style && buildAction.style.includePaths) {
+            stylePreprocessorIncludePaths = buildAction.style.includePaths.map((p) =>
                 path.resolve(buildAction._projectRoot, p)
             );
         }
