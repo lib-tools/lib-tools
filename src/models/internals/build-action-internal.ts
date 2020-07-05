@@ -1,6 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { AssetEntry, BuildAction, BundleOptions, StyleEntry, TsTranspilationOptions } from '../actions/build-action';
+import { AssetEntry, BuildAction, BundleEntry, StyleEntry, TranspilationEntry } from '../actions/build-action';
 import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleParsedEntry extends StyleEntry {
@@ -24,7 +24,7 @@ export interface TsConfigJsonOptions {
     angularCompilerOptions?: AngularCompilerJsonOptions;
 }
 
-export interface TsTranspilationOptionsInternal extends TsTranspilationOptions {
+export interface TranspilationEntryInternal extends TranspilationEntry {
     _index: number;
     _tsConfigPath: string;
     _tsConfigJson: TsConfigJsonOptions;
@@ -38,7 +38,7 @@ export interface TsTranspilationOptionsInternal extends TsTranspilationOptions {
     _customTsOutDir?: string;
 }
 
-export interface BundleOptionsInternal extends BundleOptions {
+export interface BundleEntryInternal extends BundleEntry {
     _index: number;
     _entryFilePath: string;
     _outputFilePath: string;
@@ -77,13 +77,13 @@ export interface BuildActionInternal extends BuildAction {
     _tsConfigPath?: string;
     _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
-    _tsTranspilations?: TsTranspilationOptionsInternal[];
+    _tsTranspilations?: TranspilationEntryInternal[];
     _prevTsTranspilationVersionReplaced?: boolean;
 
     // styles
     _styleParsedEntries?: StyleParsedEntry[];
 
-    _bundles?: BundleOptionsInternal[];
+    _bundles?: BundleEntryInternal[];
 
     _copyAssets: (string | AssetEntry)[] | null;
 

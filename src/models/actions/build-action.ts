@@ -360,7 +360,7 @@ export type ScriptTargetString =
 /**
  * @additionalProperties false
  */
-export interface TsTranspilationOptions {
+export interface TranspilationEntry {
     /**
      * Typescript configuration file for this transpilation.
      */
@@ -472,7 +472,7 @@ export interface BuildActionBase {
         transpilation?:
             | boolean
             | {
-                  entries?: TsTranspilationOptions[];
+                  entries?: TranspilationEntry[];
                   /**
                    * Default typescript configuration file to be used.
                    */
