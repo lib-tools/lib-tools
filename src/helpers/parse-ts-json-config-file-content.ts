@@ -12,10 +12,10 @@ import * as ts from 'typescript';
 
 import { readTsConfigFile } from './read-ts-config-file';
 
-const tsCompilerConfigMap = new Map<string, ts.ParsedCommandLine>();
+const cache = new Map<string, ts.ParsedCommandLine>();
 
 export function parseTsJsonConfigFileContent(tsConfigPath: string): ts.ParsedCommandLine {
-    const cachedTsCompilerConfig = tsCompilerConfigMap.get(tsConfigPath);
+    const cachedTsCompilerConfig = cache.get(tsConfigPath);
     if (cachedTsCompilerConfig) {
         return cachedTsCompilerConfig;
     }
@@ -30,7 +30,7 @@ export function parseTsJsonConfigFileContent(tsConfigPath: string): ts.ParsedCom
         tsConfigPath
     );
 
-    tsCompilerConfigMap.set(tsConfigPath, tsCompilerConfig);
+    cache.set(tsConfigPath, tsCompilerConfig);
 
     return tsCompilerConfig;
 }
