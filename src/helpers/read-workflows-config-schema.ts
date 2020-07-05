@@ -20,7 +20,7 @@ export async function readWorkflowsConfigSchema(): Promise<{ [key: string]: unkn
     }
 
     const schemaRootPath = path.resolve(__dirname, '../../schemas');
-    const schema = await readJson(path.resolve(schemaRootPath, 'schema.json'));
+    const schema = (await readJson(path.resolve(schemaRootPath, 'schema.json'))) as { [key: string]: unknown };
 
     if (schema.$schema) {
         delete schema.$schema;
