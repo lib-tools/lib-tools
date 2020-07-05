@@ -20,7 +20,9 @@ export async function readProjectConfigSchema(): Promise<{ [key: string]: unknow
     }
 
     const schemaRootPath = path.resolve(__dirname, '../../schemas');
-    const schema = await readJson(path.resolve(schemaRootPath, 'project-config-schema.json'));
+    const schema = (await readJson(path.resolve(schemaRootPath, 'project-config-schema.json'))) as {
+        [key: string]: unknown;
+    };
 
     if (schema.$schema) {
         delete schema.$schema;
