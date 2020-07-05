@@ -1,10 +1,17 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as supportsColor from 'supports-color';
 
 const defaultColors: { [key: string]: string } = {
     reset: '\u001b[0m',
 
     // fg
-    black: '\x1b[30m',
     white: '\x1b[37m',
     bold: '\u001b[1m',
     yellow: '\u001b[1m\u001b[33m',
@@ -14,7 +21,7 @@ const defaultColors: { [key: string]: string } = {
     magenta: '\u001b[1m\u001b[35m'
 };
 
-export type ColorKeys = 'black' | 'white' | 'bold' | 'yellow' | 'red' | 'green' | 'cyan' | 'magenta';
+export type ColorKeys = 'white' | 'bold' | 'yellow' | 'red' | 'green' | 'cyan' | 'magenta';
 
 export function colorize(str: string, colorKey: ColorKeys): string {
     if (!supportsColor.stdout) {
