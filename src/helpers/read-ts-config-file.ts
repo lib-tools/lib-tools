@@ -1,11 +1,19 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as ts from 'typescript';
 
-import { formatTsDiagnostics } from '../utils';
+import { formatTsDiagnostics } from './format-ts-diagnostics';
 
-const tsConfigJsonMap = new Map<string, { [key: string]: unknown }>();
+const cache = new Map<string, { [key: string]: unknown }>();
 
 export function readTsConfigFile(tsConfigPath: string): { [key: string]: unknown } {
-    const cachedTsConfigJson = tsConfigJsonMap.get(tsConfigPath);
+    const cachedTsConfigJson = cache.get(tsConfigPath);
     if (cachedTsConfigJson) {
         return cachedTsConfigJson;
     }
@@ -19,7 +27,7 @@ export function readTsConfigFile(tsConfigPath: string): { [key: string]: unknown
         }
     }
 
-    tsConfigJsonMap.set(tsConfigPath, jsonConfigFile.config);
+    cache.set(tsConfigPath, jsonConfigFile.config);
 
     return jsonConfigFile.config;
 }
