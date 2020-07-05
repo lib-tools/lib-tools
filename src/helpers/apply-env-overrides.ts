@@ -8,6 +8,23 @@
 
 import { OverridableAction } from '../models';
 
+function overrideActionConfig<TConfigBase>(
+    oldConfig: OverridableAction<TConfigBase>,
+    newConfig: Partial<TConfigBase>
+): void {
+    if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
+        return;
+    }
+
+    Object.keys(newConfig)
+        .filter((key: string) => key !== 'envOverrides')
+        .forEach((key: string) => {
+            (oldConfig as { [k: string]: unknown })[key] = JSON.parse(
+                JSON.stringify((newConfig as { [k: string]: unknown })[key])
+            );
+        });
+}
+
 export function applyEnvOverrides<TConfigBase>(
     overridableAction: OverridableAction<TConfigBase>,
     env: { [key: string]: boolean | string }
@@ -57,21 +74,4 @@ export function applyEnvOverrides<TConfigBase>(
             }
         });
     });
-}
-
-function overrideActionConfig<TConfigBase>(
-    oldConfig: OverridableAction<TConfigBase>,
-    newConfig: Partial<TConfigBase>
-): void {
-    if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
-        return;
-    }
-
-    Object.keys(newConfig)
-        .filter((key: string) => key !== 'envOverrides')
-        .forEach((key: string) => {
-            (oldConfig as { [k: string]: unknown })[key] = JSON.parse(
-                JSON.stringify((newConfig as { [k: string]: unknown })[key])
-            );
-        });
 }
