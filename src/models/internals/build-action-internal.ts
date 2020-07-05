@@ -51,8 +51,6 @@ export interface BundleOptionsInternal extends BundleOptions {
     _destScriptTarget?: ScriptTarget;
     _ecmaVersion?: number;
     _supportES2015?: boolean;
-
-    _nodeResolveFields?: string[];
 }
 
 export interface BuildActionInternal extends BuildAction {
