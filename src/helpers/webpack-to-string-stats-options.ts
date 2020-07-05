@@ -1,6 +1,12 @@
-import { Stats } from 'webpack';
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
 
-// const verbose = process.argv.indexOf('--verbose') > -1;
+import { Stats } from 'webpack';
 
 export function getWebpackToStringStatsOptions(
     verbose?: boolean,
@@ -42,7 +48,6 @@ export function getWebpackToStringStatsOptions(
         return { ...defaultOptions, ...(verbose ? verboseOptions : {}), ...options };
     } else if (options && typeof options === 'string') {
         if (options === 'none') {
-            // tslint:disable-next-line:no-object-literal-type-assertion
             return {
                 hash: false,
                 version: false,
@@ -66,8 +71,6 @@ export function getWebpackToStringStatsOptions(
             } as Stats.ToStringOptionsObject;
         } else {
             const pn = options;
-
-            // tslint:disable-next-line:no-object-literal-type-assertion
             return {
                 hash: pn !== 'errors-only' && pn !== 'minimal',
                 version: pn === 'verbose',
