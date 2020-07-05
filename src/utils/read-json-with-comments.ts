@@ -1,22 +1,12 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import { readFile } from 'fs';
-
-export async function readJsonWithComments(filePath: string): Promise<unknown> {
-    const content: Buffer = await new Promise((resolve, reject) => {
-        readFile(filePath, (err, buffer) => {
-            if (err) {
-                reject(err);
-
-                return;
-            }
-
-            resolve(buffer);
-        });
-    });
-
-    const contentStr = stripComments(content.toString().replace(/^\uFEFF/, ''));
-
-    return JSON.parse(contentStr);
-}
 
 function stripComments(content: string): string {
     /**
@@ -46,4 +36,22 @@ function stripComments(content: string): string {
     });
 
     return result;
+}
+
+export async function readJsonWithComments(filePath: string): Promise<unknown> {
+    const content: Buffer = await new Promise((resolve, reject) => {
+        readFile(filePath, (err, buffer) => {
+            if (err) {
+                reject(err);
+
+                return;
+            }
+
+            resolve(buffer);
+        });
+    });
+
+    const contentStr = stripComments(content.toString().replace(/^\uFEFF/, ''));
+
+    return JSON.parse(contentStr);
 }
