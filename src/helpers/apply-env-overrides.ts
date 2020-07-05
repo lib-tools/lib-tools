@@ -8,14 +8,6 @@
 
 import { OverridableAction } from '../models';
 
-function overrideActionConfig(oldConfig: { [key: string]: unknown }, newConfig: { [key: string]: unknown }): void {
-    Object.keys(newConfig)
-        .filter((key: string) => key !== 'envOverrides')
-        .forEach((key: string) => {
-            oldConfig[key] = JSON.parse(JSON.stringify(newConfig[key])) as unknown;
-        });
-}
-
 export function applyEnvOverrides<TConfigBase>(
     overridableAction: OverridableAction<TConfigBase>,
     env: { [key: string]: boolean | string }
@@ -65,4 +57,12 @@ export function applyEnvOverrides<TConfigBase>(
             }
         });
     });
+}
+
+function overrideActionConfig(oldConfig: { [key: string]: unknown }, newConfig: { [key: string]: unknown }): void {
+    Object.keys(newConfig)
+        .filter((key: string) => key !== 'envOverrides')
+        .forEach((key: string) => {
+            oldConfig[key] = JSON.parse(JSON.stringify(newConfig[key])) as unknown;
+        });
 }
