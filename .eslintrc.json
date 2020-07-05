@@ -179,8 +179,8 @@
       "plugins": [
         "@typescript-eslint",
         "jsdoc",
-        "no-null",
-        "import",
+        // "no-null",
+        // "import",
         // "prefer-arrow",
         "prettier"
       ],
@@ -237,12 +237,12 @@
         "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/restrict-template-expressions": "off",
 
-        "import/no-deprecated": "warn",
-        "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
+        // "import/no-deprecated": "warn",
+        // "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
 
         "jsdoc/check-alignment": "error",
 
-        "no-null/no-null": "error",
+        // "no-null/no-null": "error",
 
         // "prefer-arrow/prefer-arrow-functions": "error",
 
