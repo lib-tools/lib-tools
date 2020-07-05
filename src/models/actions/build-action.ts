@@ -272,6 +272,40 @@ export interface StyleEntry {
     includePaths?: string[];
 }
 
+/**
+ * @additionalProperties false
+ */
+export interface StyleOptions {
+    /**
+     * List of style entries.
+     */
+    entries?: StyleEntry[];
+    /**
+     * If true, enable the outputing of sourcemap. Default is `true`.
+     */
+    sourceMap?: boolean;
+    /**
+     * Includes the contents in the source map information. Default is `true`.
+     */
+    sourceMapContents?: boolean;
+    /**
+     * Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
+     */
+    vendorPrefixes?: boolean | AutoPrefixerOptions;
+    /**
+     * Set clean-css options or boolean value for minify file generation. Default is `true`.
+     */
+    minify?: boolean | CleanCSSOptions;
+    /**
+     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths: string[];
+    /**
+     * If true, automatically add style entry points to package.json file. Default is `true`.
+     */
+    addToPackageJson?: boolean;
+}
+
 export interface ExternalsObjectElement {
     [key: string]:
         | string
@@ -352,6 +386,19 @@ export interface ScriptTranspilationEntry {
 /**
  * @additionalProperties false
  */
+export interface ScriptTranspilationOptions {
+    /**
+     * List of transpilation entries.
+     */
+    entries?: ScriptTranspilationEntry[];
+    /**
+     * Default typescript configuration file to be used.
+     */
+    tsConfig?: string;
+}
+/**
+ * @additionalProperties false
+ */
 export interface ScriptBundleEntry {
     /**
      * Bundle module format.
@@ -402,6 +449,44 @@ export interface ScriptBundleEntry {
 /**
  * @additionalProperties false
  */
+export interface ScriptBundleOptions {
+    /**
+     * Bundle entries.
+     */
+    entries?: ScriptBundleEntry[];
+    /**
+     * The entry file to be bundled.
+     */
+    entry?: string;
+    /**
+     * Represents your umd module id.
+     */
+    libraryName?: string;
+    /**
+     * The externals configuration option provides a way of excluding dependencies from the output bundle.
+     */
+    externals?: ExternalsEntry | ExternalsEntry[];
+    /**
+     * If true or options object, commonjs modules are converted to ES6 and included in bundle.
+     */
+    includeCommonJs?: boolean | CommonJsOptions;
+    /**
+     * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
+     */
+    dependenciesAsExternals?: boolean;
+    /**
+     * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
+     */
+    peerDependenciesAsExternals?: boolean;
+    /**
+     * Banner text to add at the top of each generated files. It can be text file path or raw text.
+     */
+    banner?: string;
+}
+
+/**
+ * @additionalProperties false
+ */
 export interface BuildActionBase {
     /**
      * The output directory for build results. Default to `dist/packages/{package-name}`.
@@ -421,92 +506,17 @@ export interface BuildActionBase {
     /**
      * Style compilation options for sass, scss or css files.
      */
-    style?: {
-        /**
-         * List of style entries.
-         */
-        entries?: StyleEntry[];
-        /**
-         * If true, enable the outputing of sourcemap. Default is `true`.
-         */
-        sourceMap?: boolean;
-        /**
-         * Includes the contents in the source map information. Default is `true`.
-         */
-        sourceMapContents?: boolean;
-        /**
-         * Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
-         */
-        vendorPrefixes?: boolean | AutoPrefixerOptions;
-        /**
-         * Set clean-css options or boolean value for minify file generation. Default is `true`.
-         */
-        minify?: boolean | CleanCSSOptions;
-        /**
-         * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
-         */
-        includePaths: string[];
-        /**
-         * If true, automatically add style entry points to package.json file. Default is `true`.
-         */
-        addToPackageJson?: boolean;
-    };
+    style?: StyleOptions;
 
     /**
-     * Script transpilation options.
+     * Script transpilation options boolean value. Set `true` to detect and generate default transpilations.
      */
-    scriptTranspilation?:
-        | boolean
-        | {
-              /**
-               * List of transpilation entries.
-               */
-              entries?: ScriptTranspilationEntry[];
-              /**
-               * Default typescript configuration file to be used.
-               */
-              tsConfig?: string;
-          };
+    scriptTranspilation?: ScriptTranspilationOptions | boolean;
 
     /**
-     * Script bundling options.
+     * Script bundling options or boolean value. Set `true` to detect and bundle with default options.
      */
-    scriptBundle?:
-        | boolean
-        | {
-              /**
-               * Bundle entries.
-               */
-              entries?: ScriptBundleEntry[];
-              /**
-               * Represents your umd module id.
-               */
-              libraryName?: string;
-              /**
-               * The main entry point file for package.json.
-               */
-              // main?: string;
-              /**
-               * The externals configuration option provides a way of excluding dependencies from the output bundle.
-               */
-              externals?: ExternalsEntry | ExternalsEntry[];
-              /**
-               * If true or options object, commonjs modules are converted to ES6 and included in bundle.
-               */
-              includeCommonJs?: boolean | CommonJsOptions;
-              /**
-               * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
-               */
-              dependenciesAsExternals?: boolean;
-              /**
-               * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
-               */
-              peerDependenciesAsExternals?: boolean;
-              /**
-               * Banner text to add at the top of each generated files. It can be text file path or raw text.
-               */
-              banner?: string;
-          };
+    scriptBundle?: ScriptBundleOptions | boolean;
 }
 
 /**
