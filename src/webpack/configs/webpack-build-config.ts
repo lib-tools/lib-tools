@@ -108,10 +108,10 @@ export async function getWebpackBuildConfig(
         }
     }
 
-    let libConfig: WorkflowsConfig | null = null;
+    let workflowsConfig: WorkflowsConfig | null = null;
 
     try {
-        libConfig = ((await readJsonWithComments(configPath)) as unknown) as WorkflowsConfig;
+        workflowsConfig = (await readJsonWithComments(configPath)) as WorkflowsConfig;
     } catch (error) {
         throw new Error(`Invalid configuration, error: ${(error as Error).message || error}.`);
     }
@@ -131,7 +131,7 @@ export async function getWebpackBuildConfig(
 
     // TODO: To review
     const workspaceRoot = path.dirname(configPath);
-    const workflowConfigInternal = toWorkflowsConfigInternal(libConfig, configPath, workspaceRoot);
+    const workflowConfigInternal = toWorkflowsConfigInternal(workflowsConfig, configPath, workspaceRoot);
     const filteredProjectConfigs = Object.keys(workflowConfigInternal.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
         .map((projectName) => workflowConfigInternal.projects[projectName]);
