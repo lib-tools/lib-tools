@@ -1,10 +1,18 @@
-import { OverridableConfig } from '../models';
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
+import { OverridableAction } from '../models';
 
 export function applyEnvOverrides<TConfigBase>(
-    overridableConfig: OverridableConfig<TConfigBase>,
+    overridableAction: OverridableAction<TConfigBase>,
     env: { [key: string]: boolean | string }
 ): void {
-    if (!overridableConfig.envOverrides || Object.keys(overridableConfig.envOverrides).length === 0) {
+    if (!overridableAction.envOverrides || Object.keys(overridableAction.envOverrides).length === 0) {
         return;
     }
 
@@ -36,23 +44,23 @@ export function applyEnvOverrides<TConfigBase>(
             buildTargets.push(key);
         });
 
-    Object.keys(overridableConfig.envOverrides).forEach((buildTargetKey: string) => {
+    Object.keys(overridableAction.envOverrides).forEach((buildTargetKey: string) => {
         const targetName = buildTargetKey;
         const targets = targetName.split(',');
         targets.forEach((t) => {
             t = t.trim();
-            if (buildTargets.indexOf(t) > -1 && overridableConfig.envOverrides) {
-                const newConfig = overridableConfig.envOverrides[t];
+            if (buildTargets.indexOf(t) > -1 && overridableAction.envOverrides) {
+                const newConfig = overridableAction.envOverrides[t];
                 if (newConfig && typeof newConfig === 'object') {
-                    overrideProjectConfig(overridableConfig, newConfig);
+                    overrideActionConfig(overridableAction, newConfig);
                 }
             }
         });
     });
 }
 
-function overrideProjectConfig<TConfigBase>(
-    oldConfig: OverridableConfig<TConfigBase>,
+function overrideActionConfig<TConfigBase>(
+    oldConfig: OverridableAction<TConfigBase>,
     newConfig: Partial<TConfigBase>
 ): void {
     if (!newConfig || !oldConfig || typeof newConfig !== 'object' || Object.keys(newConfig).length === 0) {
