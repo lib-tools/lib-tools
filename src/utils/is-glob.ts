@@ -1,9 +1,17 @@
-// Fork from: https://github.com/micromatch/is-glob
-// Fork from: https://github.com/micromatch/is-extglob
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
+// Ref: https://github.com/micromatch/is-glob
+// Ref: https://github.com/micromatch/is-extglob
 
 const chars: { [key: string]: string } = { '{': '}', '(': ')', '[': ']' };
 
-export function isExtglob(str: string): boolean {
+function isExtglob(str: string): boolean {
     if (typeof str !== 'string' || str === '') {
         return false;
     }
