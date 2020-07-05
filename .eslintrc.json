@@ -179,8 +179,8 @@
       "plugins": [
         "@typescript-eslint",
         "jsdoc",
-        // "no-null",
-        // "import",
+        "no-null",
+        "import",
         // "prefer-arrow",
         "prettier"
       ],
@@ -188,7 +188,7 @@
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
-        // "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
         "plugin:prettier/recommended",
         "prettier/@typescript-eslint"
       ],
@@ -234,18 +234,15 @@
         // "@typescript-eslint/space-before-function-paren": ["error", { "asyncArrow": "always", "anonymous": "always", "named": "never" }],
 
         "@typescript-eslint/unbound-method": ["error", { "ignoreStatic": true }],
-
         "@typescript-eslint/unified-signatures": "error",
-
         "@typescript-eslint/restrict-template-expressions": "off",
 
-        // TODO: To review if necessary?
-        // "import/no-deprecated": "warn",
-        // "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
+        "import/no-deprecated": "warn",
+        "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
 
-        // "jsdoc/check-alignment": "error",
+        "jsdoc/check-alignment": "error",
 
-        // "no-null/no-null": "error",
+        "no-null/no-null": "error",
 
         // "prefer-arrow/prefer-arrow-functions": "error",
 
