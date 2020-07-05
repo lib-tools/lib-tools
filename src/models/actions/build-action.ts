@@ -382,7 +382,7 @@ export interface TsTranspilationOptions {
 /**
  * @additionalProperties false
  */
-export interface BundleOptions {
+export interface BundleEntry {
     /**
      * Bundle module format.
      */
@@ -437,67 +437,88 @@ export interface BuildActionBase {
      * The output directory for build results. Default to `dist/packages/{package-name}`.
      */
     outputPath?: string;
+
     /**
-     * Clean options or boolean value for deleting output files before build or after build. By default, output directory will be deleted before build. Set `false` to disable cleaning of output directory.
+     * Clean options or boolean value for deleting build output files. By default, output directory will be deleted when build command started. Set `false` to disable cleaning of output directory.
      */
     clean?: CleanOptions | boolean;
+
     /**
      * Asset entry array or boolean value for copying files to output directory. By default, README.md and LICENSE files are copied to output directory. Set `false` to disable copying of default files.
      */
     copy?: (string | AssetEntry)[] | boolean;
-    /**
-     * List of style entries to bundle.
-     */
-    styles?: StyleEntry[];
-    /**
-     * Default options for styles.
-     */
-    styleOptions?: StyleOptions;
-    /**
-     * The typescript configuration file to be used.
-     */
-    tsConfig?: string;
-    /**
-     * Banner text to add at the top of each generated files. It can be text file path or raw text.
-     */
-    banner?: string;
-    /**
-     * If true, sourcemaps will be generated.
-     */
-    sourceMap?: boolean;
 
     /**
-     * Typescript transpilation options.
+     * Style compilation options for sass, scss or css files.
      */
-    tsTranspilations?: TsTranspilationOptions[] | boolean;
+    style?: {
+        /**
+         * List of style entries to compile.
+         */
+        entries?: StyleEntry[];
+        /**
+         * Default options for style entries.
+         */
+        options?: StyleOptions;
+    };
+
     /**
-     * Bundle target options.
+     * Script transpilation and bundling options.
      */
-    bundles?: BundleOptions[] | boolean;
-    /**
-     * The main entry point file for package.json.
-     */
-    main?: string;
-    /**
-     * Represents your umd module id.
-     */
-    libraryName?: string;
-    /**
-     * The externals configuration option provides a way of excluding dependencies from the output bundle.
-     */
-    externals?: ExternalsEntry | ExternalsEntry[];
-    /**
-     * If true or options object, commonjs modules are converted to ES6 and included in bundle.
-     */
-    includeCommonJs?: boolean | CommonJsOptions;
-    /**
-     * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
-     */
-    dependenciesAsExternals?: boolean;
-    /**
-     * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
-     */
-    peerDependenciesAsExternals?: boolean;
+    script?: {
+        /**
+         * Typescript transpilations.
+         */
+        transpilation?:
+            | boolean
+            | {
+                  entries?: TsTranspilationOptions[];
+                  /**
+                   * Default typescript configuration file to be used.
+                   */
+                  tsConfig?: string;
+              };
+
+        /**
+         * Script bundling options.
+         */
+        bundle?:
+            | boolean
+            | {
+                  /**
+                   * Bundle entries.
+                   */
+                  entries?: BundleEntry[];
+                  /**
+                   * Represents your umd module id.
+                   */
+                  libraryName?: string;
+                  /**
+                   * The main entry point file for package.json.
+                   */
+                  // main?: string;
+                  /**
+                   * The externals configuration option provides a way of excluding dependencies from the output bundle.
+                   */
+                  externals?: ExternalsEntry | ExternalsEntry[];
+                  /**
+                   * If true or options object, commonjs modules are converted to ES6 and included in bundle.
+                   */
+                  includeCommonJs?: boolean | CommonJsOptions;
+                  /**
+                   * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
+                   */
+                  dependenciesAsExternals?: boolean;
+                  /**
+                   * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
+                   */
+                  peerDependenciesAsExternals?: boolean;
+                  /**
+                   * Banner text to add at the top of each generated files. It can be text file path or raw text.
+                   */
+                  banner?: string;
+              };
+    };
 }
 
 /**
