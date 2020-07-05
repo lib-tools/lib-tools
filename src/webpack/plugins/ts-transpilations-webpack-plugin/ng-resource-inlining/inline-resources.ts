@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import { pathExists, readFile, readJson, writeFile } from 'fs-extra';
 import * as glob from 'glob';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
 const MagicString = require('magic-string');
 
 import { LoggerBase } from '../../../../utils';
@@ -60,7 +60,7 @@ export async function inlineResources(
             const end = start + styleUrlsMatch[0].length;
             const rawStr = styleUrlsMatch[1];
 
-            // eslint-disable-next-line no-eval
+            // eslint-disable-next-line no-eval, @typescript-eslint/no-unsafe-assignment
             const urls: string[] = eval(rawStr);
             foundStyleUrlsInfoes.push({ start, end, urls, resourceId });
             if (!requireSass && urls.find((u) => /s[ca]ss$/i.test(u))) {
@@ -72,7 +72,8 @@ export async function inlineResources(
             continue;
         }
 
-        const magicString = new MagicString(content);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const magicString = new MagicString(content) as MagicStringInstance;
 
         if (foundTemplateUrlInfoes.length) {
             await inlineTemplateUrls(foundTemplateUrlInfoes, magicString, srcDir, searchRootDir, componentResources);
@@ -89,7 +90,7 @@ export async function inlineResources(
             );
         }
 
-        await replaceModuleId(content, magicString);
+        replaceModuleId(content, magicString);
 
         if (!replaced) {
             logger.debug('Inlining template and style resources');
@@ -109,7 +110,7 @@ export async function inlineResources(
             );
             const metaDataFileExists = await pathExists(metaDataFilePath);
             if (metaDataFileExists) {
-                const metaJson = await readJson(metaDataFilePath);
+                const metaJson = (await readJson(metaDataFilePath)) as { metadata: { [key: string]: MetaDataByKey } }[];
 
                 metaJson.forEach((obj: { metadata: { [key: string]: MetaDataByKey } }) => {
                     if (!obj.metadata) {
@@ -131,7 +132,7 @@ export async function inlineResources(
         const metaDataFilePath = path.resolve(searchRootDir, flatModuleOutFile);
         const metaDataFileExists = await pathExists(metaDataFilePath);
         if (metaDataFileExists) {
-            const metaDataJson = await readJson(metaDataFilePath);
+            const metaDataJson = (await readJson(metaDataFilePath)) as MetaDataJson;
             const inlinedMetaDataJson = inlineFlattenMetaDataResources(metaDataJson, componentResources);
             await writeFile(metaDataFilePath, JSON.stringify(inlinedMetaDataJson));
         }
@@ -140,7 +141,7 @@ export async function inlineResources(
     return replaced;
 }
 
-async function replaceModuleId(source: string, magicString: MagicStringInstance): Promise<void> {
+function replaceModuleId(source: string, magicString: MagicStringInstance): void {
     let moduleIdMatch: RegExpExecArray | null;
 
     while ((moduleIdMatch = moduleIdRegex.exec(source)) != null) {
