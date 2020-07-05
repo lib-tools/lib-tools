@@ -11,11 +11,12 @@ import { getRollupConfig } from './get-rollup-config';
 import { minifyJsFile } from './minify-js-file';
 
 export async function performRollupBundles(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
-    if (!buildAction._bundles || !buildAction._bundles.length) {
+    if (!buildAction._scriptBundleEntries || !buildAction._scriptBundleEntries.length) {
         return;
     }
 
-    const bundles = buildAction._bundles;
+    const bundles = buildAction._scriptBundleEntries;
+    const bundleOptions = typeof buildAction.scriptBundle === 'object' ? buildAction.scriptBundle : {};
 
     const projectName = buildAction._projectName;
     for (const currentBundle of bundles) {
@@ -57,7 +58,7 @@ export async function performRollupBundles(buildAction: BuildActionInternal, log
             await minifyJsFile(
                 currentBundle._outputFilePath,
                 minFilePath,
-                buildAction.sourceMap as boolean,
+                bundleOptions.sourceMap as boolean,
                 // buildOptions.logLevel === 'debug',
                 logger
             );
