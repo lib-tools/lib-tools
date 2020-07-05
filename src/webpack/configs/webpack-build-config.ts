@@ -1,21 +1,24 @@
 import * as path from 'path';
 
+import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 import { Configuration, Plugin } from 'webpack';
 
 import {
-    applyProjectConfigExtends,
+    applyProjectExtends,
     normalizeEnvironment,
-    readLibConfigSchema,
-    toLibConfigInternal,
-    toProjectBuildConfigInternal
+    readWorkflowsConfigSchema,
+    toBuildActionInternal,
+    toWorkflowsConfigInternal
 } from '../../helpers';
-import { BuildCommandOptions, LibConfig } from '../../models';
-import { BuildOptionsInternal, ProjectBuildConfigInternal, ProjectConfigInternal } from '../../models/internals';
-import { formatValidationError, readJsonWithComments, validateSchema } from '../../utils';
+import { BuildCommandOptions, WorkflowsConfig } from '../../models';
+import { BuildActionInternal, BuildOptionsInternal, ProjectConfigInternal } from '../../models/internals';
+import { readJsonWithComments } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
 import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
+
+const ajv = new Ajv();
 
 export async function getWebpackBuildConfig(
     configPath: string,
@@ -105,51 +108,52 @@ export async function getWebpackBuildConfig(
         }
     }
 
-    let libConfig: LibConfig | null = null;
+    let libConfig: WorkflowsConfig | null = null;
 
     try {
-        libConfig = ((await readJsonWithComments(configPath)) as unknown) as LibConfig;
+        libConfig = ((await readJsonWithComments(configPath)) as unknown) as WorkflowsConfig;
     } catch (error) {
         throw new Error(`Invalid configuration, error: ${(error as Error).message || error}.`);
     }
 
-    const libConfigSchema = await readLibConfigSchema();
+    const schema = await readWorkflowsConfigSchema();
 
-    if (libConfigSchema.$schema) {
-        delete libConfigSchema.$schema;
+    if (schema.$schema) {
+        delete schema.$schema;
     }
 
-    const errors = validateSchema(libConfigSchema, (libConfig as unknown) as { [key: string]: unknown });
-    if (errors.length) {
-        const errMsg = errors.map((err) => formatValidationError(libConfigSchema, err)).join('\n');
-        throw new Error(`Invalid configuration.\n\n${errMsg}`);
+    const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', schema);
+
+    if (!valid) {
+        const errorsText = ajv.errorsText();
+        throw new Error(`Invalid configuration.\n\n${errorsText}`);
     }
 
     // TODO: To review
     const workspaceRoot = path.dirname(configPath);
-    const libConfigInternal = toLibConfigInternal(libConfig, configPath, workspaceRoot);
-    const filteredProjectConfigs = Object.keys(libConfigInternal.projects)
+    const workflowConfigInternal = toWorkflowsConfigInternal(libConfig, configPath, workspaceRoot);
+    const filteredProjectConfigs = Object.keys(workflowConfigInternal.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
-        .map((projectName) => libConfigInternal.projects[projectName]);
+        .map((projectName) => workflowConfigInternal.projects[projectName]);
 
     const webpackConfigs: Configuration[] = [];
 
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        await applyProjectConfigExtends(projectConfigInternal, libConfigInternal.projects);
+        await applyProjectExtends(projectConfigInternal, workflowConfigInternal.projects);
 
         if (projectConfigInternal.skip) {
             continue;
         }
 
-        if (!projectConfigInternal.tasks || !projectConfigInternal.tasks.build) {
+        if (!projectConfigInternal.actions || !projectConfigInternal.actions.build) {
             continue;
         }
 
-        const projectBuildConfigInternal = await toProjectBuildConfigInternal(projectConfigInternal, buildOptions);
+        const buildActionInternal = await toBuildActionInternal(projectConfigInternal, buildOptions);
 
         const wpConfig = (await getWebpackBuildConfigInternal(
-            projectBuildConfigInternal,
+            buildActionInternal,
             buildOptions
         )) as Configuration | null;
         if (wpConfig) {
@@ -161,73 +165,73 @@ export async function getWebpackBuildConfig(
 }
 
 async function getWebpackBuildConfigInternal(
-    projectBuildConfig: ProjectBuildConfigInternal,
+    buildAction: BuildActionInternal,
     buildOptions: BuildOptionsInternal
 ): Promise<Configuration> {
     const plugins: Plugin[] = [
         new ProjectBuildInfoWebpackPlugin({
-            projectBuildConfig,
+            buildAction,
             logLevel: buildOptions.logLevel
         })
     ];
 
     // Clean plugin
-    if (projectBuildConfig.clean !== false) {
+    if (buildAction.clean !== false) {
         const pluginModule = await import('../plugins/clean-webpack-plugin');
         const CleanWebpackPlugin = pluginModule.CleanWebpackPlugin;
         plugins.push(
             new CleanWebpackPlugin({
-                projectBuildConfig,
+                buildAction,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
     // Typescript transpilation plugin
-    if (projectBuildConfig._tsTranspilations && projectBuildConfig._tsTranspilations.length > 0) {
+    if (buildAction._tsTranspilations && buildAction._tsTranspilations.length > 0) {
         const pluginModule = await import('../plugins/ts-transpilations-webpack-plugin');
         const TsTranspilationsWebpackPlugin = pluginModule.TsTranspilationsWebpackPlugin;
         plugins.push(
             new TsTranspilationsWebpackPlugin({
-                projectBuildConfig,
+                buildAction,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
     // styles
-    if (projectBuildConfig._styleParsedEntries && projectBuildConfig._styleParsedEntries.length > 0) {
+    if (buildAction._styleParsedEntries && buildAction._styleParsedEntries.length > 0) {
         const pluginModule = await import('../plugins/styles-bundle-webpack-plugin');
         const StyleBundleWebpackPlugin = pluginModule.StyleBundleWebpackPlugin;
         plugins.push(
             new StyleBundleWebpackPlugin({
-                projectBuildConfig,
+                buildAction,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
     // Rollup bundles plugin
-    if (projectBuildConfig._bundles && projectBuildConfig._bundles.length > 0) {
+    if (buildAction._bundles && buildAction._bundles.length > 0) {
         const pluginModule = await import('../plugins/rollup-bundles-webpack-plugin');
         const RollupBundlesWebpackPlugin = pluginModule.RollupBundlesWebpackPlugin;
         plugins.push(
             new RollupBundlesWebpackPlugin({
-                projectBuildConfig,
+                buildAction,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
     // Copy plugin
-    if (projectBuildConfig._copyAssets && projectBuildConfig._copyAssets.length > 0) {
+    if (buildAction._copyAssets && buildAction._copyAssets.length > 0) {
         const pluginModule = await import('../plugins/copy-webpack-plugin');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
         plugins.push(
             new CopyWebpackPlugin({
-                assets: projectBuildConfig._copyAssets,
-                projectRoot: projectBuildConfig._projectRoot,
-                outputPath: projectBuildConfig._outputPath,
+                assets: buildAction._copyAssets,
+                projectRoot: buildAction._projectRoot,
+                outputPath: buildAction._outputPath,
                 allowCopyOutsideOutputPath: true,
                 forceWriteToDisk: true,
                 logLevel: buildOptions.logLevel
@@ -238,19 +242,19 @@ async function getWebpackBuildConfigInternal(
     // package.json plugin
     plugins.push(
         new PackageJsonFileWebpackPlugin({
-            projectBuildConfig,
+            buildAction,
             logLevel: buildOptions.logLevel
         })
     );
 
     const webpackConfig: Configuration = {
-        name: projectBuildConfig._projectName,
+        name: buildAction._projectName,
         entry: () => ({}),
         output: {
-            path: projectBuildConfig._outputPath,
+            path: buildAction._outputPath,
             filename: '[name].js'
         },
-        context: projectBuildConfig._projectRoot,
+        context: buildAction._projectRoot,
         plugins,
         stats: 'errors-only'
     };
