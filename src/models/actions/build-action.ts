@@ -337,7 +337,25 @@ export interface CommonJsOptions {
     ignoreGlobal?: boolean;
 }
 
-export type EcmaScriptTargetString = 'es5' | 'es2015' | 'es2016' | 'es2017' | 'es2018' | 'es2019' | 'es2020' | 'esnext';
+export type ScriptTargetString =
+    | 'es5'
+    | 'ES5'
+    | 'es2015'
+    | 'ES2015'
+    | 'es2016'
+    | 'ES2016'
+    | 'es2017'
+    | 'ES2017'
+    | 'es2018'
+    | 'ES2018'
+    | 'es2019'
+    | 'ES2019'
+    | 'es2020'
+    | 'ES2020'
+    | 'esnext'
+    | 'ESNext'
+    | 'latest'
+    | 'Latest';
 
 /**
  * @additionalProperties false
@@ -354,7 +372,7 @@ export interface TsTranspilationOptions {
     /**
      * Override script target for this transpilation.
      */
-    target?: EcmaScriptTargetString;
+    target?: ScriptTargetString;
     /**
      * Override declaration option for this transpilation.
      */
