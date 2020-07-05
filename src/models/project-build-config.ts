@@ -416,7 +416,7 @@ export interface BundleOptions {
  */
 export interface ProjectBuildConfigBase {
     /**
-     * The output directory for build results. Default is `dist/packages/{project-name}`.
+     * The output directory for build results. Default to `dist/packages/{package-name}`.
      */
     outputPath?: string;
     /**
