@@ -212,7 +212,7 @@ export async function toBuildActionInternal(
         buildActionInternal.style.entries &&
         buildActionInternal.style.entries.length > 0
     ) {
-        buildActionInternal._styleParsedEntries = await parseStyleEntries(
+        buildActionInternal._styleParsedEntries = parseStyleEntries(
             buildActionInternal.style.entries,
             buildActionInternal,
             projectRoot,
@@ -638,6 +638,7 @@ export function prepareBundleEntry(
 
     // externals
     if (currentBundle.externals == null && bundleOptions.externals) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         currentBundle.externals = JSON.parse(JSON.stringify(bundleOptions.externals));
     }
 
@@ -814,12 +815,12 @@ export function prepareBundleEntry(
     };
 }
 
-async function parseStyleEntries(
+function parseStyleEntries(
     styleEntries: StyleEntry[],
     buildAction: BuildActionInternal,
     projectRoot: string,
     outputPath: string
-): Promise<StyleParsedEntry[]> {
+): StyleParsedEntry[] {
     return styleEntries.map((styleEntry) => {
         if (!supportedStyleInputExt.test(styleEntry.input)) {
             throw new Error(
