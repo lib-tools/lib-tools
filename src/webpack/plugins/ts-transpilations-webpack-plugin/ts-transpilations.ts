@@ -4,21 +4,18 @@ import * as spawn from 'cross-spawn';
 import { pathExists, writeFile } from 'fs-extra';
 import { ScriptTarget } from 'typescript';
 
-import { ProjectBuildConfigInternal, TsTranspilationOptionsInternal } from '../../../models/internals';
+import { BuildActionInternal, TsTranspilationOptionsInternal } from '../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizeRelativePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
 
-export async function preformTsTranspilations(
-    projectBuildConfig: ProjectBuildConfigInternal,
-    logger: LoggerBase
-): Promise<void> {
-    if (!projectBuildConfig._tsTranspilations || !projectBuildConfig._tsTranspilations.length) {
+export async function preformTsTranspilations(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
+    if (!buildAction._tsTranspilations || !buildAction._tsTranspilations.length) {
         return;
     }
 
     let tsc = 'tsc';
-    const nodeModulesPath = projectBuildConfig._nodeModulesPath;
+    const nodeModulesPath = buildAction._nodeModulesPath;
     if (nodeModulesPath) {
         if (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) {
             tsc = path.join(nodeModulesPath, '.bin/ngc');
@@ -27,7 +24,7 @@ export async function preformTsTranspilations(
         }
     }
 
-    for (const tsTranspilation of projectBuildConfig._tsTranspilations) {
+    for (const tsTranspilation of buildAction._tsTranspilations) {
         const tsConfigPath = tsTranspilation._tsConfigPath;
         const compilerOptions = tsTranspilation._tsCompilerConfig.options;
         const commandArgs: string[] = ['-p', tsConfigPath];
@@ -78,7 +75,7 @@ export async function preformTsTranspilations(
             child.on('error', reject);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
-                    afterTsTranspileTask(tsTranspilation, projectBuildConfig, tsc, logger)
+                    afterTsTranspileTask(tsTranspilation, buildAction, tsc, logger)
                         .then(() => {
                             resolve();
                         })
@@ -95,28 +92,28 @@ export async function preformTsTranspilations(
 
 async function afterTsTranspileTask(
     tsTranspilation: TsTranspilationOptionsInternal,
-    projectBuildConfig: ProjectBuildConfigInternal,
+    buildAction: BuildActionInternal,
     tsc: string,
     logger: LoggerBase
 ): Promise<void> {
-    const outputRootDir = projectBuildConfig._outputPath;
+    const outputRootDir = buildAction._outputPath;
 
     // Replace version
     if (
-        projectBuildConfig._packageVersion &&
+        buildAction._packageVersion &&
         (tsTranspilation._index === 0 ||
-            (tsTranspilation._index > 0 && projectBuildConfig._prevTsTranspilationVersionReplaced))
+            (tsTranspilation._index > 0 && buildAction._prevTsTranspilationVersionReplaced))
     ) {
         logger.debug('Checking version placeholder');
 
         const hasVersionReplaced = await replaceVersion(
             tsTranspilation._tsOutDirRootResolved,
-            projectBuildConfig._packageVersion,
+            buildAction._packageVersion,
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/version.js')}`,
             logger
         );
-        if (hasVersionReplaced && !projectBuildConfig._prevTsTranspilationVersionReplaced) {
-            projectBuildConfig._prevTsTranspilationVersionReplaced = true;
+        if (hasVersionReplaced && !buildAction._prevTsTranspilationVersionReplaced) {
+            buildAction._prevTsTranspilationVersionReplaced = true;
         }
     }
 
@@ -135,9 +132,9 @@ async function afterTsTranspileTask(
         }
 
         let stylePreprocessorIncludePaths: string[] = [];
-        if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.includePaths) {
-            stylePreprocessorIncludePaths = projectBuildConfig.styleOptions.includePaths.map((p) =>
-                path.resolve(projectBuildConfig._projectRoot, p)
+        if (buildAction.styleOptions && buildAction.styleOptions.includePaths) {
+            stylePreprocessorIncludePaths = buildAction.styleOptions.includePaths.map((p) =>
+                path.resolve(buildAction._projectRoot, p)
             );
         }
 
@@ -146,7 +143,7 @@ async function afterTsTranspileTask(
         const inlineResourcesModule = await import('./ng-resource-inlining/inline-resources');
 
         await inlineResourcesModule.inlineResources(
-            projectBuildConfig._projectRoot,
+            buildAction._projectRoot,
             tsTranspilation._tsOutDirRootResolved,
             `${path.join(tsTranspilation._tsOutDirRootResolved, '**/*.js')}`,
             stylePreprocessorIncludePaths,
@@ -186,22 +183,22 @@ async function afterTsTranspileTask(
 
     // Re-export
     if (
-        projectBuildConfig._nestedPackage &&
+        buildAction._nestedPackage &&
         tsTranspilation._declaration &&
         tsTranspilation._typingsOutDir &&
         tsTranspilation._detectedEntryName
     ) {
         let reExportName = tsTranspilation._detectedEntryName;
-        if (projectBuildConfig._nestedPackage && projectBuildConfig._packageNameWithoutScope) {
-            reExportName = projectBuildConfig._packageNameWithoutScope.substr(
-                projectBuildConfig._packageNameWithoutScope.lastIndexOf('/') + 1
+        if (buildAction._nestedPackage && buildAction._packageNameWithoutScope) {
+            reExportName = buildAction._packageNameWithoutScope.substr(
+                buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
             );
         }
 
         const relPath = normalizeRelativePath(path.relative(outputRootDir, tsTranspilation._typingsOutDir));
 
         // add banner to index
-        const bannerContent = projectBuildConfig._bannerText ? `${projectBuildConfig._bannerText}\n` : '';
+        const bannerContent = buildAction._bannerText ? `${buildAction._bannerText}\n` : '';
 
         logger.debug('Re-exporting typing files to output root');
 
@@ -216,7 +213,7 @@ async function afterTsTranspileTask(
                 tsTranspilation._tsConfigJson.angularCompilerOptions &&
                 tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleId
                     ? tsTranspilation._tsConfigJson.angularCompilerOptions.flatModuleId
-                    : projectBuildConfig._packageName;
+                    : buildAction._packageName;
 
             const metadataJson = {
                 __symbolic: 'module',

@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 
-import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 import { preformTsTranspilations } from './ts-transpilations';
 
 export interface TsTranspilationsWebpackPluginOptions {
-    projectBuildConfig: ProjectBuildConfigInternal;
+    buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
 }
 
@@ -26,7 +26,7 @@ export class TsTranspilationsWebpackPlugin {
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () =>
-            preformTsTranspilations(this.options.projectBuildConfig, this.logger)
+            preformTsTranspilations(this.options.buildAction, this.logger)
         );
     }
 }

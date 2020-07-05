@@ -4,23 +4,20 @@ import { pathExists } from 'fs-extra';
 import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
-import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
 import { getRollupConfig } from './get-rollup-config';
 import { minifyJsFile } from './minify-js-file';
 
-export async function performRollupBundles(
-    projectBuildConfig: ProjectBuildConfigInternal,
-    logger: LoggerBase
-): Promise<void> {
-    if (!projectBuildConfig._bundles || !projectBuildConfig._bundles.length) {
+export async function performRollupBundles(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
+    if (!buildAction._bundles || !buildAction._bundles.length) {
         return;
     }
 
-    const bundles = projectBuildConfig._bundles;
+    const bundles = buildAction._bundles;
 
-    const projectName = projectBuildConfig._projectName;
+    const projectName = buildAction._projectName;
     for (const currentBundle of bundles) {
         const entryFilePath = currentBundle._entryFilePath;
         const entryFileExists = await pathExists(entryFilePath);
@@ -32,7 +29,7 @@ export async function performRollupBundles(
         }
 
         // main bundling
-        const rollupOptions = getRollupConfig(projectBuildConfig, currentBundle, logger);
+        const rollupOptions = getRollupConfig(buildAction, currentBundle, logger);
 
         let scriptTargetText = '';
         if (currentBundle._destScriptTarget) {
@@ -45,7 +42,7 @@ export async function performRollupBundles(
         await bundle.write(rollupOptions.outputOptions);
 
         // Remapping sourcemaps
-        // const shouldReMapSourceMap = projectBuildConfig.sourceMap && !/\.tsx?$/i.test(entryFilePath);
+        // const shouldReMapSourceMap = buildAction.sourceMap && !/\.tsx?$/i.test(entryFilePath);
         // (path.dirname(entryFilePath) !== srcDir)
         // if (shouldReMapSourceMap) {
         //     const chain = await sorcery.load(currentBundle._outputFilePath);
@@ -60,13 +57,13 @@ export async function performRollupBundles(
             await minifyJsFile(
                 currentBundle._outputFilePath,
                 minFilePath,
-                projectBuildConfig.sourceMap as boolean,
+                buildAction.sourceMap as boolean,
                 // buildOptions.logLevel === 'debug',
                 logger
             );
 
             // Remapping sourcemaps
-            // if (projectBuildConfig.sourceMap) {
+            // if (buildAction.sourceMap) {
             //     const chain = await sorcery.load(currentBundle._outputFilePath);
             //     await chain.write();
             // }

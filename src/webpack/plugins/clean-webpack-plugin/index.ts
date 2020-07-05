@@ -7,13 +7,13 @@ import * as minimatch from 'minimatch';
 import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models';
-import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizeRelativePath } from '../../../utils';
 
 const globPromise = promisify(glob);
 
 export interface CleanWebpackPluginOptions {
-    projectBuildConfig: ProjectBuildConfigInternal;
+    buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
 }
 
@@ -417,16 +417,16 @@ export class CleanWebpackPlugin {
     }
 
     private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
-        const projectBuildConfig = options.projectBuildConfig;
-        const workspaceRoot = projectBuildConfig._workspaceRoot;
-        let outputPath = projectBuildConfig._outputPath;
-        if (projectBuildConfig._nestedPackage) {
-            const nestedPackageStartIndex = projectBuildConfig._packageNameWithoutScope.indexOf('/') + 1;
-            const nestedPackageSuffix = projectBuildConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
+        const buildAction = options.buildAction;
+        const workspaceRoot = buildAction._workspaceRoot;
+        let outputPath = buildAction._outputPath;
+        if (buildAction._nestedPackage) {
+            const nestedPackageStartIndex = buildAction._packageNameWithoutScope.indexOf('/') + 1;
+            const nestedPackageSuffix = buildAction._packageNameWithoutScope.substr(nestedPackageStartIndex);
             outputPath = path.resolve(outputPath, nestedPackageSuffix);
         }
 
-        const cleanConfigOptions = typeof projectBuildConfig.clean === 'object' ? projectBuildConfig.clean : {};
+        const cleanConfigOptions = typeof buildAction.clean === 'object' ? buildAction.clean : {};
 
         const cleanOptions: CleanOptionsInternal = {
             ...cleanConfigOptions,
@@ -440,7 +440,7 @@ export class CleanWebpackPlugin {
 
         let skipCleanOutDir = false;
 
-        if (projectBuildConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
+        if (buildAction._nestedPackage && beforeBuildOption.cleanOutDir) {
             skipCleanOutDir = true;
         }
 

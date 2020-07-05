@@ -1,8 +1,8 @@
-import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 export interface ProjectBuildInfoWebpackPluginOptions {
-    projectBuildConfig: ProjectBuildConfigInternal;
+    buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
 }
 
@@ -21,7 +21,7 @@ export class ProjectBuildInfoWebpackPlugin {
     }
 
     apply(): void {
-        const msg = `Preparing project ${this.options.projectBuildConfig._projectName} for build`;
+        const msg = `Preparing project ${this.options.buildAction._projectName} for build`;
         this.logger.info(msg);
     }
 }

@@ -7,13 +7,13 @@ import resolve from '@rollup/plugin-node-resolve';
 const builtins = require('builtins')();
 
 import { ExternalsEntry } from '../../../models';
-import { BundleOptionsInternal, ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal, BundleOptionsInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export function getRollupConfig(
-    projectBuildConfig: ProjectBuildConfigInternal,
+    buildAction: BuildActionInternal,
     currentBundle: BundleOptionsInternal,
     logger: LoggerBase
 ): {
@@ -21,12 +21,12 @@ export function getRollupConfig(
     outputOptions: rollup.OutputOptions;
 } {
     // const isTsEntry = /\.tsx?$/i.test(currentBundle._entryFilePath);
-    let moduleName = projectBuildConfig.libraryName;
-    if (!moduleName && projectBuildConfig._packageName) {
-        if (projectBuildConfig._packageName.startsWith('@')) {
-            moduleName = projectBuildConfig._packageName.substring(1).split('/').join('.');
+    let moduleName = buildAction.libraryName;
+    if (!moduleName && buildAction._packageName) {
+        if (buildAction._packageName.startsWith('@')) {
+            moduleName = buildAction._packageName.substring(1).split('/').join('.');
         } else {
-            moduleName = projectBuildConfig._packageName.split('/').join('.');
+            moduleName = buildAction._packageName.split('/').join('.');
         }
         moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -35,8 +35,8 @@ export function getRollupConfig(
     }
 
     let amdId: { [key: string]: string } | undefined;
-    if (projectBuildConfig._packageName) {
-        amdId = { id: projectBuildConfig._packageName };
+    if (buildAction._packageName) {
+        amdId = { id: buildAction._packageName };
     }
 
     // library target
@@ -76,10 +76,10 @@ export function getRollupConfig(
 
     if (
         currentBundle.dependenciesAsExternals !== false &&
-        projectBuildConfig._packageJson &&
-        projectBuildConfig._packageJson.dependencies
+        buildAction._packageJson &&
+        buildAction._packageJson.dependencies
     ) {
-        Object.keys(projectBuildConfig._packageJson.dependencies)
+        Object.keys(buildAction._packageJson.dependencies)
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
                 externals.push(e);
@@ -88,10 +88,10 @@ export function getRollupConfig(
 
     if (
         currentBundle.peerDependenciesAsExternals !== false &&
-        projectBuildConfig._packageJson &&
-        projectBuildConfig._packageJson.peerDependencies
+        buildAction._packageJson &&
+        buildAction._packageJson.peerDependencies
     ) {
-        Object.keys(projectBuildConfig._packageJson.peerDependencies)
+        Object.keys(buildAction._packageJson.peerDependencies)
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
                 externals.push(e);
@@ -134,7 +134,7 @@ export function getRollupConfig(
         if (currentBundle.includeCommonJs) {
             let commonjsOption = {
                 extensions: ['.js'],
-                sourceMap: projectBuildConfig.sourceMap
+                sourceMap: buildAction.sourceMap
             };
 
             if (typeof currentBundle.includeCommonJs === 'object') {
@@ -179,11 +179,11 @@ export function getRollupConfig(
         globals,
         exports: 'named',
         file: currentBundle._outputFilePath,
-        sourcemap: projectBuildConfig.sourceMap
+        sourcemap: buildAction.sourceMap
     };
 
-    if (projectBuildConfig._bannerText) {
-        outputOptions.banner = projectBuildConfig._bannerText;
+    if (buildAction._bannerText) {
+        outputOptions.banner = buildAction._bannerText;
     }
 
     return {

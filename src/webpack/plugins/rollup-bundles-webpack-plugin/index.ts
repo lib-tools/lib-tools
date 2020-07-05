@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 
-import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
 import { performRollupBundles } from './rollup-bundles';
 
 export interface RollupBundlesWebpackPluginOptions {
-    projectBuildConfig: ProjectBuildConfigInternal;
+    buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
 }
 
@@ -26,7 +26,7 @@ export class RollupBundlesWebpackPlugin {
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () =>
-            performRollupBundles(this.options.projectBuildConfig, this.logger)
+            performRollupBundles(this.options.buildAction, this.logger)
         );
     }
 }

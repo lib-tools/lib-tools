@@ -8,11 +8,11 @@ import * as sass from 'sass';
 import * as webpack from 'webpack';
 
 import { AutoPrefixerOptions, CleanCSSOptions } from '../../../models';
-import { ProjectBuildConfigInternal } from '../../../models/internals';
+import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, normalizeRelativePath } from '../../../utils';
 
 export interface StyleBundleWebpackPluginOptions {
-    projectBuildConfig: ProjectBuildConfigInternal;
+    buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
 }
 
@@ -38,35 +38,32 @@ export class StyleBundleWebpackPlugin {
     }
 
     private async processStyles(): Promise<void> {
-        const projectBuildConfig = this.options.projectBuildConfig;
+        const buildAction = this.options.buildAction;
 
-        if (!projectBuildConfig._styleParsedEntries || !projectBuildConfig._styleParsedEntries.length) {
+        if (!buildAction._styleParsedEntries || !buildAction._styleParsedEntries.length) {
             return;
         }
 
         await Promise.all(
-            projectBuildConfig._styleParsedEntries.map(async (styleEntry) => {
+            buildAction._styleParsedEntries.map(async (styleEntry) => {
                 const inputFilePath = styleEntry._inputFilePath;
                 const outFilePath = styleEntry._outputFilePath;
                 const inputRelToWorkspace = normalizeRelativePath(
-                    path.relative(projectBuildConfig._workspaceRoot, inputFilePath)
+                    path.relative(buildAction._workspaceRoot, inputFilePath)
                 );
 
                 let sourceMap = true;
                 if (styleEntry.sourceMap != null) {
                     sourceMap = styleEntry.sourceMap;
-                } else if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.sourceMap != null) {
-                    sourceMap = projectBuildConfig.styleOptions.sourceMap;
+                } else if (buildAction.styleOptions && buildAction.styleOptions.sourceMap != null) {
+                    sourceMap = buildAction.styleOptions.sourceMap;
                 }
 
                 let sourceMapContents = true;
                 if (styleEntry.sourceMapContents != null) {
                     sourceMapContents = styleEntry.sourceMapContents;
-                } else if (
-                    projectBuildConfig.styleOptions &&
-                    projectBuildConfig.styleOptions.sourceMapContents != null
-                ) {
-                    sourceMapContents = projectBuildConfig.styleOptions.sourceMapContents;
+                } else if (buildAction.styleOptions && buildAction.styleOptions.sourceMapContents != null) {
+                    sourceMapContents = buildAction.styleOptions.sourceMapContents;
                 }
 
                 if (/\.s[ac]ss$/i.test(inputFilePath)) {
@@ -117,8 +114,8 @@ export class StyleBundleWebpackPlugin {
                 let vendorPrefixes: boolean | AutoPrefixerOptions = true;
                 if (styleEntry.vendorPrefixes != null) {
                     vendorPrefixes = styleEntry.vendorPrefixes;
-                } else if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.vendorPrefixes != null) {
-                    vendorPrefixes = projectBuildConfig.styleOptions.vendorPrefixes;
+                } else if (buildAction.styleOptions && buildAction.styleOptions.vendorPrefixes != null) {
+                    vendorPrefixes = buildAction.styleOptions.vendorPrefixes;
                 }
 
                 if (vendorPrefixes !== false) {
@@ -147,8 +144,8 @@ export class StyleBundleWebpackPlugin {
                 let minify: boolean | CleanCSSOptions = true;
                 if (styleEntry.minify != null) {
                     minify = styleEntry.minify;
-                } else if (projectBuildConfig.styleOptions && projectBuildConfig.styleOptions.minify != null) {
-                    minify = projectBuildConfig.styleOptions.minify;
+                } else if (buildAction.styleOptions && buildAction.styleOptions.minify != null) {
+                    minify = buildAction.styleOptions.minify;
                 }
 
                 if (minify) {
