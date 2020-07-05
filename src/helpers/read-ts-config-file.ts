@@ -29,5 +29,5 @@ export function readTsConfigFile(tsConfigPath: string): { [key: string]: unknown
 
     cache.set(tsConfigPath, jsonConfigFile.config);
 
-    return jsonConfigFile.config;
+    return jsonConfigFile.config as { [key: string]: unknown };
 }
