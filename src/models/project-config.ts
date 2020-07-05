@@ -1,6 +1,7 @@
-import { ProjectBuildConfig } from './project-build-config';
+import { BuildAction } from './actions/build-action';
 
 /**
+ * The project configuration.
  * @additionalProperties false
  */
 export interface ProjectConfig {
@@ -15,14 +16,14 @@ export interface ProjectConfig {
     root?: string;
 
     /**
-     * Set true to skip for processing tasks.
+     * Set true for skipping actions.
      */
     skip?: boolean;
 
     /**
-     * The task configurations.
+     * The action configurations.
      */
-    tasks?: {
-        build?: ProjectBuildConfig;
+    actions?: {
+        build?: BuildAction;
     };
 }

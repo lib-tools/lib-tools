@@ -1,12 +1,6 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import {
-    AssetEntry,
-    BundleOptions,
-    ProjectBuildConfig,
-    StyleEntry,
-    TsTranspilationOptions
-} from '../project-build-config';
+import { AssetEntry, BuildAction, BundleOptions, StyleEntry, TsTranspilationOptions } from '../actions/build-action';
 import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleParsedEntry extends StyleEntry {
@@ -61,7 +55,7 @@ export interface BundleOptionsInternal extends BundleOptions {
     _nodeResolveFields?: string[];
 }
 
-export interface ProjectBuildConfigInternal extends ProjectBuildConfig {
+export interface BuildActionInternal extends BuildAction {
     _workspaceRoot: string;
     _configPath: string;
     _nodeModulesPath: string | null;

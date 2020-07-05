@@ -7,11 +7,11 @@ export interface BuildOptions {
      */
     environment?: { [key: string]: boolean | string } | string;
     /**
-     * Filter config by name(s).
+     * Filter projects by name(s) for build processing.
      */
     filter?: string | string[];
     /**
-     * Logging level for output logging.
+     * Logging level for output debugging.
      */
     logLevel?: 'debug' | 'info' | 'warn' | 'none';
     /**
@@ -23,7 +23,7 @@ export interface BuildOptions {
      */
     beep?: boolean;
     /**
-     * Set or override library package(s) version.
+     * Set version to override versions of the project packages.
      */
     version?: string;
 }

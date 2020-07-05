@@ -1,4 +1,4 @@
-export interface OverridableConfig<TConfigBase> {
+export interface OverridableAction<TConfigBase> {
     envOverrides?: {
         [name: string]: Partial<TConfigBase>;
     };

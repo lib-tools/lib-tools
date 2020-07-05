@@ -9,6 +9,7 @@ export interface WorkflowsConfig {
      * Link to schema.
      */
     $schema?: string;
+
     /**
      * The workflow configurations for projects.
      */
