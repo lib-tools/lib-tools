@@ -23,10 +23,9 @@
   "scripts": {
     "eslint": "eslint",
     "tsc": "tsc",
-    "rimraf": "rimraf",
     "lint": "eslint -c .eslintrc.json --ext .js,.ts .",
     "compile": "tsc --project tsconfig.build.json",
-    "build": "rimraf -- dist && tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version",
+    "build": "tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version",
     "show-help": "node -r source-map-support/register dist/bin/lib --help",
     "samples:copy-clean-demo:build": "node -r source-map-support/register ./dist/bin/lib build --config=samples/copy-clean-demo/workflows.json --version=1.0.0",
     "samples:bootstrap-css-demo:build": "node -r source-map-support/register ./dist/bin/lib build --config=samples/bootstrap-css-demo/workflows.json --version=1.0.0"
@@ -52,7 +51,8 @@
     "uglify-js": "^3.10.0",
     "update-notifier": "^4.1.0",
     "webpack": "^4.43.0",
-    "yargs": "^15.4.0"
+    "yargs": "^15.4.0",
+    "sass": "^1.26.9"
   },
   "devDependencies": {
     "@types/autoprefixer": "^9.7.2",
@@ -74,18 +74,11 @@
     "@typescript-eslint/parser": "^3.5.0",
     "eslint": "^7.4.0",
     "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-jsdoc": "^28.6.1",
-    "eslint-plugin-no-null": "^1.0.2",
-    "eslint-plugin-prefer-arrow": "^1.2.1",
     "eslint-plugin-prettier": "^3.1.4",
     "prettier": "^2.0.5",
-    "rimraf": "^3.0.2",
     "source-map-support": "^0.5.19",
     "typescript": "~3.9.6",
     "typescript-json-schema": "^0.42.0"
-  },
-  "optionalDependencies": {
-    "sass": "^1.26.9"
   }
 }
