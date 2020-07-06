@@ -1,6 +1,7 @@
 {
   "name": "lib-tools",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.1",
+  "description": "With Lib Tools, you can easily build/bundle, test and pack your library projects from zero-configuration to fully configurable options. You don’t need to learn how to configure webpack or rollup to bundle or package your project, the tool will automatically make for you!",
   "author": "DagonMetric",
   "license": "MIT",
   "repository": {
@@ -11,6 +12,32 @@
     "url": "https://github.com/DagonMetric/lib-tools/issues"
   },
   "homepage": "https://github.com/DagonMetric/lib-tools",
+  "keywords": [
+    "lib-tools",
+    "library-tools",
+    "workflow-tools",
+    "build-tools",
+    "npm-packaging-tools",
+    "library-packaging-tools",
+    "angular-library-packaging",
+    "typescript-library-packaging",
+    "javascript-library-packaging",
+    "sass-library-packaging",
+    "scss-library-packaging",
+    "css-library-packaging",
+    "style-library-packaging",
+    "nodejs-library-packaging",
+    "angular-library",
+    "typescript-library",
+    "angular",
+    "typescript",
+    "sass",
+    "scss",
+    "postcss",
+    "autoprefixer",
+    "webpack",
+    "rollup"
+  ],
   "engines": {
     "node": ">=10.9.0"
   },
@@ -67,8 +94,8 @@
     "@types/resolve": "^1.17.1",
     "@types/sass": "^1.16.0",
     "@types/supports-color": "^5.3.0",
-    "@types/uglify-js": "^3.9.2",
-    "@types/webpack": "^4.41.18",
+    "@types/uglify-js": "^3.9.3",
+    "@types/webpack": "^4.41.19",
     "@types/yargs": "^15.0.5",
     "@typescript-eslint/eslint-plugin": "^3.5.0",
     "@typescript-eslint/parser": "^3.5.0",
