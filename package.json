@@ -1,7 +1,7 @@
 {
   "name": "lib-tools",
-  "version": "0.0.1-alpha.1",
-  "description": "With Lib Tools, you can easily build/bundle, test and pack your library projects from zero-configuration to fully configurable options. You don’t need to learn how to configure webpack or rollup to bundle or package your project, the tool will automatically make for you!",
+  "version": "0.0.1-alpha.2",
+  "description": "With Lib Tools, you can easily build/bundle, test and pack your library projects from zero-configuration to fully configurable options.",
   "author": "DagonMetric",
   "license": "MIT",
   "repository": {
