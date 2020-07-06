@@ -263,13 +263,9 @@ export interface StyleEntry {
      */
     vendorPrefixes?: boolean | AutoPrefixerOptions;
     /**
-     * Set clean-css options or boolean value for minify file generation. Default is `true`.
+     * Set clean-css options or boolean value to generate minify file. Default is `true`.
      */
     minify?: boolean | CleanCSSOptions;
-    /**
-     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
-     */
-    includePaths?: string[];
 }
 
 /**
@@ -281,19 +277,19 @@ export interface StyleOptions {
      */
     entries?: StyleEntry[];
     /**
-     * If true, enable the outputing of sourcemap. Default is `true`.
+     * Default sourceMap option to all entries. If true, enable the outputing of sourcemap. Default is `true`.
      */
     sourceMap?: boolean;
     /**
-     * Includes the contents in the source map information. Default is `true`.
+     * Default sourceMapContents option to all entries. Includes the contents in the source map information. Default is `true`.
      */
     sourceMapContents?: boolean;
     /**
-     * Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
+     * Default vendorPrefixes option to all entries. Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
      */
     vendorPrefixes?: boolean | AutoPrefixerOptions;
     /**
-     * Set clean-css options or boolean value for minify file generation. Default is `true`.
+     * Default minify option to all entries. Set clean-css options or boolean value to generate minify file. Default is `true`.
      */
     minify?: boolean | CleanCSSOptions;
     /**
@@ -301,7 +297,7 @@ export interface StyleOptions {
      */
     includePaths: string[];
     /**
-     * If true, automatically add style entry points to package.json file. Default is `true`.
+     * If true, automatically detect and add `style`, `sass` and 'files' entries to package.json file. Default is `true`.
      */
     addToPackageJson?: boolean;
 }
