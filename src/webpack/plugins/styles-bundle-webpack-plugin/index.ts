@@ -177,7 +177,7 @@ export class StyleBundleWebpackPlugin {
                     const minDest = path.resolve(path.dirname(outFilePath), `${path.parse(outFilePath).name}.min.css`);
                     await writeFile(minDest, result.styles);
                     if (cleanCssSourceMap && result.sourceMap) {
-                        await writeFile(`${minDest}.map`, result.sourceMap);
+                        await writeFile(`${minDest}.map`, result.sourceMap.toString());
                     }
                 }
             })
