@@ -6,24 +6,36 @@
       "actions": {
         "build": {
           "outputPath": "dist",
+          "style": {
+            "entries": [
+              {
+                "input": "src/scss/bootstrap.scss",
+                "output": "css/bootstrap.css"
+              },
+              {
+                "input": "src/scss/bootstrap-grid.scss",
+                "output": "css/bootstrap-grid.css"
+              },
+              {
+                "input": "src/scss/bootstrap-reboot.scss",
+                "output": "css/bootstrap-reboot.css"
+              },
+              {
+                "input": "src/scss/bootstrap-utilities.scss",
+                "output": "css/bootstrap-utilities.css"
+              }
+            ],
+            "minify": true,
+            "vendorPrefixes": true,
+            "sourceMap": true
+
+          },
           "copy": [
             {
               "from": "src/scss",
               "to": "scss/"
             }
-          ],
-          "style": {
-            "entries": [
-              {
-                "input": "src/scss/bootstrap.scss",
-                "output": "css/bootstrap.css",
-                "minify": true,
-                "vendorPrefixes": true,
-                "sourceMap": true
-              }
-            ]
-
-          }
+          ]
         }
       }
     }
