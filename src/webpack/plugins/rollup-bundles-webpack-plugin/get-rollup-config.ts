@@ -6,7 +6,7 @@ import resolve from '@rollup/plugin-node-resolve';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const builtins = require('builtins')();
 
-import { ExternalsEntry } from '../../../models';
+import { ModuleExternalsEntry } from '../../../models';
 import { BuildActionInternal, ScriptBundleEntryInternal } from '../../../models/internals';
 import { LoggerBase } from '../../../utils';
 
@@ -51,7 +51,7 @@ export function getRollupConfig(
         globals: {}
     };
 
-    const rawExternals: ExternalsEntry[] = [];
+    const rawExternals: ModuleExternalsEntry[] = [];
     if (currentBundle.externals) {
         if (Array.isArray(currentBundle.externals)) {
             rawExternals.push(...currentBundle.externals);
@@ -194,7 +194,7 @@ export function getRollupConfig(
 }
 
 function mapToRollupGlobalsAndExternals(
-    external: ExternalsEntry,
+    external: ModuleExternalsEntry,
     mapResult: { externals: string[]; globals: { [key: string]: string } }
 ): void {
     if (!external) {
