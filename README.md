@@ -10,7 +10,27 @@ With Lib Tools, you can easily build/bundle, test and pack your library projects
 * SASS/SCSS/CSS library project
 * Assets library project (e.g. icons, json)
 
-Coming soon!
+**Note: This project is working in progess and coming soon!**
+
+## Get Started
+
+### Installation
+
+npm
+
+```bash
+npm install -D lib-tools
+```
+
+or yarn
+
+```bash
+yarn add -D lib-tools
+```
+
+## Feedback and Contributing
+
+Check out our [Contributing](https://github.com/DagonMetric/lib-tools/blob/master/CONTRIBUTING.md) page.
 
 ## License
 
