@@ -5,8 +5,10 @@ With Lib Tools, you can easily build/bundle, test and pack your library projects
 ## Supported Project Types
 
 * Typescript library project
+* JavaScript library project
 * Angular library project
 * SASS/SCSS/CSS library project
+* Assets library project (e.g. icons, json)
 
 Coming soon!
 
