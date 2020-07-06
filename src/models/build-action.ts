@@ -266,6 +266,10 @@ export interface StyleEntry {
      * Set clean-css options or boolean value to generate minify file. Default is `true`.
      */
     minify?: boolean | CleanCSSOptions;
+    /**
+     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths?: string[];
 }
 
 /**
@@ -293,27 +297,30 @@ export interface StyleOptions {
      */
     minify?: boolean | CleanCSSOptions;
     /**
-     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     * Default includePaths option to all entries and .sass/.scss files. An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
      */
-    includePaths: string[];
+    includePaths?: string[];
     /**
-     * If true, automatically detect and add `style`, `sass` and 'files' entries to package.json file. Default is `true`.
+     * If true, automatically add `style` and 'files' entries to package.json file. By default, the first entry will be added.
      */
     addToPackageJson?: boolean;
 }
 
-export interface ExternalsObjectElement {
+/**
+ * @additionalProperties false
+ */
+export interface ModuleExternalsObjectEntry {
     [key: string]:
         | string
         | {
               [key: string]: string;
-              commonjs: string;
-              amd: string;
-              root: string;
           };
 }
 
-export type ExternalsEntry = string | ExternalsObjectElement;
+/**
+ * @additionalProperties false
+ */
+export type ModuleExternalsEntry = string | ModuleExternalsObjectEntry;
 
 /**
  * @additionalProperties false
@@ -337,6 +344,9 @@ export interface CommonJsOptions {
     ignoreGlobal?: boolean;
 }
 
+/**
+ * @additionalProperties false
+ */
 export type ScriptTargetString =
     | 'es5'
     | 'ES5'
@@ -392,6 +402,7 @@ export interface ScriptTranspilationOptions {
      */
     tsConfig?: string;
 }
+
 /**
  * @additionalProperties false
  */
@@ -423,7 +434,7 @@ export interface ScriptBundleEntry {
     /**
      * The externals configuration option provides a way of excluding dependencies from the output bundle.
      */
-    externals?: ExternalsEntry | ExternalsEntry[];
+    externals?: ModuleExternalsEntry | ModuleExternalsEntry[];
     /**
      * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
      */
@@ -461,7 +472,7 @@ export interface ScriptBundleOptions {
     /**
      * The externals configuration option provides a way of excluding dependencies from the output bundle.
      */
-    externals?: ExternalsEntry | ExternalsEntry[];
+    externals?: ModuleExternalsEntry | ModuleExternalsEntry[];
     /**
      * If true or options object, commonjs modules are converted to ES6 and included in bundle.
      */
