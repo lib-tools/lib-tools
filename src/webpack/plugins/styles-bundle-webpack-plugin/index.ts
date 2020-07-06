@@ -7,7 +7,6 @@ import * as postcss from 'postcss';
 import * as sass from 'sass';
 import * as webpack from 'webpack';
 
-import { AutoPrefixerOptions, CleanCSSOptions, StyleOptions } from '../../../models';
 import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, normalizeRelativePath } from '../../../utils';
 
@@ -44,8 +43,6 @@ export class StyleBundleWebpackPlugin {
             return;
         }
 
-        const styleOptions = buildAction.style as StyleOptions;
-
         await Promise.all(
             buildAction._styleEntries.map(async (styleEntry) => {
                 const inputFilePath = styleEntry._inputFilePath;
@@ -53,20 +50,6 @@ export class StyleBundleWebpackPlugin {
                 const inputRelToWorkspace = normalizeRelativePath(
                     path.relative(buildAction._workspaceRoot, inputFilePath)
                 );
-
-                let sourceMap = true;
-                if (styleEntry.sourceMap != null) {
-                    sourceMap = styleEntry.sourceMap;
-                } else if (styleOptions.sourceMap != null) {
-                    sourceMap = styleOptions.sourceMap;
-                }
-
-                let sourceMapContents = true;
-                if (styleEntry.sourceMapContents != null) {
-                    sourceMapContents = styleEntry.sourceMapContents;
-                } else if (styleOptions.sourceMapContents != null) {
-                    sourceMapContents = styleOptions.sourceMapContents;
-                }
 
                 if (/\.s[ac]ss$/i.test(inputFilePath)) {
                     if (this.options.logLevel === 'debug') {
@@ -81,8 +64,8 @@ export class StyleBundleWebpackPlugin {
                                 outputStyle: 'expanded',
                                 file: inputFilePath,
                                 outFile: outFilePath,
-                                sourceMap,
-                                sourceMapContents,
+                                sourceMap: styleEntry._sourceMap,
+                                sourceMapContents: styleEntry._sourceMapContents,
                                 includePaths: styleEntry._includePaths
                             },
                             (err, sassResult) => {
@@ -99,7 +82,7 @@ export class StyleBundleWebpackPlugin {
 
                     await ensureDir(path.dirname(outFilePath));
                     await writeFile(outFilePath, result.css);
-                    if (sourceMap && result.map) {
+                    if (styleEntry._sourceMap && result.map) {
                         await writeFile(`${outFilePath}.map`, result.map);
                     }
                 } else {
@@ -113,21 +96,15 @@ export class StyleBundleWebpackPlugin {
                     await copy(inputFilePath, outFilePath);
                 }
 
-                let vendorPrefixes: boolean | AutoPrefixerOptions = true;
-                if (styleEntry.vendorPrefixes != null) {
-                    vendorPrefixes = styleEntry.vendorPrefixes;
-                } else if (styleOptions.vendorPrefixes != null) {
-                    vendorPrefixes = styleOptions.vendorPrefixes;
-                }
-
-                if (vendorPrefixes !== false) {
+                if (styleEntry._vendorPrefixes !== false) {
                     if (this.options.logLevel === 'debug') {
                         this.logger.debug('Adding vendor prefixes to css rules');
                     } else {
                         this.logger.info('Adding vendor prefixes to css rules');
                     }
 
-                    const vendorPrefixesOptions = typeof vendorPrefixes === 'object' ? vendorPrefixes : {};
+                    const vendorPrefixesOptions =
+                        typeof styleEntry._vendorPrefixes === 'object' ? styleEntry._vendorPrefixes : {};
 
                     const cssContent = await readFile(outFilePath, 'utf-8');
                     const postcssResult = await postcss([
@@ -138,27 +115,20 @@ export class StyleBundleWebpackPlugin {
                         from: outFilePath
                     });
                     await writeFile(outFilePath, postcssResult.css);
-                    if (sourceMap && postcssResult.map) {
+                    if (styleEntry._sourceMap && postcssResult.map) {
                         await writeFile(`${outFilePath}.map`, postcssResult.map.toString());
                     }
                 }
 
-                let minify: boolean | CleanCSSOptions = true;
-                if (styleEntry.minify != null) {
-                    minify = styleEntry.minify;
-                } else if (styleOptions.minify != null) {
-                    minify = styleOptions.minify;
-                }
-
-                if (minify) {
+                if (styleEntry._minify !== false) {
                     if (this.options.logLevel === 'debug') {
                         this.logger.debug('Minifing css rules');
                     } else {
                         this.logger.info('Minifing css rules');
                     }
 
-                    const cleanCssOptions = typeof minify === 'object' ? minify : {};
-                    let cleanCssSourceMap = sourceMap;
+                    const cleanCssOptions = typeof styleEntry._minify === 'object' ? styleEntry._minify : {};
+                    let cleanCssSourceMap = styleEntry._sourceMap;
                     if (cleanCssOptions.sourceMap != null) {
                         cleanCssSourceMap = cleanCssOptions.sourceMap;
                     }
