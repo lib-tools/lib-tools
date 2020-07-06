@@ -410,43 +410,53 @@ export interface ScriptBundleEntry {
     /**
      * Bundle module format.
      */
-    libraryTarget?: 'cjs' | 'umd' | 'esm';
+    libraryTarget: 'cjs' | 'umd' | 'esm';
+
     /**
      * The entry file to be bundled.
      */
     entry?: string;
+
     /**
-     * The typescript configuration file to be used.
+     * Root directory for entry file resolution.
+     */
+    entryRoot?: 'projectRoot' | 'transpilationOutput' | 'prevBundleOutput';
+
+    /**
+     * Specify typescript configuration file if `entry` is .ts file.
      */
     tsConfig?: string;
+
     /**
-     * Entry root directory resolution.
+     * If `entryRoot` is set to `transpilationOutput`, specify transpilation entry index (index starts from 0).
      */
-    entryRoot?: 'root' | 'tsTranspilationOutput' | 'prevBundleOutput';
-    /**
-     * Array index for entry root tsTranspilationResult.
-     */
-    tsTranspilationIndex?: number;
+    transpilationEntryIndex?: number;
+
     /**
      * Custom bundle output file path.
      */
     outputFilePath?: string;
+
     /**
      * The externals configuration option provides a way of excluding dependencies from the output bundle.
      */
     externals?: ModuleExternalsEntry | ModuleExternalsEntry[];
+
     /**
      * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
      */
     dependenciesAsExternals?: boolean;
+
     /**
      * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
      */
     peerDependenciesAsExternals?: boolean;
+
     /**
      * If true or options object, commonjs modules are converted to ES6 and included in bundle.
      */
     includeCommonJs?: boolean | CommonJsOptions;
+
     /**
      * If true, minify file will be generated.
      */

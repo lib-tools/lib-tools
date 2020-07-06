@@ -38,6 +38,7 @@ export interface TsConfigJsonOptions {
 
 export interface ScriptTranspilationEntryInternal extends ScriptTranspilationEntry {
     _index: number;
+
     _tsConfigPath: string;
     _tsConfigJson: TsConfigJsonOptions;
     _tsCompilerConfig: ParsedCommandLine;
@@ -45,9 +46,8 @@ export interface ScriptTranspilationEntryInternal extends ScriptTranspilationEnt
     _scriptTarget: ScriptTarget;
     _tsOutDirRootResolved: string;
 
-    _detectedEntryName?: string;
-    _typingsOutDir?: string;
-    _customTsOutDir?: string;
+    _detectedEntryName: string | null;
+    _customTsOutDir: string | null;
 }
 
 export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
@@ -55,13 +55,9 @@ export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
     _entryFilePath: string;
     _outputFilePath: string;
 
-    _tsConfigPath?: string;
-    _tsConfigJson?: TsConfigJsonOptions;
-    _tsCompilerConfig?: ParsedCommandLine;
-
-    _sourceScriptTarget?: ScriptTarget;
-    _destScriptTarget?: ScriptTarget;
-    _supportES2015?: boolean;
+    _tsConfigPath: string | null;
+    _sourceScriptTarget: ScriptTarget | null;
+    _destScriptTarget: ScriptTarget | null;
 }
 
 export interface BuildActionInternal extends BuildAction {
