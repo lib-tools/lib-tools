@@ -178,8 +178,7 @@ export async function toBuildActionInternal(
         _scriptTranspilationEntries: [],
         _scriptBundleEntries: [],
         _packageJsonOutDir: packageJsonOutDir,
-        _packageJsonEntryPoint: {},
-        _packageJsonFiles: []
+        _packageJsonEntryPoint: {}
     };
 
     // Copy assets
