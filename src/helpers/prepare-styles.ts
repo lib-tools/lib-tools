@@ -17,7 +17,7 @@ import { normalizeRelativePath } from '../utils';
 const inputExtRegExp = /\.(sass|scss|css)$/i;
 const outputExtRegExp = /\.css$/i;
 
-export async function prepareStyle(buildAction: BuildActionInternal): Promise<void> {
+export async function prepareStyles(buildAction: BuildActionInternal): Promise<void> {
     if (!buildAction.style) {
         return;
     }
