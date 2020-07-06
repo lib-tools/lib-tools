@@ -1,12 +1,24 @@
 import { ParsedCommandLine, ScriptTarget } from 'typescript';
 
-import { AssetEntry, BuildAction, ScriptBundleEntry, ScriptTranspilationEntry, StyleEntry } from '../build-action';
+import {
+    AssetEntry,
+    AutoPrefixerOptions,
+    BuildAction,
+    CleanCSSOptions,
+    ScriptBundleEntry,
+    ScriptTranspilationEntry,
+    StyleEntry
+} from '../build-action';
 import { PackageJsonLike } from './package-jon-like';
 
-export interface StyleParsedEntry extends StyleEntry {
+export interface StyleEntryInternal extends StyleEntry {
     _inputFilePath: string;
     _outputFilePath: string;
-    _includePaths?: string[];
+    _includePaths: string[];
+    _sourceMap: boolean;
+    _sourceMapContents: boolean;
+    _vendorPrefixes: boolean | AutoPrefixerOptions;
+    _minify: boolean | CleanCSSOptions;
 }
 
 export interface AngularCompilerJsonOptions {
@@ -59,6 +71,7 @@ export interface BuildActionInternal extends BuildAction {
 
     _projectName: string;
     _projectRoot: string;
+
     _outputPath: string;
 
     _packageJsonPath: string;
@@ -73,10 +86,10 @@ export interface BuildActionInternal extends BuildAction {
     _rootPackageJson: PackageJsonLike | null;
 
     // Assets
-    _copyAssets: (string | AssetEntry)[] | null;
+    _copyAssets: (AssetEntry | string)[];
 
     // styles
-    _styleParsedEntries?: StyleParsedEntry[];
+    _styleEntries: StyleEntryInternal[];
 
     // tsconfig
     _tsConfigPath?: string;
@@ -92,5 +105,6 @@ export interface BuildActionInternal extends BuildAction {
 
     // package.json
     _packageJsonOutDir: string;
-    _packageEntryPoints?: { [key: string]: string };
+    _packageJsonEntryPoint: { [key: string]: string };
+    _packageJsonFiles: string[];
 }
