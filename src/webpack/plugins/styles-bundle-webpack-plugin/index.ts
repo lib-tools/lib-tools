@@ -139,7 +139,7 @@ export class StyleBundleWebpackPlugin {
                     });
                     await writeFile(outFilePath, postcssResult.css);
                     if (sourceMap && postcssResult.map) {
-                        await writeFile(`${outFilePath}.map`, postcssResult.map);
+                        await writeFile(`${outFilePath}.map`, postcssResult.map.toString());
                     }
                 }
 
