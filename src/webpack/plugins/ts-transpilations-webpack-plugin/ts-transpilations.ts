@@ -155,11 +155,7 @@ async function afterTsTranspileTask(
     }
 
     // Move typings and metadata files
-    if (
-        tsTranspilation._declaration &&
-        tsTranspilation._typingsOutDir &&
-        tsTranspilation._typingsOutDir !== tsTranspilation._tsOutDirRootResolved
-    ) {
+    if (tsTranspilation._declaration && buildAction._packageJsonOutDir !== tsTranspilation._tsOutDirRootResolved) {
         // Angular
         if (/ngc$/.test(tsc)) {
             logger.debug('Moving typing and metadata files to output root');
@@ -167,7 +163,7 @@ async function afterTsTranspileTask(
             await globCopyFiles(
                 tsTranspilation._tsOutDirRootResolved,
                 '**/*.+(d.ts|metadata.json)',
-                tsTranspilation._typingsOutDir,
+                buildAction._packageJsonOutDir,
                 true
             );
         } else {
@@ -176,19 +172,14 @@ async function afterTsTranspileTask(
             await globCopyFiles(
                 tsTranspilation._tsOutDirRootResolved,
                 '**/*.+(d.ts)',
-                tsTranspilation._typingsOutDir,
+                buildAction._packageJsonOutDir,
                 true
             );
         }
     }
 
     // Re-export
-    if (
-        buildAction._nestedPackage &&
-        tsTranspilation._declaration &&
-        tsTranspilation._typingsOutDir &&
-        tsTranspilation._detectedEntryName
-    ) {
+    if (buildAction._nestedPackage && tsTranspilation._declaration && tsTranspilation._detectedEntryName) {
         let reExportName = tsTranspilation._detectedEntryName;
         if (buildAction._nestedPackage && buildAction._packageNameWithoutScope) {
             reExportName = buildAction._packageNameWithoutScope.substr(
@@ -196,7 +187,7 @@ async function afterTsTranspileTask(
             );
         }
 
-        const relPath = normalizeRelativePath(path.relative(outputRootDir, tsTranspilation._typingsOutDir));
+        const relPath = normalizeRelativePath(path.relative(outputRootDir, buildAction._packageJsonOutDir));
 
         // add banner to index
         const bannerContent = buildAction._bannerText ? `${buildAction._bannerText}\n` : '';
