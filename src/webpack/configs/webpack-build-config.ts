@@ -200,7 +200,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     // styles
-    if (buildAction._styleParsedEntries && buildAction._styleParsedEntries.length > 0) {
+    if (buildAction._styleEntries && buildAction._styleEntries.length > 0) {
         const pluginModule = await import('../plugins/styles-bundle-webpack-plugin');
         const StyleBundleWebpackPlugin = pluginModule.StyleBundleWebpackPlugin;
         plugins.push(
