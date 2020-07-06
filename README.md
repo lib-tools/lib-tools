@@ -1,4 +1,4 @@
-# Lib Tools – Build, Test and NPM Packaging Make Easy
+# Lib Tools – Build, Test and NPM Package Make Easy
 
 [![GitHub Actions Status](https://github.com/DagonMetric/lib-tools/workflows/Main%20Workflow/badge.svg)](https://github.com/DagonMetric/lib-tools/actions)
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
