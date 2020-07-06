@@ -42,8 +42,8 @@ export class PackageJsonFileWebpackPlugin {
         this.logger.debug('Checking package.json file');
 
         // Update entry points
-        if (this.buildAction._packageEntryPoints) {
-            const packageEntryPoints = this.buildAction._packageEntryPoints;
+        if (this.buildAction._packageJsonEntryPoint) {
+            const packageEntryPoints = this.buildAction._packageJsonEntryPoint;
             Object.keys(packageEntryPoints).forEach((key) => {
                 this.packageJsonHasAnyChanges = true;
                 this.logger.debug(`Updating package entry point '${key}' in package.json`);
