@@ -19,6 +19,7 @@ export interface StyleEntryInternal extends StyleEntry {
     _sourceMapContents: boolean;
     _vendorPrefixes: boolean | AutoPrefixerOptions;
     _minify: boolean | CleanCSSOptions;
+    _minOutputFilePath: string;
 }
 
 export interface AngularCompilerJsonOptions {
@@ -102,5 +103,4 @@ export interface BuildActionInternal extends BuildAction {
     // package.json
     _packageJsonOutDir: string;
     _packageJsonEntryPoint: { [key: string]: string };
-    _packageJsonFiles: string[];
 }
