@@ -104,11 +104,7 @@ export class StyleBundleWebpackPlugin {
                 }
 
                 if (styleEntry._vendorPrefixes !== false) {
-                    if (this.options.logLevel === 'debug') {
-                        this.logger.debug('Adding vendor prefixes to css rules');
-                    } else {
-                        this.logger.info('Adding vendor prefixes to css rules');
-                    }
+                    this.logger.debug('Adding vendor prefixes to css rules');
 
                     const vendorPrefixesOptions =
                         typeof styleEntry._vendorPrefixes === 'object' ? styleEntry._vendorPrefixes : {};
@@ -128,11 +124,11 @@ export class StyleBundleWebpackPlugin {
                 }
 
                 if (styleEntry._minify !== false) {
-                    if (this.options.logLevel === 'debug') {
-                        this.logger.debug('Minifing css');
-                    } else {
-                        this.logger.info('Minifing css');
-                    }
+                    const minFileToWorkspace = normalizeRelativePath(
+                        path.relative(buildAction._workspaceRoot, styleEntry._minOutputFilePath)
+                    );
+
+                    this.logger.debug(`Generating minify file ${minFileToWorkspace}`);
 
                     const cleanCssOptions = typeof styleEntry._minify === 'object' ? styleEntry._minify : {};
                     let cleanCssSourceMap = styleEntry._sourceMap;
