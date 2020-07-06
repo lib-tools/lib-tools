@@ -40,14 +40,14 @@ export class StyleBundleWebpackPlugin {
     private async processStyles(): Promise<void> {
         const buildAction = this.options.buildAction;
 
-        if (!buildAction._styleParsedEntries || !buildAction._styleParsedEntries.length) {
+        if (!buildAction._styleEntries || !buildAction._styleEntries.length) {
             return;
         }
 
         const styleOptions = buildAction.style as StyleOptions;
 
         await Promise.all(
-            buildAction._styleParsedEntries.map(async (styleEntry) => {
+            buildAction._styleEntries.map(async (styleEntry) => {
                 const inputFilePath = styleEntry._inputFilePath;
                 const outFilePath = styleEntry._outputFilePath;
                 const inputRelToWorkspace = normalizeRelativePath(
