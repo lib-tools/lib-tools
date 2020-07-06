@@ -2,30 +2,40 @@
 
 With Lib Tools, you can easily build/bundle, test and pack your library projects from zero-configuration to fully configurable options. You don’t need to learn how to configure webpack or rollup to bundle or package your project, the tool will automatically make for you!
 
-## Supported Project Types
+This tool helps you simplify the build/bundle, test and npm packaging workflows for the following project types:
 
 * Typescript library project
 * JavaScript library project
 * Angular library project
-* SASS/SCSS/CSS library project
-* Assets library project (e.g. icons, json)
+* SASS/SCSS/CSS module project
+* Assets module project (e.g. icons)
 
-**Note: This project is working in progess and coming soon!**
+**Note: Working in progess and coming soon!**
 
 ## Get Started
 
 ### Installation
 
-npm
+You can install lib-tools cli either globally or locally.
 
 ```bash
 npm install -D lib-tools
 ```
 
-or yarn
+or install globally
 
 ```bash
-yarn add -D lib-tools
+npm install -g lib-tools
+```
+
+Latest npm package is [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
+
+### Build Project for NPM Package Publish with Zero-Configuration
+
+The following command automatically detects your project structure and make it ready for npm package publish.
+
+```bash
+lib build --auto
 ```
 
 ## Feedback and Contributing
