@@ -36,7 +36,7 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
         buildAction._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
     }
 
-    const scriptTranspilationEntries: ScriptTranspilationEntryInternal[] = [];
+    const transpilationEntries: ScriptTranspilationEntryInternal[] = [];
 
     if (
         buildAction.scriptTranspilation &&
@@ -52,8 +52,8 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
             } else {
                 if (buildAction._tsConfigPath) {
                     tsConfigPath = buildAction._tsConfigPath;
-                } else if (i > 0 && scriptTranspilationEntries[i - 1]._tsConfigPath) {
-                    tsConfigPath = scriptTranspilationEntries[i - 1]._tsConfigPath;
+                } else if (i > 0 && transpilationEntries[i - 1]._tsConfigPath) {
+                    tsConfigPath = transpilationEntries[i - 1]._tsConfigPath;
                 } else if (i === 0) {
                     const foundTsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
                     if (foundTsConfigPath) {
@@ -68,13 +68,13 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
                 );
             }
 
-            const scriptTranspilationEntry = await toScriptTranspilationEntryInternal(
+            const scriptTranspilationEntry = await toTranspilationEntryInternal(
                 tsConfigPath,
                 transpilationEntry,
                 1,
                 buildAction
             );
-            scriptTranspilationEntries.push(scriptTranspilationEntry);
+            transpilationEntries.push(scriptTranspilationEntry);
         }
     } else if (buildAction.scriptTranspilation) {
         let tsConfigPath: string | null = null;
@@ -88,7 +88,7 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
             throw new Error(`Could not detect tsconfig file for 'projects[${projectName}].`);
         }
 
-        const esm2015Transpilation = await toScriptTranspilationEntryInternal(
+        const esm2015Transpilation = await toTranspilationEntryInternal(
             tsConfigPath,
             {
                 target: 'es2015',
@@ -97,9 +97,9 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
             0,
             buildAction
         );
-        scriptTranspilationEntries.push(esm2015Transpilation);
+        transpilationEntries.push(esm2015Transpilation);
 
-        const esm5Transpilation = await toScriptTranspilationEntryInternal(
+        const esm5Transpilation = await toTranspilationEntryInternal(
             tsConfigPath,
             {
                 target: 'es5',
@@ -109,13 +109,13 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
             1,
             buildAction
         );
-        scriptTranspilationEntries.push(esm5Transpilation);
+        transpilationEntries.push(esm5Transpilation);
     }
 
-    buildAction._scriptTranspilationEntries = scriptTranspilationEntries;
+    buildAction._scriptTranspilationEntries = transpilationEntries;
 }
 
-async function toScriptTranspilationEntryInternal(
+async function toTranspilationEntryInternal(
     tsConfigPath: string,
     transpilationEntry: ScriptTranspilationEntry,
     i: number,
