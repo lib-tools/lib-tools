@@ -36,13 +36,13 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
         const styleEntry = styleOptions.entries[i];
         if (!styleEntry.input || !styleEntry.input.trim().length) {
             throw new Error(
-                `Style input file is required. Config location projects[${projectName}].style.entries[${i}].`
+                `Style input file is required, correct value in projects[${projectName}].style.entries[${i}].input.`
             );
         }
 
         if (!inputExtRegExp.test(styleEntry.input)) {
             throw new Error(
-                `Unsupported style input file '${styleEntry.input}'. Config location projects[${projectName}].style.entries[${i}].`
+                `Unsupported style input file '${styleEntry.input}', correct value in projects[${projectName}].style.entries[${i}].input.`
             );
         }
 
@@ -50,7 +50,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
         const inputFileExists = await pathExists(inputFilePath);
         if (!inputFileExists) {
             throw new Error(
-                `Style input file path '${inputFilePath}' doesn't exist. Config location projects[${projectName}].style.entries[${i}].`
+                `Style input file path '${inputFilePath}' doesn't exist, correct value in projects[${projectName}].style.entries[${i}].input.`
             );
         }
 
@@ -65,7 +65,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
             } else {
                 if (!outputExtRegExp.test(extName)) {
                     throw new Error(
-                        `Unsupported style output file '${styleEntry.input}'. Config location projects[${projectName}].style.entries[${i}].`
+                        `Unsupported style output file '${styleEntry.input}', correct value in projects[${projectName}].style.entries[${i}].output.`
                     );
                 }
 
@@ -113,19 +113,15 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
             minify = styleOptions.minify;
         }
 
-        if (styleOptions.addToPackageJson !== false) {
-            if (!packageJsonStyleEntry) {
-                packageJsonStyleEntry = normalizeRelativePath(
-                    path.relative(buildAction._packageJsonOutDir, outputFilePath)
-                );
-            }
+        const minOutputFilePath = path.resolve(
+            path.dirname(outputFilePath),
+            `${path.parse(outputFilePath).name}.min.css`
+        );
 
-            const filePattern = normalizeRelativePath(
-                path.relative(buildAction._packageJsonOutDir, `${path.dirname(outputFilePath)}/*.{css,map}`)
+        if (!packageJsonStyleEntry && styleOptions.addToPackageJson !== false) {
+            packageJsonStyleEntry = normalizeRelativePath(
+                path.relative(buildAction._packageJsonOutDir, outputFilePath)
             );
-            if (!buildAction._packageJsonFiles.includes(filePattern)) {
-                buildAction._packageJsonFiles.push(filePattern);
-            }
         }
 
         buildAction._styleEntries.push({
@@ -136,7 +132,12 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
             _sourceMap: sourceMap,
             _sourceMapContents: sourceMapContents,
             _vendorPrefixes: vendorPrefixes,
-            _minify: minify
+            _minify: minify,
+            _minOutputFilePath: minOutputFilePath
         });
+    }
+
+    if (styleOptions.addToPackageJson !== false && packageJsonStyleEntry) {
+        buildAction._packageJsonEntryPoint.style = packageJsonStyleEntry;
     }
 }
