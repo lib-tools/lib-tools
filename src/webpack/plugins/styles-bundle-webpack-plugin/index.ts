@@ -1,3 +1,11 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as path from 'path';
 
 import { copy, ensureDir, readFile, writeFile } from 'fs-extra';
@@ -61,7 +69,6 @@ export class StyleBundleWebpackPlugin {
                     const result = await new Promise<sass.Result>((res, rej) => {
                         sass.render(
                             {
-                                outputStyle: 'expanded',
                                 file: inputFilePath,
                                 outFile: outFilePath,
                                 sourceMap: styleEntry._sourceMap,
@@ -122,9 +129,9 @@ export class StyleBundleWebpackPlugin {
 
                 if (styleEntry._minify !== false) {
                     if (this.options.logLevel === 'debug') {
-                        this.logger.debug('Minifing css rules');
+                        this.logger.debug('Minifing css');
                     } else {
-                        this.logger.info('Minifing css rules');
+                        this.logger.info('Minifing css');
                     }
 
                     const cleanCssOptions = typeof styleEntry._minify === 'object' ? styleEntry._minify : {};
