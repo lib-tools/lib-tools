@@ -1,3 +1,10 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
 import * as path from 'path';
 
 import * as Ajv from 'ajv';
@@ -12,8 +19,13 @@ import {
     toWorkflowsConfigInternal
 } from '../../helpers';
 import { BuildCommandOptions, WorkflowsConfig } from '../../models';
-import { BuildActionInternal, BuildOptionsInternal, ProjectConfigInternal } from '../../models/internals';
-import { readJsonWithComments } from '../../utils';
+import {
+    BuildActionInternal,
+    BuildOptionsInternal,
+    ProjectConfigInternal,
+    WorkflowsConfigInternal
+} from '../../models/internals';
+import { findUp, readJsonWithComments } from '../../utils';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
 import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
@@ -21,22 +33,9 @@ import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-pl
 const ajv = new Ajv();
 
 export async function getWebpackBuildConfig(
-    configPath: string,
-    env?: string | { [key: string]: boolean | string },
+    env?: { [key: string]: boolean | string },
     argv?: BuildCommandOptions & { [key: string]: unknown }
 ): Promise<Configuration[]> {
-    if (!configPath) {
-        throw new Error("The 'configPath' parameter is required.");
-    }
-
-    if (!/\.json$/i.test(configPath)) {
-        throw new Error(`Invalid config file: ${configPath}.`);
-    }
-
-    if (!(await pathExists(configPath))) {
-        throw new Error(`Config file: ${configPath} doesn't exist.`);
-    }
-
     const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
     const environment = env ? normalizeEnvironment(env, prod) : {};
@@ -108,39 +107,17 @@ export async function getWebpackBuildConfig(
         }
     }
 
-    let workflowsConfig: WorkflowsConfig | null = null;
+    const workflowConfig = await getWorkflowsConfig(buildOptions);
 
-    try {
-        workflowsConfig = (await readJsonWithComments(configPath)) as WorkflowsConfig;
-    } catch (error) {
-        throw new Error(`Invalid configuration, error: ${(error as Error).message || error}.`);
-    }
-
-    const schema = await readWorkflowsConfigSchema();
-
-    if (schema.$schema) {
-        delete schema.$schema;
-    }
-
-    const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', schema);
-
-    if (!valid) {
-        const errorsText = ajv.errorsText();
-        throw new Error(`Invalid configuration.\n\n${errorsText}`);
-    }
-
-    // TODO: To review
-    const workspaceRoot = path.dirname(configPath);
-    const workflowConfigInternal = toWorkflowsConfigInternal(workflowsConfig, configPath, workspaceRoot);
-    const filteredProjectConfigs = Object.keys(workflowConfigInternal.projects)
+    const filteredProjectConfigs = Object.keys(workflowConfig.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
-        .map((projectName) => workflowConfigInternal.projects[projectName]);
+        .map((projectName) => workflowConfig.projects[projectName]);
 
     const webpackConfigs: Configuration[] = [];
 
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        await applyProjectExtends(projectConfigInternal, workflowConfigInternal.projects);
+        await applyProjectExtends(projectConfigInternal, workflowConfig.projects);
 
         if (projectConfigInternal.skip) {
             continue;
@@ -162,6 +139,55 @@ export async function getWebpackBuildConfig(
     }
 
     return webpackConfigs;
+}
+
+async function getWorkflowsConfig(buildOptions: BuildOptionsInternal): Promise<WorkflowsConfigInternal> {
+    let foundConfigPath: string | null = null;
+    if (!buildOptions.config) {
+        foundConfigPath = await findUp(['workflows.json'], process.cwd(), path.parse(process.cwd()).root);
+    }
+
+    if (buildOptions.auto && !buildOptions.config && foundConfigPath === null) {
+        throw new Error('This feature is not implemented.');
+    } else {
+        let configPath: string;
+        if (buildOptions.config) {
+            configPath = path.isAbsolute(buildOptions.config)
+                ? buildOptions.config
+                : path.resolve(process.cwd(), buildOptions.config);
+
+            if (!(await pathExists(configPath))) {
+                throw new Error(`Config file doesn't exist at ${configPath}.`);
+            }
+        } else {
+            if (!foundConfigPath) {
+                throw new Error('Could not detect workflows.json file.');
+            }
+
+            configPath = foundConfigPath;
+        }
+
+        try {
+            const workflowsConfig = (await readJsonWithComments(configPath)) as WorkflowsConfig;
+            const schema = await readWorkflowsConfigSchema();
+
+            if (schema.$schema) {
+                delete schema.$schema;
+            }
+
+            const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', workflowsConfig);
+
+            if (!valid) {
+                const errorsText = ajv.errorsText();
+                throw new Error(`Invalid configuration.\n\n${errorsText}`);
+            }
+
+            const workspaceRoot = path.dirname(configPath);
+            return toWorkflowsConfigInternal(workflowsConfig, configPath, workspaceRoot);
+        } catch (error) {
+            throw new Error(`Invalid configuration, error: ${(error as Error).message || error}.`);
+        }
+    }
 }
 
 async function getWebpackBuildConfigInternal(
