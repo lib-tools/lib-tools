@@ -71,7 +71,7 @@ export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
 
 export interface BuildActionInternal extends BuildAction {
     _workspaceRoot: string;
-    _configPath: string;
+    _configPath: string | null;
     _nodeModulesPath: string | null;
 
     _projectName: string;
