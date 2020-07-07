@@ -3,6 +3,10 @@
  */
 export interface BuildOptions {
     /**
+     * Detect project structure and build without configuration file.
+     */
+    auto?: boolean;
+    /**
      * Define the build environment.
      */
     environment?: { [key: string]: boolean | string } | string;
