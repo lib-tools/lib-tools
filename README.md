@@ -2,18 +2,11 @@
 
 [![GitHub Actions Status](https://github.com/DagonMetric/lib-tools/workflows/Main%20Workflow/badge.svg)](https://github.com/DagonMetric/lib-tools/actions)
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
+[![Gitter](https://badges.gitter.im/DagonMetric/general.svg)](https://gitter.im/DagonMetric/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-With Lib Tools, you can easily build/bundle, test and pack your library projects from zero-configuration to fully configurable options. You don’t need to learn how to configure webpack or rollup to bundle or package your project, the tool will automatically make for you!
+The `Lib Tools` helps you simplify the build/bundle, test and npm packaging workflows for common library project types such as Typescript/JavaScript library projects, Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool will automatically set up for you without the time spent with webpack, rollup, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully configurable options!
 
-This tool helps you simplify the build/bundle, test and npm packaging workflows for the following project types:
-
-* Typescript library project
-* JavaScript library project
-* Angular library project
-* SASS/SCSS/CSS module project
-* Assets module project (e.g. icons)
-
-**Note: Working in progess and coming soon!**
+**Note: This project is still working in progess and coming soon!**
 
 ## Get Started
 
