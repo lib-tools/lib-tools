@@ -262,7 +262,7 @@ async function getWebpackBuildConfigInternal(
                 projectRoot: buildAction._projectRoot,
                 outputPath: buildAction._outputPath,
                 allowCopyOutsideOutputPath: true,
-                forceWriteToDisk: true,
+                // forceWriteToDisk: true,
                 logLevel: buildOptions.logLevel
             })
         );
