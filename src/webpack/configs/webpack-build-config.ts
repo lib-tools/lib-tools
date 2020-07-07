@@ -117,7 +117,10 @@ export async function getWebpackBuildConfig(
 
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        await applyProjectExtends(projectConfigInternal, workflowConfig.projects);
+        if (projectConfigInternal._configPath) {
+            const configPath = projectConfig._configPath as string;
+            await applyProjectExtends(projectConfigInternal, workflowConfig.projects, configPath);
+        }
 
         if (projectConfigInternal.skip) {
             continue;
