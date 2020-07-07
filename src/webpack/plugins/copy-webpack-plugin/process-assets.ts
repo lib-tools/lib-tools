@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
 
 import * as path from 'path';
 import { promisify } from 'util';
 
 import * as glob from 'glob';
-import * as loaderUtils from 'loader-utils';
 import * as minimatch from 'minimatch';
 
 import { isInFolder, isSamePaths, normalizeRelativePath } from '../../../utils';
@@ -22,31 +23,46 @@ export interface ProcessedAssetsResult {
     relativeFrom: string;
     absoluteFrom: string;
     relativeTo: string;
-    content: Buffer;
-    hash: string;
+    // content: Buffer | null;
+    // hash: string | null;
 }
 
 export async function processAssets(
     preProcessedEntries: PreProcessedAssetEntry[],
-    outputPath?: string,
-    inputFileSystem: any = require('fs')
+    outputPath: string,
+    skipContentReading: boolean,
+    inputFileSystem?: {
+        constructor: {
+            name: string;
+        };
+        readFile(filePath: string, callback: (err: Error | null, data: Buffer) => void): void;
+        stat(filePath: string, cb: (err: Error | null) => void): void;
+        existsSync(itemPath: string): boolean;
+        readdirSync(itemPath: string): string[];
+        statSync(
+            itemPath: string
+        ): {
+            isDirectory(): boolean;
+            isFile(): boolean;
+        } | null;
+    }
 ): Promise<ProcessedAssetsResult[]> {
     const results: ProcessedAssetsResult[] = [];
     await Promise.all(
         preProcessedEntries.map(async (assetEntry: PreProcessedAssetEntry) => {
             const relativeFromPaths: string[] = [];
             if (typeof assetEntry.from === 'string') {
-                // for absolute file path
                 const relativeFromPath = path.isAbsolute(assetEntry.from)
                     ? path.relative(assetEntry.context, assetEntry.from)
                     : assetEntry.from;
                 relativeFromPaths.push(relativeFromPath);
             } else {
-                let fromGlobPattern = (assetEntry.from as any).glob as string;
+                let fromGlobPattern = assetEntry.from.glob;
                 if (path.isAbsolute(fromGlobPattern)) {
                     fromGlobPattern = path.relative(assetEntry.context, fromGlobPattern);
                 }
-                if (inputFileSystem.constructor.name === 'MemoryFileSystem') {
+
+                if (!skipContentReading && inputFileSystem && inputFileSystem.constructor.name === 'MemoryFileSystem') {
                     const memItems = inputFileSystem.readdirSync(assetEntry.context);
                     const memFiles = getAllMemoryFiles(
                         inputFileSystem,
@@ -74,29 +90,38 @@ export async function processAssets(
                 relativeFromPaths.map(async (relativeFrom) => {
                     const absoluteFrom = path.resolve(assetEntry.context, relativeFrom);
 
-                    const isExists = await new Promise<boolean>((resolve) => {
-                        inputFileSystem.stat(absoluteFrom, (statError: Error) => {
-                            resolve(statError ? false : true);
-
-                            return;
-                        });
-                    });
-
-                    if (!isExists) {
-                        return;
-                    }
-
-                    const content = await new Promise<Buffer>((resolve, reject) => {
-                        inputFileSystem.readFile(absoluteFrom, (err: Error, data: Buffer) => {
-                            if (err) {
-                                reject(err);
+                    if (!skipContentReading && inputFileSystem) {
+                        const isExists = await new Promise<boolean>((res) => {
+                            inputFileSystem.stat(absoluteFrom, (err: Error | null) => {
+                                res(err ? false : true);
 
                                 return;
-                            }
-                            resolve(data);
+                            });
                         });
-                    });
-                    const hash = loaderUtils.getHashDigest(content, 'md5', 'hex', 9999);
+
+                        if (!isExists) {
+                            return;
+                        }
+                    }
+
+                    // let content: Buffer | null = null;
+                    // let hash: string | null = null;
+
+                    // if (!skipContentReading && inputFileSystem) {
+                    //     content = await new Promise<Buffer>((res, rej) => {
+                    //         inputFileSystem.readFile(absoluteFrom, (err: Error | null, data: Buffer) => {
+                    //             if (err) {
+                    //                 rej(err);
+
+                    //                 return;
+                    //             }
+
+                    //             res(data);
+                    //         });
+                    //     });
+
+                    //     hash = loaderUtils.getHashDigest(content, 'md5', 'hex', 9999);
+                    // }
 
                     // check the ignore list
                     let shouldIgnore = false;
@@ -120,8 +145,8 @@ export async function processAssets(
 
                     const assetToEmit: ProcessedAssetsResult = {
                         assetEntry,
-                        content,
-                        hash,
+                        // content,
+                        // hash,
                         relativeFrom,
                         absoluteFrom,
                         relativeTo: assetEntry.to || ''
@@ -150,44 +175,46 @@ export async function processAssets(
                             assetToEmit.relativeFrom = path.basename(assetToEmit.absoluteFrom);
                         }
 
-                        if (assetEntry.toIsTemplate && assetToEmit.relativeTo) {
-                            // a hack so .dotted files don't get parsed as extensions
-                            const basename = path.basename(assetToEmit.relativeFrom);
-                            let dotRemoved = false;
+                        // if (assetEntry.toIsTemplate && assetToEmit.relativeTo) {
+                        //     // a hack so .dotted files don't get parsed as extensions
+                        //     const basename = path.basename(assetToEmit.relativeFrom);
+                        //     let dotRemoved = false;
 
-                            if (basename[0] === '.') {
-                                dotRemoved = true;
-                                assetToEmit.relativeFrom = path.join(
-                                    path.dirname(assetToEmit.relativeFrom),
-                                    basename.slice(1)
-                                );
-                            }
+                        //     if (basename[0] === '.') {
+                        //         dotRemoved = true;
+                        //         assetToEmit.relativeFrom = path.join(
+                        //             path.dirname(assetToEmit.relativeFrom),
+                        //             basename.slice(1)
+                        //         );
+                        //     }
 
-                            // if it doesn't have an extension, remove it from the pattern
-                            // ie. [name].[ext] or [name][ext] both become [name]
-                            if (!path.extname(assetToEmit.relativeFrom)) {
-                                assetToEmit.relativeTo = assetToEmit.relativeTo.replace(/\.?\[ext\]/g, '');
-                            }
+                        //     // if it doesn't have an extension, remove it from the pattern
+                        //     // ie. [name].[ext] or [name][ext] both become [name]
+                        //     if (!path.extname(assetToEmit.relativeFrom)) {
+                        //         assetToEmit.relativeTo = assetToEmit.relativeTo.replace(/\.?\[ext\]/g, '');
+                        //     }
 
-                            // a hack because loaderUtils.interpolateName doesn't
-                            // find the right path if no directory is defined
-                            // i.e. [path] applied to 'file.txt' would return 'file'
-                            if (assetToEmit.relativeFrom.indexOf(path.sep) < 0) {
-                                assetToEmit.relativeFrom = path.sep + assetToEmit.relativeFrom;
-                            }
+                        //     // a hack because loaderUtils.interpolateName doesn't
+                        //     // find the right path if no directory is defined
+                        //     // i.e. [path] applied to 'file.txt' would return 'file'
+                        //     if (assetToEmit.relativeFrom.indexOf(path.sep) < 0) {
+                        //         assetToEmit.relativeFrom = path.sep + assetToEmit.relativeFrom;
+                        //     }
 
-                            assetToEmit.relativeTo = loaderUtils.interpolateName(
-                                { resourcePath: assetToEmit.relativeFrom } as any,
-                                assetToEmit.relativeTo,
-                                { content }
-                            );
+                        //     assetToEmit.relativeTo = loaderUtils.interpolateName(
+                        //         { resourcePath: assetToEmit.relativeFrom },
+                        //         assetToEmit.relativeTo,
+                        //         { content }
+                        //     );
 
-                            // Add back removed dots
-                            if (dotRemoved) {
-                                const newBasename = path.basename(assetToEmit.relativeTo);
-                                assetToEmit.relativeTo = `${path.dirname(assetToEmit.relativeTo)}/.${newBasename}`;
-                            }
-                        } else if (assetEntry.fromType === 'directory' || assetEntry.fromType === 'glob') {
+                        //     // Add back removed dots
+                        //     if (dotRemoved) {
+                        //         const newBasename = path.basename(assetToEmit.relativeTo);
+                        //         assetToEmit.relativeTo = `${path.dirname(assetToEmit.relativeTo)}/.${newBasename}`;
+                        //     }
+                        // } else if (assetEntry.fromType === 'directory' || assetEntry.fromType === 'glob') {
+
+                        if (assetEntry.fromType === 'directory' || assetEntry.fromType === 'glob') {
                             assetToEmit.relativeTo = path.join(assetEntry.to, assetToEmit.relativeFrom);
                         } else {
                             assetToEmit.relativeTo = assetEntry.to;
@@ -204,10 +231,6 @@ export async function processAssets(
                     }
 
                     if (path.isAbsolute(assetToEmit.relativeTo)) {
-                        if (!outputPath || outputPath === '/') {
-                            throw new Error("The absolute path is required for 'outputPath'.");
-                        }
-
                         assetToEmit.relativeTo = path.relative(outputPath, assetToEmit.relativeTo);
                     }
 
@@ -224,7 +247,16 @@ export async function processAssets(
 }
 
 export function getAllMemoryFiles(
-    memoryFileSystem: any,
+    memoryFileSystem: {
+        existsSync(itemPath: string): boolean;
+        readdirSync(itemPath: string): string[];
+        statSync(
+            itemPath: string
+        ): {
+            isDirectory(): boolean;
+            isFile(): boolean;
+        } | null;
+    },
     items: string[],
     baseContext: string,
     currentContext: string
@@ -251,11 +283,13 @@ export function getAllMemoryFiles(
             }
         }
 
-        if (memoryFileSystem.statSync(itemPath).isDirectory()) {
+        const stats = memoryFileSystem.statSync(itemPath);
+
+        if (stats && stats.isDirectory()) {
             const subItems = memoryFileSystem.readdirSync(itemPath);
             const subResults = getAllMemoryFiles(memoryFileSystem, subItems, baseContext, itemPath);
             results.push(...subResults);
-        } else if (memoryFileSystem.statSync(itemPath).isFile()) {
+        } else if (stats && stats.isFile()) {
             results.push(path.relative(baseContext, itemPath));
         }
     }

@@ -1,7 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as path from 'path';
 
 import { isGlob } from '../../../utils';
@@ -18,40 +22,51 @@ export interface PreProcessedAssetEntry {
     to?: string;
     fromDir?: string;
     exclude?: string[];
-    toIsTemplate?: boolean;
+    // toIsTemplate?: boolean;
 }
 
 // https://www.debuggex.com/r/VH2yS2mvJOitiyr3
-const isTemplateLike = /(\[ext\])|(\[name\])|(\[path\])|(\[folder\])|(\[emoji(:\d+)?\])|(\[(\w+:)?hash(:\w+)?(:\d+)?\])|(\[\d+\])/;
+// const isTemplateLike = /(\[ext\])|(\[name\])|(\[path\])|(\[folder\])|(\[emoji(:\d+)?\])|(\[(\w+:)?hash(:\w+)?(:\d+)?\])|(\[\d+\])/;
+
+interface Stats {
+    isDirectory(): boolean;
+    isFile(): boolean;
+}
 
 export async function preProcessAssets(
     baseDir: string,
     assetEntries: string | (string | { from: string; to?: string })[],
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-    inputFileSystem: any = require('fs')
+    inputFileSystem: {
+        constructor: {
+            name: string;
+        };
+        readFile(filePath: string, callback: (err: Error | null, data: Buffer) => void): void;
+        stat(filePath: string, cb: (err: Error | null, stats: Stats) => void): void;
+        exists(filePath: string, cb: (isExists: boolean) => void): void;
+        existsSync(itemPath: string): boolean;
+        readdirSync(itemPath: string): string[];
+        statSync(itemPath: string): Stats | null;
+    }
 ): Promise<PreProcessedAssetEntry[]> {
     if (!assetEntries || !assetEntries.length) {
         return [];
     }
 
     const entries = Array.isArray(assetEntries) ? assetEntries : [assetEntries];
-    const clonedEntries = entries.map((entry: unknown) =>
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        typeof entry === 'object' ? JSON.parse(JSON.stringify(entry)) : entry
-    );
+    const clonedEntries = entries.map((entry) => (typeof entry === 'string' ? entry : { ...entry }));
 
     const isDirectory = async (p: string): Promise<boolean> => {
         if (typeof inputFileSystem.exists === 'function') {
-            return new Promise<boolean>((resolve) => {
-                inputFileSystem.exists(p, (exists: boolean) => {
-                    if (!exists) {
-                        resolve(false);
+            return new Promise<boolean>((res) => {
+                inputFileSystem.exists(p, (isExists: boolean) => {
+                    if (!isExists) {
+                        res(false);
 
                         return;
                     }
 
-                    inputFileSystem.stat(p, (statError: Error, statResult: any) => {
-                        resolve(statError ? false : statResult.isDirectory());
+                    inputFileSystem.stat(p, (err: Error | null, stats: Stats) => {
+                        res(err ? false : stats.isDirectory());
 
                         return;
                     });
@@ -60,8 +75,8 @@ export async function preProcessAssets(
         }
 
         return new Promise<boolean>((resolve) => {
-            inputFileSystem.stat(p, (statError: Error, statResult: any): void => {
-                resolve(statError ? false : statResult.isDirectory());
+            inputFileSystem.stat(p, (statError: Error | null, stats: Stats): void => {
+                resolve(statError ? false : stats.isDirectory());
 
                 return;
             });
@@ -108,7 +123,7 @@ export async function preProcessAssets(
                             glob: fromGlob,
                             dot: true
                         },
-                        fromType: fromType as any,
+                        fromType,
                         context: baseDir,
                         fromDir: fromPath
                     };
@@ -130,14 +145,14 @@ export async function preProcessAssets(
                 const assetParsedEntry: PreProcessedAssetEntry = {
                     ...asset,
                     context: baseDir,
-                    fromType: 'glob' as any
+                    fromType: 'glob'
                 };
 
-                if (assetParsedEntry.to) {
-                    if (isTemplateLike.test(assetParsedEntry.to)) {
-                        assetParsedEntry.toIsTemplate = true;
-                    }
-                }
+                // if (assetParsedEntry.to) {
+                //     if (isTemplateLike.test(assetParsedEntry.to)) {
+                //         assetParsedEntry.toIsTemplate = true;
+                //     }
+                // }
 
                 const from = (asset as { from: string; to?: string }).from;
                 const isGlobPattern = from.lastIndexOf('*') > -1 || isGlob(from);
