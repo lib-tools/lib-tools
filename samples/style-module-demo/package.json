@@ -1,13 +1,13 @@
 {
   "name": "style-module-demo",
   "version": "0.0.0",
-  "description": "SCSS styles build and pack demo.",
+  "description": "SCSS styles module buuild demo.",
   "keywords": [
     "lib-tools",
     "demo",
     "scss",
     "css",
-    "bootstrap"
+    "style-module"
   ],
   "author": "DagonMetric",
   "license": "MIT",
@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/DagonMetric/lib-tools",
   "devDependencies": {
-    "lib-tools": "^0.0.1-alpha.3"
+    "lib-tools": "^0.0.1-alpha.5"
   }
 }
