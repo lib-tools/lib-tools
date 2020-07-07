@@ -15,8 +15,8 @@ Usage:
   lib [command] [options...]`;
     const yargsInstance = yargs
         .usage(cliUsage)
-        .example('lib build', 'Build the project(s)')
-        .example('lib test', 'Test the project(s)')
+        .example('lib build', 'Build the project(s) using workflows.json configuration file')
+        .example('lib build --auto', 'Automatically detect project structure and build without configuration file')
         .example('lib --help', 'Show help')
         .version(false)
         .help('help')
