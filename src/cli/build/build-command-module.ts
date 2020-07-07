@@ -18,6 +18,10 @@ Usage:
                 .usage(buildCommandUsage)
                 .example('lib build', 'Build the project(s).')
                 .help('h')
+                .option('auto', {
+                    describe: 'Detect project structure and build without configuration file.',
+                    type: 'boolean'
+                })
                 .option('config', {
                     alias: 'c',
                     describe: 'The workflows.json config file location.',
