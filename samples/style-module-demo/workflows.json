@@ -1,7 +1,7 @@
 {
   "$schema": "../../dist/schemas/schema.json#",
   "projects": {
-    "bootstrap-css-demo": {
+    "style-module-demo": {
       "root": "./",
       "actions": {
         "build": {
