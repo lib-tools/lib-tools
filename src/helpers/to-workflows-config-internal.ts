@@ -17,6 +17,7 @@ export function toWorkflowsConfigInternal(
     workspaceRoot: string
 ): WorkflowsConfigInternal {
     const workflowsConfigInternal: WorkflowsConfigInternal = {
+        _workspaceRoot: workspaceRoot,
         _configPath: configPath,
         projects: {}
     };

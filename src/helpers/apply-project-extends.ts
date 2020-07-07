@@ -157,6 +157,22 @@ async function getBaseProjectConfigFromFile(
                 );
             }
 
+            const skipValidate = extendsFilePath === rootConfigPath || extendsFilePath === projectConfig._configPath;
+            if (!skipValidate) {
+                if (workflowConfig.$schema) {
+                    delete workflowConfig.$schema;
+                }
+
+                const schema = await readWorkflowsConfigSchema();
+                const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', workflowConfig);
+                if (!valid) {
+                    const errorsText = ajv.errorsText();
+                    throw new Error(
+                        `Error in extending project config, invalid configuration:\n\n${errorsText}\nConfig file location ${currentConfigFile}.`
+                    );
+                }
+            }
+
             const workflowsConfigInternal = toWorkflowsConfigInternal(
                 workflowConfig,
                 extendsFilePath,
@@ -168,22 +184,6 @@ async function getBaseProjectConfigFromFile(
                 throw new Error(
                     `Error in extending project config, base project name must not be the same as current project name. Config location ${currentConfigFile} -> ${configErrorLocation}.`
                 );
-            }
-
-            const skipValidate = extendsFilePath === rootConfigPath || extendsFilePath === projectConfig._configPath;
-            if (!skipValidate) {
-                if (workflowConfig.$schema) {
-                    delete workflowConfig.$schema;
-                }
-
-                const schema = await readWorkflowsConfigSchema();
-                const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', schema);
-                if (!valid) {
-                    const errorsText = ajv.errorsText();
-                    throw new Error(
-                        `Error in extending project config, invalid configuration:\n\n${errorsText}\nConfig file location ${currentConfigFile}.`
-                    );
-                }
             }
 
             return {
@@ -201,7 +201,7 @@ async function getBaseProjectConfigFromFile(
             }
 
             const schema = await readProjectConfigSchema();
-            const valid = ajv.addSchema(schema, 'projectSchema').validate('projectSchema', schema);
+            const valid = ajv.addSchema(schema, 'projectSchema').validate('projectSchema', foundBaseProject);
             if (!valid) {
                 const errorsText = ajv.errorsText();
                 throw new Error(
