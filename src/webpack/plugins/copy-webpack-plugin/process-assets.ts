@@ -90,7 +90,7 @@ export async function processAssets(
                 relativeFromPaths.map(async (relativeFrom) => {
                     const absoluteFrom = path.resolve(assetEntry.context, relativeFrom);
 
-                    if (!skipContentReading && inputFileSystem) {
+                    if (inputFileSystem) {
                         const isExists = await new Promise<boolean>((res) => {
                             inputFileSystem.stat(absoluteFrom, (err: Error | null) => {
                                 res(err ? false : true);
