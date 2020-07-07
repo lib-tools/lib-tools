@@ -32,7 +32,6 @@ export async function toBuildActionInternal(
     }
 
     const buildAction = JSON.parse(JSON.stringify(projectConfig.actions.build)) as BuildAction;
-    const configPath = projectConfig._configPath;
     const workspaceRoot = projectConfig._workspaceRoot;
     const projectRoot = projectConfig._projectRoot;
     const projectName = projectConfig._projectName;
@@ -157,7 +156,7 @@ export async function toBuildActionInternal(
 
     const buildActionInternal: BuildActionInternal = {
         ...buildAction,
-        _configPath: configPath,
+        _configPath: projectConfig._configPath,
         _workspaceRoot: workspaceRoot,
         _nodeModulesPath: nodeModulesPath,
         _projectRoot: projectRoot,

@@ -23,15 +23,14 @@ const ajv = new Ajv();
 
 export async function applyProjectExtends(
     projectConfig: ProjectConfigInternal,
-    projectCollection: { [key: string]: ProjectConfigInternal } = {}
+    projectCollection: { [key: string]: ProjectConfigInternal } = {},
+    configPath: string
 ): Promise<void> {
     if (!projectConfig.extends || !projectConfig.extends.trim().length) {
         return;
     }
 
-    const rootConfigPath = projectConfig._configPath;
-
-    await applyProjectExtendsInternal(projectConfig, projectCollection, rootConfigPath);
+    await applyProjectExtendsInternal(projectConfig, projectCollection, configPath);
 }
 
 async function applyProjectExtendsInternal(
@@ -138,7 +137,7 @@ async function getBaseProjectConfigFromFile(
 
     const extendsFilePath = path.isAbsolute(parts[1])
         ? path.resolve(parts[1])
-        : path.resolve(path.dirname(projectConfig._configPath), parts[1]);
+        : path.resolve(path.dirname(projectConfig._configPath || rootConfigPath), parts[1]);
 
     if (!(await pathExists(extendsFilePath))) {
         throw new Error(
