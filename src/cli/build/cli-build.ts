@@ -1,5 +1,10 @@
-import * as path from 'path';
-
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
 import * as webpack from 'webpack';
 
 import { runWebpack } from '../../helpers';
@@ -9,16 +14,16 @@ import { getWebpackBuildConfig } from '../../webpack/configs';
 
 export async function cliBuild(argv: { [key: string]: unknown }): Promise<number> {
     const startTime = global.libCli && global.libCli.startTime > 0 ? global.libCli.startTime : Date.now();
-    let environment: string | { [key: string]: boolean | string } | undefined;
+    let env: { [key: string]: boolean | string } | undefined;
 
     if (argv.environment) {
-        environment = argv.environment as { [key: string]: boolean | string } | string;
+        env = argv.environment as { [key: string]: boolean | string };
         delete argv.environment;
     }
 
     if (argv.env) {
-        if (!environment) {
-            environment = argv.env as { [key: string]: boolean | string } | string;
+        if (!env) {
+            env = argv.env as { [key: string]: boolean | string };
         }
 
         delete argv.env;
@@ -30,19 +35,11 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
         warnPrefix: 'WARNING:'
     });
 
-    let configPath = '';
-    if (argv.config) {
-        const configStr = argv.config as string;
-        configPath = path.isAbsolute(configStr) ? path.resolve(configStr) : path.resolve(process.cwd(), configStr);
-    } else {
-        configPath = path.resolve(process.cwd(), 'workflows.json');
-    }
-
     const watch = argv.watch ? true : false;
     let webpackConfigs: webpack.Configuration[] = [];
 
     try {
-        webpackConfigs = await getWebpackBuildConfig(configPath, environment, argv);
+        webpackConfigs = await getWebpackBuildConfig(env, argv);
     } catch (err) {
         logger.error(`${(err as Error).message || err}\n`);
 
