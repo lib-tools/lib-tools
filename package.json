@@ -21,14 +21,7 @@
     "library-packaging-tools",
     "angular-library-packaging",
     "typescript-library-packaging",
-    "javascript-library-packaging",
-    "sass-library-packaging",
-    "scss-library-packaging",
-    "css-library-packaging",
     "style-library-packaging",
-    "nodejs-library-packaging",
-    "angular-library",
-    "typescript-library",
     "angular",
     "typescript",
     "sass",
@@ -54,8 +47,7 @@
     "compile": "tsc --project tsconfig.build.json",
     "build": "tsc --project tsconfig.build.json && node tools/generate-schemas.js && node tools/copy-files.js && node dist/bin/lib --version",
     "build:samples": "npm run build:samples:bootstrap-css-demo",
-    "build:samples:bootstrap-css-demo": "node -r source-map-support/register ./dist/bin/lib build --config=samples/bootstrap-css-demo/workflows.json --version=1.0.0",
-    "show-help": "node -r source-map-support/register dist/bin/lib --help"
+    "build:samples:bootstrap-css-demo": "node -r source-map-support/register ./dist/bin/lib build --config=samples/bootstrap-css-demo/workflows.json --version=1.0.0"
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
