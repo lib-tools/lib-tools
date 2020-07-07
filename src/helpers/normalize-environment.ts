@@ -7,46 +7,23 @@
  */
 
 export function normalizeEnvironment(
-    rawEnvironment: string | { [key: string]: boolean | string } | null,
+    env: { [key: string]: boolean | string } | null,
     prod?: boolean
 ): { [key: string]: boolean | string } {
-    if (!rawEnvironment) {
+    if (!env) {
         return {};
     }
 
     const environment: { [key: string]: boolean | string } = {};
 
-    if (typeof rawEnvironment === 'string') {
-        const normalizedKey = normalizeEnvName(rawEnvironment);
-        environment[normalizedKey] = true;
-    } else if (rawEnvironment && typeof rawEnvironment === 'object') {
-        Object.keys(rawEnvironment).forEach((key: string) => {
-            const normalizedKey = normalizeEnvName(key);
-            if (normalizedKey === 'prod' && !prod) {
-                environment.prod = toBoolean(rawEnvironment[key]);
-            } else {
-                environment[normalizedKey] = toBooleanOrString(rawEnvironment[key]);
-            }
-        });
-    }
-
-    // dll
-    if (environment.dll != null) {
-        if (environment.dll) {
-            environment.dll = true;
+    Object.keys(env).forEach((key: string) => {
+        const normalizedKey = normalizeEnvName(key);
+        if (normalizedKey === 'prod' && !prod) {
+            environment.prod = toBoolean(env[key]);
         } else {
-            delete environment.dll;
+            environment[normalizedKey] = toBooleanOrString(env[key]);
         }
-    }
-
-    // aot
-    if (environment.aot != null) {
-        if (environment.aot) {
-            environment.aot = true;
-        } else {
-            delete environment.aot;
-        }
-    }
+    });
 
     // prod
     if (prod) {
@@ -129,8 +106,6 @@ function normalizeEnvName(envName: string): string {
         case 'dev':
         case 'development':
             return 'dev';
-        case 'dll':
-            return 'dll';
         default:
             return envName;
     }
