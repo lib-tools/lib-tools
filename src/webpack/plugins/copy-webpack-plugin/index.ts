@@ -77,16 +77,25 @@ export class CopyWebpackPlugin {
                     this.logger.info(`Copying ${assetEntry.from}`);
                 }
 
+                let fromRoot = projectRoot;
+                const parts = normalizePath(assetEntry.from).split('/');
+                for (const p of parts) {
+                    if (await pathExists(path.resolve(fromRoot, p))) {
+                        fromRoot = path.resolve(fromRoot, p);
+                    } else {
+                        break;
+                    }
+                }
+
                 await Promise.all(
                     foundPaths.map(async (foundFileRel) => {
-                        const toFilePath = path.resolve(toPath, foundFileRel);
-                        const foundFromFilePath = path.resolve(projectRoot, foundFileRel);
+                        const fromFilePath = path.resolve(projectRoot, foundFileRel);
+                        const toFileRel = path.relative(fromRoot, fromFilePath);
+                        const toFilePath = path.resolve(toPath, toFileRel);
 
-                        this.logger.debug(
-                            `Copying ${normalizePath(path.relative(projectRoot, foundFromFilePath))} file`
-                        );
+                        this.logger.debug(`Copying ${normalizePath(foundFileRel)} file`);
 
-                        await copy(foundFromFilePath, toFilePath);
+                        await copy(fromFilePath, toFilePath);
                     })
                 );
             } else {
