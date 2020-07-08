@@ -253,16 +253,12 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Copy plugin
-    if (buildAction._copyAssets && buildAction._copyAssets.length > 0) {
+    if (buildAction._assetEntries.length > 0) {
         const pluginModule = await import('../plugins/copy-webpack-plugin');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
         plugins.push(
             new CopyWebpackPlugin({
-                assets: buildAction._copyAssets,
-                projectRoot: buildAction._projectRoot,
-                outputPath: buildAction._outputPath,
-                allowCopyOutsideOutputPath: true,
-                // forceWriteToDisk: true,
+                buildAction,
                 logLevel: buildOptions.logLevel
             })
         );
