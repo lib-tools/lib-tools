@@ -15,7 +15,7 @@ import { isInFolder, isSamePaths } from '../utils';
 import { applyEnvOverrides } from './apply-env-overrides';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
-import { prepareCopyAssets } from './prepare-copy-assets';
+import { prepareAssetEntries } from './prepare-asset-entries';
 import { prepareScriptBundles } from './prepare-script-bundles';
 import { prepareScriptTranspilations } from './prepare-script-transpilations';
 import { prepareStyles } from './prepare-styles';
@@ -172,7 +172,7 @@ export async function toBuildActionInternal(
         _packageScope: packageScope,
         _rootPackageJsonPath: rootPackageJsonPath,
         _rootPackageJson: rootPackageJson,
-        _copyAssets: [],
+        _assetEntries: [],
         _styleEntries: [],
         _scriptTranspilationEntries: [],
         _scriptBundleEntries: [],
@@ -181,7 +181,7 @@ export async function toBuildActionInternal(
     };
 
     // Copy assets
-    await prepareCopyAssets(buildActionInternal);
+    await prepareAssetEntries(buildActionInternal);
 
     // Styles
     if (
