@@ -91,7 +91,7 @@ export interface BuildActionInternal extends BuildAction {
     _rootPackageJson: PackageJsonLike | null;
 
     // Assets
-    _copyAssets: (AssetEntry | string)[];
+    _assetEntries: AssetEntry[];
 
     // styles
     _styleEntries: StyleEntryInternal[];

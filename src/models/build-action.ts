@@ -67,17 +67,13 @@ export interface CleanOptions {
  */
 export interface AssetEntry {
     /**
-     * The source file, it can be absolute or relative path or glob pattern.
+     * The source file, it can be relative path or glob pattern.
      */
     from: string;
     /**
-     * The output file name.
+     * The output file/folder name.
      */
     to?: string;
-    /**
-     * The ignore list.
-     */
-    exclude?: string[];
 }
 
 /**
