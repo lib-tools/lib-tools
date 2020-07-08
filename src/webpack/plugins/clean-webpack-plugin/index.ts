@@ -8,7 +8,7 @@ import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models';
 import { BuildActionInternal } from '../../../models/internals';
-import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizePath } from '../../../utils';
+import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
 const globPromise = promisify(glob);
 
@@ -184,7 +184,7 @@ export class CleanWebpackPlugin {
             throw new Error("The 'outputPath' options is required.");
         }
 
-        if (!path.isAbsolute(outputPath) || outputPath === '/' || isGlob(outputPath)) {
+        if (!path.isAbsolute(outputPath) || outputPath === '/') {
             throw new Error("The absolute path is required for 'outputPath' options.");
         }
 
@@ -228,7 +228,7 @@ export class CleanWebpackPlugin {
 
         if (cleanOptions.excludes) {
             cleanOptions.excludes.forEach((excludePath) => {
-                if (isGlob(excludePath)) {
+                if (glob.hasMagic(excludePath)) {
                     if (!patternsToExclude.includes(excludePath)) {
                         patternsToExclude.push(excludePath);
                     }
@@ -298,7 +298,7 @@ export class CleanWebpackPlugin {
 
         await Promise.all(
             rawPathsToClean.map(async (cleanPattern: string) => {
-                if (!isGlob(cleanPattern)) {
+                if (!glob.hasMagic(cleanPattern)) {
                     const absolutePath = path.isAbsolute(cleanPattern)
                         ? path.resolve(cleanPattern)
                         : path.resolve(outputPath, cleanPattern);
