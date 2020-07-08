@@ -8,7 +8,7 @@ import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models';
 import { BuildActionInternal } from '../../../models/internals';
-import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizeRelativePath } from '../../../utils';
+import { LogLevelString, Logger, isGlob, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
 const globPromise = promisify(glob);
 
@@ -330,7 +330,7 @@ export class CleanWebpackPlugin {
                 continue;
             }
 
-            const relToOutDir = normalizeRelativePath(path.relative(outputPath, pathToClean));
+            const relToOutDir = normalizePath(path.relative(outputPath, pathToClean));
             if (relToOutDir) {
                 let il = patternsToExclude.length;
                 let foundExclude = false;
@@ -395,7 +395,7 @@ export class CleanWebpackPlugin {
                 }
             }
 
-            const relToWorkspace = normalizeRelativePath(path.relative(workspaceRoot, pathToClean));
+            const relToWorkspace = normalizePath(path.relative(workspaceRoot, pathToClean));
 
             if (this.isPersistedOutputFileSystem || this.options.forceCleanToDisk) {
                 const exists = await pathExists(pathToClean);

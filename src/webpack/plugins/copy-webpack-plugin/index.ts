@@ -14,7 +14,7 @@ import * as glob from 'glob';
 import * as webpack from 'webpack';
 
 import { BuildActionInternal } from '../../..//models/internals';
-import { LogLevelString, Logger, normalizeRelativePath } from '../../../utils';
+import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils';
 
 const globAsync = promisify(glob);
 
@@ -43,7 +43,6 @@ export class CopyWebpackPlugin {
     }
 
     private async processCopy(): Promise<void> {
-        const startTime = Date.now();
         const buildAction = this.options.buildAction;
 
         if (!buildAction._assetEntries.length) {
@@ -58,14 +57,13 @@ export class CopyWebpackPlugin {
         const infoLoggedFiles: string[] = [];
 
         for (const assetEntry of assetEntries) {
-            const toPathAbs = path.resolve(outputPath, assetEntry.to || '');
+            const toPath = path.resolve(outputPath, assetEntry.to || '');
             const hasMagic = glob.hasMagic(assetEntry.from);
 
             if (hasMagic) {
-                let globPattern = assetEntry.from;
-                if (path.isAbsolute(globPattern)) {
-                    globPattern = path.relative(projectRoot, globPattern);
-                }
+                const globPattern = path.isAbsolute(assetEntry.from)
+                    ? path.relative(projectRoot, assetEntry.from)
+                    : assetEntry.from;
 
                 const foundPaths = await globAsync(globPattern, {
                     cwd: projectRoot,
@@ -78,64 +76,84 @@ export class CopyWebpackPlugin {
                     continue;
                 }
 
+                if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(assetEntry.from)) {
+                    infoLoggedFiles.push(assetEntry.from);
+                    this.logger.info(`Copying ${assetEntry.from}`);
+                }
+
                 await Promise.all(
-                    foundPaths.map(async (pathRel) => {
-                        const fromFilePathAbs = path.resolve(projectRoot, pathRel);
-                        this.logger.debug(`Copying ${normalizeRelativePath(pathRel)}`);
-                        await copy(fromFilePathAbs, toPathAbs);
+                    foundPaths.map(async (foundPath) => {
+                        const pathRel = normalizePath(path.relative(projectRoot, foundPath));
+                        const toFilePathAbs = path.resolve(toPath, pathRel);
+
+                        this.logger.debug(`Copying ${normalizePath(pathRel)}`);
+
+                        await copy(foundPath, toFilePathAbs);
                     })
                 );
             } else {
-                const fromPathAbs = path.isAbsolute(assetEntry.from)
+                const fromPath = path.isAbsolute(assetEntry.from)
                     ? path.resolve(assetEntry.from)
                     : path.resolve(projectRoot, assetEntry.from);
-                if (!(await pathExists(fromPathAbs))) {
-                    this.logger.debug(`There is no matched file to copy, path: ${fromPathAbs}.`);
+                if (!(await pathExists(fromPath))) {
+                    this.logger.debug(`There is no matched file to copy, path: ${fromPath}.`);
                     continue;
                 }
 
-                const stats = await stat(fromPathAbs);
+                const stats = await stat(fromPath);
                 if (stats.isFile()) {
-                    const fromPathRel = normalizeRelativePath(path.relative(projectRoot, fromPathAbs));
-
-                    if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(fromPathAbs)) {
-                        infoLoggedFiles.push(fromPathAbs);
-                        this.logger.info(`Copying ${fromPathRel}`);
+                    const fromExt = path.extname(fromPath);
+                    const toExt = path.extname(toPath);
+                    let toFilePath = toPath;
+                    if (
+                        !assetEntry.to ||
+                        assetEntry.to.endsWith('/') ||
+                        isSamePaths(outputPath, toPath) ||
+                        (fromExt && !toExt)
+                    ) {
+                        toFilePath = path.resolve(toPath, path.basename(fromPath));
                     }
 
-                    this.logger.debug(`Copying ${fromPathRel}`);
-                    await copy(fromPathAbs, toPathAbs);
+                    const fromPathRel = normalizePath(path.relative(projectRoot, fromPath));
+                    if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(fromPath)) {
+                        infoLoggedFiles.push(fromPath);
+                        this.logger.info(`Copying ${fromPathRel} file`);
+                    }
+
+                    this.logger.debug(`Copying ${fromPathRel} file`);
+
+                    await copy(fromPath, toFilePath);
                 } else {
-                    const globPattern = path.join(fromPathAbs, '**/*');
-                    const foundPaths = await globAsync(globPattern, {
-                        cwd: fromPathAbs,
+                    const foundFilePaths = await globAsync(path.join('**/*'), {
+                        cwd: fromPath,
                         nodir: true,
                         dot: true
                     });
 
-                    if (!foundPaths.length) {
-                        this.logger.debug(`There is no matched file to copy, path: ${fromPathAbs}.`);
+                    if (!foundFilePaths.length) {
+                        this.logger.debug(`There is no matched file to copy, path: ${fromPath}.`);
                         continue;
                     }
 
-                    if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(fromPathAbs)) {
-                        infoLoggedFiles.push(fromPathAbs);
-                        const fromPathRel = normalizeRelativePath(path.relative(projectRoot, fromPathAbs));
-                        this.logger.info(`Copying ${fromPathRel}`);
+                    if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(fromPath)) {
+                        infoLoggedFiles.push(fromPath);
+                        this.logger.info(`Copying ${normalizePath(path.relative(projectRoot, fromPath))} folder`);
                     }
 
                     await Promise.all(
-                        foundPaths.map(async (pathRel) => {
-                            const fromFilePathAbs = path.resolve(fromPathAbs, pathRel);
-                            this.logger.debug(`Copying ${normalizeRelativePath(pathRel)}`);
-                            await copy(fromFilePathAbs, toPathAbs);
+                        foundFilePaths.map(async (foundFileRel) => {
+                            const toFilePath = path.resolve(toPath, foundFileRel);
+                            const foundFromFilePath = path.resolve(fromPath, foundFileRel);
+
+                            this.logger.debug(
+                                `Copying ${normalizePath(path.relative(projectRoot, foundFromFilePath))} file`
+                            );
+
+                            await copy(foundFromFilePath, toFilePath);
                         })
                     );
                 }
             }
         }
-
-        const duration = Date.now() - startTime;
-        this.logger.debug(`Copy completed in [${duration}ms]`);
     }
 }

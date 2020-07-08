@@ -16,7 +16,7 @@ import * as sass from 'sass';
 import * as webpack from 'webpack';
 
 import { BuildActionInternal } from '../../../models/internals';
-import { LogLevelString, Logger, normalizeRelativePath } from '../../../utils';
+import { LogLevelString, Logger, normalizePath } from '../../../utils';
 
 export interface StyleBundleWebpackPluginOptions {
     buildAction: BuildActionInternal;
@@ -55,9 +55,7 @@ export class StyleBundleWebpackPlugin {
             buildAction._styleEntries.map(async (styleEntry) => {
                 const inputFilePath = styleEntry._inputFilePath;
                 const outFilePath = styleEntry._outputFilePath;
-                const inputRelToWorkspace = normalizeRelativePath(
-                    path.relative(buildAction._workspaceRoot, inputFilePath)
-                );
+                const inputRelToWorkspace = normalizePath(path.relative(buildAction._workspaceRoot, inputFilePath));
 
                 if (/\.s[ac]ss$/i.test(inputFilePath)) {
                     if (this.options.logLevel === 'debug') {
@@ -124,7 +122,7 @@ export class StyleBundleWebpackPlugin {
                 }
 
                 if (styleEntry._minify !== false) {
-                    const minFileToWorkspace = normalizeRelativePath(
+                    const minFileToWorkspace = normalizePath(
                         path.relative(buildAction._workspaceRoot, styleEntry._minOutputFilePath)
                     );
 

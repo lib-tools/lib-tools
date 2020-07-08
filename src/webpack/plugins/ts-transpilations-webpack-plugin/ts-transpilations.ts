@@ -5,7 +5,7 @@ import { pathExists, writeFile } from 'fs-extra';
 import { ScriptTarget } from 'typescript';
 
 import { BuildActionInternal, ScriptTranspilationEntryInternal } from '../../../models/internals';
-import { LoggerBase, globCopyFiles, normalizeRelativePath } from '../../../utils';
+import { LoggerBase, globCopyFiles, normalizePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
 
@@ -187,7 +187,7 @@ async function afterTsTranspileTask(
             );
         }
 
-        const relPath = normalizeRelativePath(path.relative(outputRootDir, buildAction._packageJsonOutDir));
+        const relPath = normalizePath(path.relative(outputRootDir, buildAction._packageJsonOutDir));
 
         // add banner to index
         const bannerContent = buildAction._bannerText ? `${buildAction._bannerText}\n` : '';
