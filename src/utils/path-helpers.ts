@@ -8,18 +8,13 @@
 
 import * as path from 'path';
 
-function removeEndingSlash(p: string): string {
+export function normalizePath(p: string): string {
     if (!p) {
         return '';
     }
 
-    return p.replace(/(\/|\\)+$/, '');
-}
+    p = path.normalize(p);
 
-export function normalizeRelativePath(p: string): string {
-    if (!p) {
-        return '';
-    }
     p = p
         .replace(/\\/g, '/')
         .replace(/^\.\//, '')
@@ -36,27 +31,22 @@ export function isSamePaths(p1: string, p2: string): boolean {
         return true;
     }
 
-    p1 = removeEndingSlash(path.normalize(p1));
-    p2 = removeEndingSlash(path.normalize(p2));
+    p1 = normalizePath(p1);
+    p2 = normalizePath(p2);
 
-    return p1 === p2;
+    return p1.toLowerCase() === p2.toLowerCase();
 }
 
 export function isInFolder(parentDir: string, checkDir: string): boolean {
-    parentDir = removeEndingSlash(path.normalize(parentDir));
-    checkDir = removeEndingSlash(path.normalize(checkDir));
+    parentDir = normalizePath(parentDir).toLowerCase();
+    checkDir = normalizePath(checkDir).toLowerCase();
 
     if (!checkDir || parentDir === checkDir) {
         return false;
     }
 
-    const checkDirHome = path.parse(checkDir).root;
-    if (
-        checkDir === checkDirHome ||
-        checkDir === removeEndingSlash(checkDirHome) ||
-        checkDir === '.' ||
-        checkDir === './'
-    ) {
+    const checkDirHome = normalizePath(path.parse(checkDir).root);
+    if (checkDir === checkDirHome || checkDir === checkDirHome || checkDir === '.' || checkDir === './') {
         return false;
     }
 
@@ -64,8 +54,9 @@ export function isInFolder(parentDir: string, checkDir: string): boolean {
     let prevTempCheckDir = '';
     while (tempCheckDir && tempCheckDir !== checkDirHome && tempCheckDir !== '.' && tempCheckDir !== prevTempCheckDir) {
         prevTempCheckDir = tempCheckDir;
-        tempCheckDir = path.dirname(tempCheckDir);
-        if (tempCheckDir === parentDir || removeEndingSlash(tempCheckDir) === parentDir) {
+        tempCheckDir = normalizePath(path.dirname(tempCheckDir));
+
+        if (tempCheckDir === parentDir || tempCheckDir === parentDir) {
             return true;
         }
     }
