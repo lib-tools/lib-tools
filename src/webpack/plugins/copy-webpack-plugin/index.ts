@@ -61,11 +61,7 @@ export class CopyWebpackPlugin {
             const hasMagic = glob.hasMagic(assetEntry.from);
 
             if (hasMagic) {
-                const globPattern = path.isAbsolute(assetEntry.from)
-                    ? path.relative(projectRoot, assetEntry.from)
-                    : assetEntry.from;
-
-                const foundPaths = await globAsync(globPattern, {
+                const foundPaths = await globAsync(assetEntry.from, {
                     cwd: projectRoot,
                     nodir: true,
                     dot: true
@@ -82,13 +78,15 @@ export class CopyWebpackPlugin {
                 }
 
                 await Promise.all(
-                    foundPaths.map(async (foundPath) => {
-                        const pathRel = normalizePath(path.relative(projectRoot, foundPath));
-                        const toFilePathAbs = path.resolve(toPath, pathRel);
+                    foundPaths.map(async (foundFileRel) => {
+                        const toFilePath = path.resolve(toPath, foundFileRel);
+                        const foundFromFilePath = path.resolve(projectRoot, foundFileRel);
 
-                        this.logger.debug(`Copying ${normalizePath(pathRel)}`);
+                        this.logger.debug(
+                            `Copying ${normalizePath(path.relative(projectRoot, foundFromFilePath))} file`
+                        );
 
-                        await copy(foundPath, toFilePathAbs);
+                        await copy(foundFromFilePath, toFilePath);
                     })
                 );
             } else {
@@ -124,7 +122,7 @@ export class CopyWebpackPlugin {
 
                     await copy(fromPath, toFilePath);
                 } else {
-                    const foundFilePaths = await globAsync(path.join('**/*'), {
+                    const foundFilePaths = await globAsync('**/*', {
                         cwd: fromPath,
                         nodir: true,
                         dot: true
