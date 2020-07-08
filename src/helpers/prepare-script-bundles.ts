@@ -13,7 +13,7 @@ import { ScriptTarget } from 'typescript';
 
 import { ModuleExternalsEntry, ScriptBundleEntry } from '../models';
 import { BuildActionInternal, ScriptBundleEntryInternal, ScriptTranspilationEntryInternal } from '../models/internals';
-import { findUp, normalizeRelativePath } from '../utils';
+import { findUp, normalizePath } from '../utils';
 
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 
@@ -241,7 +241,7 @@ function toBundleEntryInternal(
 
     // package entry points
     if (buildAction._packageJsonOutDir) {
-        const entryFileRel = normalizeRelativePath(path.relative(buildAction._packageJsonOutDir, bundleOutFilePath));
+        const entryFileRel = normalizePath(path.relative(buildAction._packageJsonOutDir, bundleOutFilePath));
 
         // TODO: To check
         if (currentBundle.libraryTarget === 'esm' && destScriptTarget === ScriptTarget.ES2015) {

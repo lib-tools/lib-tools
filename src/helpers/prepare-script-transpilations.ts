@@ -13,7 +13,7 @@ import * as ts from 'typescript';
 
 import { ScriptTranspilationEntry } from '../models';
 import { BuildActionInternal, ScriptTranspilationEntryInternal } from '../models/internals';
-import { findUp, isInFolder, isSamePaths, normalizeRelativePath } from '../utils';
+import { findUp, isInFolder, isSamePaths, normalizePath } from '../utils';
 
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { readTsConfigFile } from './read-ts-config-file';
@@ -167,8 +167,8 @@ async function toTranspilationEntryInternal(
 
     if (compilerOptions.rootDir && !isSamePaths(compilerOptions.rootDir, path.dirname(tsConfigPath))) {
         const relSubDir = isInFolder(compilerOptions.rootDir, path.dirname(tsConfigPath))
-            ? normalizeRelativePath(path.relative(compilerOptions.rootDir, path.dirname(tsConfigPath)))
-            : normalizeRelativePath(path.relative(path.dirname(tsConfigPath), compilerOptions.rootDir));
+            ? normalizePath(path.relative(compilerOptions.rootDir, path.dirname(tsConfigPath)))
+            : normalizePath(path.relative(path.dirname(tsConfigPath), compilerOptions.rootDir));
         tsOutDir = path.resolve(tsOutDir, relSubDir);
     }
 
@@ -207,9 +207,9 @@ async function toTranspilationEntryInternal(
     // Add  entry points to package.json
     if (detectedEntryName) {
         const entryNameRel = path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, detectedEntryName));
-        const jsEntryFileRel = normalizeRelativePath(`${entryNameRel}.js`);
+        const jsEntryFileRel = normalizePath(`${entryNameRel}.js`);
         // TODO: To check
-        const typingsEntryFileRel = normalizeRelativePath(`${entryNameRel}.d.ts`);
+        const typingsEntryFileRel = normalizePath(`${entryNameRel}.d.ts`);
 
         if (
             compilerOptions.module &&
@@ -239,7 +239,7 @@ async function toTranspilationEntryInternal(
 
                 // TODO: To check
                 // buildAction._packageJsonEntryPoint.typings = typingsEntryFileRel; ?
-                buildAction._packageJsonEntryPoint.typings = normalizeRelativePath(
+                buildAction._packageJsonEntryPoint.typings = normalizePath(
                     path.relative(
                         buildAction._packageJsonOutDir,
                         path.join(buildAction._outputPath, `${typingEntryName}.d.ts`)

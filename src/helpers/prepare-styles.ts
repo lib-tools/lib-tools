@@ -12,7 +12,7 @@ import { pathExists } from 'fs-extra';
 
 import { AutoPrefixerOptions, CleanCSSOptions } from '../models';
 import { BuildActionInternal } from '../models/internals';
-import { normalizeRelativePath } from '../utils';
+import { normalizePath } from '../utils';
 
 const inputExtRegExp = /\.(sass|scss|css)$/i;
 const outputExtRegExp = /\.css$/i;
@@ -119,9 +119,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
         );
 
         if (!packageJsonStyleEntry && styleOptions.addToPackageJson !== false) {
-            packageJsonStyleEntry = normalizeRelativePath(
-                path.relative(buildAction._packageJsonOutDir, outputFilePath)
-            );
+            packageJsonStyleEntry = normalizePath(path.relative(buildAction._packageJsonOutDir, outputFilePath));
         }
 
         buildAction._styleEntries.push({
