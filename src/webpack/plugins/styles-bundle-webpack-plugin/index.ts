@@ -58,9 +58,8 @@ export class StyleBundleWebpackPlugin {
                 const inputRelToWorkspace = normalizePath(path.relative(buildAction._workspaceRoot, inputFilePath));
 
                 if (/\.s[ac]ss$/i.test(inputFilePath)) {
-                    if (this.options.logLevel === 'debug') {
-                        this.logger.debug(`Compiling ${inputRelToWorkspace}`);
-                    } else {
+                    this.logger.debug(`Compiling ${inputRelToWorkspace}`);
+                    if (this.options.logLevel !== 'debug') {
                         this.logger.info(`Compiling ${inputRelToWorkspace}`);
                     }
 
@@ -91,9 +90,8 @@ export class StyleBundleWebpackPlugin {
                         await writeFile(`${outFilePath}.map`, result.map);
                     }
                 } else {
-                    if (this.options.logLevel === 'debug') {
-                        this.logger.debug(`Copying ${inputRelToWorkspace}`);
-                    } else {
+                    this.logger.debug(`Copying ${inputRelToWorkspace}`);
+                    if (this.options.logLevel !== 'debug') {
                         this.logger.info(`Copying ${inputRelToWorkspace}`);
                     }
 
