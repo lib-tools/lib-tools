@@ -81,7 +81,7 @@ export class CopyWebpackPlugin {
                     dot: true
                 });
 
-                foundPaths = foundPaths.filter((p) => !excludeMatch(p, excludes));
+                foundPaths = foundPaths.filter((p) => !excludeMatch(normalizePath(p), excludes));
 
                 if (!foundPaths.length) {
                     this.logger.warn(`There is no matched file to copy, pattern: ${assetEntry.from}`);
@@ -125,7 +125,8 @@ export class CopyWebpackPlugin {
 
                 const stats = await stat(fromPath);
                 if (stats.isFile()) {
-                    if (excludeMatch(fromPath, excludes)) {
+                    const fromPathRel = normalizePath(path.relative(projectRoot, fromPath));
+                    if (excludeMatch(fromPathRel, excludes)) {
                         this.logger.warn(`Excluded from copy, path: ${fromPath}`);
                         continue;
                     }
@@ -142,7 +143,6 @@ export class CopyWebpackPlugin {
                         toFilePath = path.resolve(toPath, path.basename(fromPath));
                     }
 
-                    const fromPathRel = normalizePath(path.relative(projectRoot, fromPath));
                     if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(fromPath)) {
                         infoLoggedFiles.push(fromPath);
                         this.logger.info(`Copying ${fromPathRel} file`);
@@ -158,7 +158,7 @@ export class CopyWebpackPlugin {
                         dot: true
                     });
 
-                    foundPaths = foundPaths.filter((p) => !excludeMatch(p, excludes));
+                    foundPaths = foundPaths.filter((p) => !excludeMatch(normalizePath(p), excludes));
 
                     if (!foundPaths.length) {
                         this.logger.warn(`There is no matched file to copy, path: ${fromPath}`);
