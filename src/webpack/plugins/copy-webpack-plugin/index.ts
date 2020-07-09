@@ -167,7 +167,11 @@ export class CopyWebpackPlugin {
 
                     if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(fromPath)) {
                         infoLoggedFiles.push(fromPath);
-                        this.logger.info(`Copying ${normalizePath(path.relative(projectRoot, fromPath))} folder`);
+                        this.logger.info(
+                            `Copying ${normalizePath(path.relative(projectRoot, fromPath))} folder, total ${
+                                foundPaths.length
+                            } file(s)`
+                        );
                     }
 
                     await Promise.all(
