@@ -1,7 +1,7 @@
 {
   "$schema": "../../dist/schemas/schema.json#",
   "projects": {
-    "style-module-demo": {
+    "typescript-library-project-demo": {
       "root": "./",
       "actions": {
         "build": {
