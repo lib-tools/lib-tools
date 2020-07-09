@@ -90,7 +90,7 @@ export class CopyWebpackPlugin {
 
                 if (this.options.logLevel !== 'debug' && !infoLoggedFiles.includes(assetEntry.from)) {
                     infoLoggedFiles.push(assetEntry.from);
-                    this.logger.info(`Copying ${assetEntry.from}`);
+                    this.logger.info(`Copying ${assetEntry.from}, total ${foundPaths.length} file(s)`);
                 }
 
                 let fromRoot = projectRoot;
