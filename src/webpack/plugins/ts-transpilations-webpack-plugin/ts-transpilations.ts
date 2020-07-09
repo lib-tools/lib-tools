@@ -69,7 +69,7 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
 
         logger.info(`Compiling typescript files, target: ${scriptTargetText}`);
 
-        await new Promise((resolve, reject) => {
+        await new Promise((res, rej) => {
             const errors: string[] = [];
             const child = spawn(tscCommand, commandArgs, {});
             if (child.stdout) {
@@ -82,18 +82,18 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
                 child.stderr.on('data', (data: string | Buffer) => errors.push(data.toString().trim()));
             }
 
-            child.on('error', reject);
+            child.on('error', rej);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
                     afterTsTranspileTask(tsTranspilation, buildAction, tscCommand, logger)
                         .then(() => {
-                            resolve();
+                            res();
                         })
                         .catch((err) => {
-                            reject(err);
+                            rej(err);
                         });
                 } else {
-                    reject(new Error(errors.join('\n')));
+                    rej(new Error(errors.join('\n')));
                 }
             });
         });
