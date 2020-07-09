@@ -84,7 +84,7 @@ export class CopyWebpackPlugin {
                 foundPaths = foundPaths.filter((p) => !excludeMatch(p, excludes));
 
                 if (!foundPaths.length) {
-                    this.logger.debug(`There is no matched file to copy, pattern: ${assetEntry.from}.`);
+                    this.logger.warn(`There is no matched file to copy, pattern: ${assetEntry.from}`);
                     continue;
                 }
 
@@ -119,14 +119,14 @@ export class CopyWebpackPlugin {
                     ? path.resolve(assetEntry.from)
                     : path.resolve(projectRoot, assetEntry.from);
                 if (!(await pathExists(fromPath))) {
-                    this.logger.debug(`There is no matched file to copy, path: ${fromPath}.`);
+                    this.logger.warn(`Path doesn't exist to copy, path: ${fromPath}`);
                     continue;
                 }
 
                 const stats = await stat(fromPath);
                 if (stats.isFile()) {
                     if (excludeMatch(fromPath, excludes)) {
-                        this.logger.warn(`Excluded from copy, path: ${fromPath}.`);
+                        this.logger.warn(`Excluded from copy, path: ${fromPath}`);
                         continue;
                     }
 
@@ -161,7 +161,7 @@ export class CopyWebpackPlugin {
                     foundPaths = foundPaths.filter((p) => !excludeMatch(p, excludes));
 
                     if (!foundPaths.length) {
-                        this.logger.debug(`There is no matched file to copy, path: ${fromPath}.`);
+                        this.logger.warn(`There is no matched file to copy, path: ${fromPath}`);
                         continue;
                     }
 
