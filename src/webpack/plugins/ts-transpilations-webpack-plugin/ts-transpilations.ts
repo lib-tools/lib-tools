@@ -1,3 +1,11 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as path from 'path';
 
 import * as spawn from 'cross-spawn';
@@ -12,17 +20,17 @@ import { replaceVersion } from './replace-version';
 let prevTsTranspilationVersionReplaced = false;
 
 export async function preformTsTranspilations(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
-    if (!buildAction._scriptTranspilationEntries || !buildAction._scriptTranspilationEntries.length) {
+    if (!buildAction._scriptTranspilationEntries.length) {
         return;
     }
 
-    let tsc = 'tsc';
+    let tscCommand = 'tsc';
     const nodeModulesPath = buildAction._nodeModulesPath;
     if (nodeModulesPath) {
         if (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) {
-            tsc = path.join(nodeModulesPath, '.bin/ngc');
+            tscCommand = path.join(nodeModulesPath, '.bin/ngc');
         } else if (await pathExists(path.join(nodeModulesPath, '.bin/tsc'))) {
-            tsc = path.join(nodeModulesPath, '.bin/tsc');
+            tscCommand = path.join(nodeModulesPath, '.bin/tsc');
         }
     }
 
@@ -63,7 +71,7 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
 
         await new Promise((resolve, reject) => {
             const errors: string[] = [];
-            const child = spawn(tsc, commandArgs, {});
+            const child = spawn(tscCommand, commandArgs, {});
             if (child.stdout) {
                 child.stdout.on('data', (data: string | Buffer) => {
                     logger.debug(`${data}`);
@@ -77,7 +85,7 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
             child.on('error', reject);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
-                    afterTsTranspileTask(tsTranspilation, buildAction, tsc, logger)
+                    afterTsTranspileTask(tsTranspilation, buildAction, tscCommand, logger)
                         .then(() => {
                             resolve();
                         })
@@ -95,7 +103,7 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
 async function afterTsTranspileTask(
     tsTranspilation: ScriptTranspilationEntryInternal,
     buildAction: BuildActionInternal,
-    tsc: string,
+    tscCommand: string,
     logger: LoggerBase
 ): Promise<void> {
     const outputRootDir = buildAction._outputPath;
@@ -120,7 +128,7 @@ async function afterTsTranspileTask(
 
     // Angular inline assets
     if (
-        /ngc$/.test(tsc) &&
+        /ngc$/.test(tscCommand) &&
         tsTranspilation._tsConfigJson.angularCompilerOptions &&
         tsTranspilation._tsConfigJson.angularCompilerOptions.enableResourceInlining == null
     ) {
@@ -157,7 +165,7 @@ async function afterTsTranspileTask(
     // Move typings and metadata files
     if (tsTranspilation._declaration && buildAction._packageJsonOutDir !== tsTranspilation._tsOutDirRootResolved) {
         // Angular
-        if (/ngc$/.test(tsc)) {
+        if (/ngc$/.test(tscCommand)) {
             logger.debug('Moving typing and metadata files to output root');
 
             await globCopyFiles(
@@ -199,7 +207,7 @@ async function afterTsTranspileTask(
         await writeFile(reEportTypingsOutFileAbs, reExportTypingsContent);
 
         // Angular
-        if (/ngc$/.test(tsc)) {
+        if (/ngc$/.test(tscCommand)) {
             logger.debug('Re-exporting Angular metadata files to output root');
             const flatModuleId =
                 tsTranspilation._tsConfigJson.angularCompilerOptions &&
