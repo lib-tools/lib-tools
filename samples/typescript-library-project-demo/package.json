@@ -1,0 +1,21 @@
+{
+  "name": "typescript-library-project-demo",
+  "version": "0.0.0",
+  "author": "DagonMetric",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DagonMetric/lib-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DagonMetric/lib-tools/issues"
+  },
+  "homepage": "https://github.com/DagonMetric/lib-tools",
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
+  "devDependencies": {
+    "lib-tools": "0.0.1-alpha.7"
+
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "../../dist/schemas/schema.json#",
+  "projects": {
+    "style-module-demo": {
+      "root": "./",
+      "actions": {
+        "build": {
+          "outputPath": "dist/packages/typescript-library-project-demo",
+          "scriptTranspilation": {
+            "entries": [
+              {
+                "declaration": true,
+                "target": "ES2015",
+                "outDir": "esm2015"
+              },
+              {
+                "declaration": false,
+                "target": "es5",
+                "outDir": "esm5"
+              }
+            ],
+            "tsConfig": "tsconfig.build.json"
+          },
+          "scriptBundle": {
+            "entries": [
+              {
+                "libraryTarget": "esm",
+                "entryRoot": "transpilationOutput",
+                "transpilationEntryIndex": 0
+              },
+              {
+                "libraryTarget": "esm",
+                "entryRoot": "transpilationOutput",
+                "transpilationEntryIndex": 1
+              },
+              {
+                "libraryTarget": "umd",
+                "entryRoot": "prevBundleOutput"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

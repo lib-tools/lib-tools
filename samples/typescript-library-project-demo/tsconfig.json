@@ -1,0 +1,27 @@
+﻿{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "es2015",
+    "moduleResolution": "node",
+
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictNullChecks": true,
+    "stripInternal": true,
+    "strictPropertyInitialization": true,
+
+    "sourceMap": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "lib": [ "es2018", "dom" ],
+
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "./dist"
+  }
+}
