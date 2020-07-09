@@ -71,11 +71,11 @@ export interface AssetEntry {
      */
     from: string;
     /**
-     * Custom output file/folder name.
+     * Custom output file or folder name.
      */
     to?: string;
     /**
-     * The exclude list.
+     * Exclude list of minimatch patterns.
      */
     exclude?: string[];
 }
