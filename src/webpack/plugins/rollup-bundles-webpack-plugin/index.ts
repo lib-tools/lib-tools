@@ -1,3 +1,11 @@
+/**
+ * @license
+ * Copyright DagonMetric. All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found under the LICENSE file in the root directory of this source tree.
+ */
+
 import * as webpack from 'webpack';
 
 import { BuildActionInternal } from '../../../models/internals';
@@ -19,8 +27,9 @@ export class RollupBundlesWebpackPlugin {
 
     constructor(private readonly options: RollupBundlesWebpackPluginOptions) {
         this.logger = new Logger({
-            name: `[${this.name}]`,
-            logLevel: this.options.logLevel || 'info'
+            logLevel: this.options.logLevel || 'info',
+            debugPrefix: `[${this.name}]`,
+            infoPrefix: ''
         });
     }
 
