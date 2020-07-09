@@ -31,9 +31,14 @@
 
           },
           "copy": [
+            "README.md",
+            "LICENSE",
             {
               "from": "src/scss",
-              "to": "scss/"
+              "to": "scss/",
+              "exclude": [
+                "**/*.js"
+              ]
             }
           ]
         }
