@@ -13,17 +13,17 @@ import { OverridableAction } from './overridable-action';
  */
 export interface BeforeBuildCleanOptions {
     /**
-     * If true, delete output directory before build.
+     * If true, delete output directory before build. Default is `true`.
      */
     cleanOutDir?: boolean;
     /**
-     * File or directory paths to be deleted.
+     * Custom file or directory paths to delete.
      */
     paths?: string[];
     /**
-     * Path array to exclude from deleting.
+     * Exclude list of minimatch patterns.
      */
-    excludes?: string[];
+    exclude?: string[];
 }
 
 /**
@@ -31,13 +31,13 @@ export interface BeforeBuildCleanOptions {
  */
 export interface AfterEmitCleanOptions {
     /**
-     * File or directory paths to be deleted.
+     * File or directory paths to delete after build emit assets.
      */
     paths?: string[];
     /**
-     * Path array to exclude from deleting.
+     * Exclude list of minimatch patterns.
      */
-    excludes?: string[];
+    exclude?: string[];
 }
 
 /**
@@ -45,19 +45,19 @@ export interface AfterEmitCleanOptions {
  */
 export interface CleanOptions {
     /**
-     * Before build clean option.
+     * Before build clean options.
      */
     beforeBuild?: BeforeBuildCleanOptions;
     /**
-     * After emit clean option.
+     * After emit clean options.
      */
     afterEmit?: AfterEmitCleanOptions;
     /**
-     * Allows cleaning outside of output directory.
+     * If trye, allow cleaning outside of the output directory.
      */
     allowOutsideOutDir?: boolean;
     /**
-     * Allows cleaning outside of workspace root.
+     * If true, allow cleaning outside of the workspace root directory.
      */
     allowOutsideWorkspaceRoot?: boolean;
 }
@@ -67,7 +67,7 @@ export interface CleanOptions {
  */
 export interface AssetEntry {
     /**
-     * The source file path or minimatch pattern.
+     * The source file, folder path or minimatch pattern.
      */
     from: string;
     /**
