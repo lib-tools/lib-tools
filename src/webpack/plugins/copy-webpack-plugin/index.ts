@@ -11,12 +11,25 @@ import { promisify } from 'util';
 
 import { copy, pathExists, stat } from 'fs-extra';
 import * as glob from 'glob';
+import * as minimatch from 'minimatch';
 import * as webpack from 'webpack';
 
 import { BuildActionInternal } from '../../..//models/internals';
 import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils';
 
 const globAsync = promisify(glob);
+
+function excludeMatch(filePathRel: string, excludes: string[]): boolean {
+    let il = excludes.length;
+    while (il--) {
+        const ignoreGlob = excludes[il];
+        if (minimatch(filePathRel, ignoreGlob, { dot: true, matchBase: true })) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 export interface CopyWebpackPluginOptions {
     buildAction: BuildActionInternal;
@@ -57,15 +70,18 @@ export class CopyWebpackPlugin {
         const infoLoggedFiles: string[] = [];
 
         for (const assetEntry of assetEntries) {
+            const excludes = assetEntry.exclude || ['**/.DS_Store', '**/Thumbs.db'];
             const toPath = path.resolve(outputPath, assetEntry.to || '');
             const hasMagic = glob.hasMagic(assetEntry.from);
 
             if (hasMagic) {
-                const foundPaths = await globAsync(assetEntry.from, {
+                let foundPaths = await globAsync(assetEntry.from, {
                     cwd: projectRoot,
                     nodir: true,
                     dot: true
                 });
+
+                foundPaths = foundPaths.filter((p) => !excludeMatch(p, excludes));
 
                 if (!foundPaths.length) {
                     this.logger.debug(`There is no matched file to copy, pattern: ${assetEntry.from}.`);
@@ -109,6 +125,11 @@ export class CopyWebpackPlugin {
 
                 const stats = await stat(fromPath);
                 if (stats.isFile()) {
+                    if (excludeMatch(fromPath, excludes)) {
+                        this.logger.warn(`Excluded from copy, path: ${fromPath}.`);
+                        continue;
+                    }
+
                     const fromExt = path.extname(fromPath);
                     const toExt = path.extname(toPath);
                     let toFilePath = toPath;
@@ -131,13 +152,15 @@ export class CopyWebpackPlugin {
 
                     await copy(fromPath, toFilePath);
                 } else {
-                    const foundFilePaths = await globAsync('**/*', {
+                    let foundPaths = await globAsync('**/*', {
                         cwd: fromPath,
                         nodir: true,
                         dot: true
                     });
 
-                    if (!foundFilePaths.length) {
+                    foundPaths = foundPaths.filter((p) => !excludeMatch(p, excludes));
+
+                    if (!foundPaths.length) {
                         this.logger.debug(`There is no matched file to copy, path: ${fromPath}.`);
                         continue;
                     }
@@ -148,7 +171,7 @@ export class CopyWebpackPlugin {
                     }
 
                     await Promise.all(
-                        foundFilePaths.map(async (foundFileRel) => {
+                        foundPaths.map(async (foundFileRel) => {
                             const toFilePath = path.resolve(toPath, foundFileRel);
                             const foundFromFilePath = path.resolve(fromPath, foundFileRel);
 
