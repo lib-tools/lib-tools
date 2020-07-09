@@ -32,9 +32,7 @@ export class StyleBundleWebpackPlugin {
 
     constructor(private readonly options: StyleBundleWebpackPluginOptions) {
         this.logger = new Logger({
-            logLevel: this.options.logLevel || 'info',
-            debugPrefix: `[${this.name}]`,
-            infoPrefix: ''
+            logLevel: this.options.logLevel || 'info'
         });
     }
 

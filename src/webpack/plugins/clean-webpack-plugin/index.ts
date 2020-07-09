@@ -45,9 +45,7 @@ export class CleanWebpackPlugin {
         this.options = this.prepareCleanOptions(options);
 
         this.logger = new Logger({
-            logLevel: this.options.logLevel || 'info',
-            debugPrefix: `[${this.name}]`,
-            infoPrefix: ''
+            logLevel: this.options.logLevel || 'info'
         });
     }
 

@@ -27,9 +27,7 @@ export class RollupBundlesWebpackPlugin {
 
     constructor(private readonly options: RollupBundlesWebpackPluginOptions) {
         this.logger = new Logger({
-            logLevel: this.options.logLevel || 'info',
-            debugPrefix: `[${this.name}]`,
-            infoPrefix: ''
+            logLevel: this.options.logLevel || 'info'
         });
     }
 

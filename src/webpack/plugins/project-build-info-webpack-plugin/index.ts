@@ -23,8 +23,7 @@ export class ProjectBuildInfoWebpackPlugin {
 
     constructor(private readonly options: ProjectBuildInfoWebpackPluginOptions) {
         this.logger = new Logger({
-            logLevel: this.options.logLevel || 'info',
-            infoPrefix: ''
+            logLevel: this.options.logLevel || 'info'
         });
     }
 
