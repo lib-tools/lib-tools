@@ -96,16 +96,14 @@ export interface BuildActionInternal extends BuildAction {
     // styles
     _styleEntries: StyleEntryInternal[];
 
-    // tsconfig
+    // Script transpilations
+    _scriptTranspilationEntries: ScriptTranspilationEntryInternal[];
     _tsConfigPath?: string;
     _tsConfigJson?: TsConfigJsonOptions;
     _tsCompilerConfig?: ParsedCommandLine;
 
-    // Script transpilations
-    _scriptTranspilationEntries?: ScriptTranspilationEntryInternal[];
-
     // Script bundles
-    _scriptBundleEntries?: ScriptBundleEntryInternal[];
+    _scriptBundleEntries: ScriptBundleEntryInternal[];
     _bannerText?: string;
 
     // package.json
