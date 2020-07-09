@@ -194,7 +194,7 @@ export async function toBuildActionInternal(
 
     // Script transpilations
     if (buildActionInternal.scriptTranspilation) {
-        await prepareScriptTranspilations(buildActionInternal);
+        await prepareScriptTranspilations(buildActionInternal, buildOptions.auto);
     }
 
     // Script bundles
