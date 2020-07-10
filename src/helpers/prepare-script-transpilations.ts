@@ -189,36 +189,7 @@ async function toTranspilationEntryInternal(
     }
 
     // Detect entry file
-    let detectedEntryName: string | null = null;
-    const flatModuleOutFile =
-        buildAction._tsConfigJson &&
-        buildAction._tsConfigJson.angularCompilerOptions &&
-        buildAction._tsConfigJson.angularCompilerOptions.flatModuleOutFile
-            ? buildAction._tsConfigJson.angularCompilerOptions.flatModuleOutFile
-            : null;
-    if (flatModuleOutFile) {
-        detectedEntryName = flatModuleOutFile.replace(/\.js$/i, '');
-    } else {
-        const testName1 = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const testName2 = buildAction._packageNameWithoutScope
-            .substr(buildAction._packageNameWithoutScope.lastIndexOf('/') + 1)
-            .replace(/\//gm, '-');
-
-        const tsSrcDir = path.dirname(tsConfigPath);
-        if (await pathExists(path.resolve(tsSrcDir, 'index.ts'))) {
-            detectedEntryName = 'index';
-        } else if (await pathExists(path.resolve(tsSrcDir, testName1 + '.ts'))) {
-            detectedEntryName = testName1;
-        } else if (await pathExists(path.resolve(tsSrcDir, testName2 + '.ts'))) {
-            detectedEntryName = testName2;
-        } else if (await pathExists(path.resolve(tsSrcDir, 'main.ts'))) {
-            detectedEntryName = 'main';
-        } else if (await pathExists(path.resolve(tsSrcDir, 'public_api.ts'))) {
-            detectedEntryName = 'public_api';
-        } else if (await pathExists(path.resolve(tsSrcDir, 'public-api.ts'))) {
-            detectedEntryName = 'public-api';
-        }
-    }
+    const detectedEntryName = await detectEntryName(buildAction, tsConfigPath);
 
     // Add  entry points to package.json
     if (
@@ -229,18 +200,12 @@ async function toTranspilationEntryInternal(
                 buildAction.scriptTranspilation.addToPackageJson !== false))
     ) {
         if (declaration) {
-            // TODO: To review
             if (buildAction._nestedPackage) {
-                const typingEntryName = buildAction._packageNameWithoutScope.substr(
-                    buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
-                );
-
                 // TODO: To check
-                // buildAction._packageJsonEntryPoint.typings = typingsEntryFileRel; ?
                 buildAction._packageJsonEntryPoint.typings = normalizePath(
                     path.relative(
                         buildAction._packageJsonOutDir,
-                        path.join(buildAction._outputPath, `${typingEntryName}.d.ts`)
+                        path.join(buildAction._outputPath, `${detectedEntryName}.d.ts`)
                     )
                 );
             } else {
@@ -318,4 +283,53 @@ async function detectTsConfigPath(workspaceRoot: string, projectRoot: string): P
         projectRoot,
         workspaceRoot
     );
+}
+
+async function detectEntryName(buildAction: BuildActionInternal, tsConfigPath: string): Promise<string | null> {
+    if (
+        buildAction.scriptTranspilation &&
+        typeof buildAction.scriptTranspilation === 'object' &&
+        buildAction.scriptTranspilation.entry
+    ) {
+        const normalizedEntryFile = normalizePath(buildAction.scriptTranspilation.entry).replace(/\.(ts|js)$/i, '');
+        return normalizedEntryFile;
+    }
+
+    const flatModuleOutFile =
+        buildAction._tsConfigJson &&
+        buildAction._tsConfigJson.angularCompilerOptions &&
+        buildAction._tsConfigJson.angularCompilerOptions.flatModuleOutFile
+            ? buildAction._tsConfigJson.angularCompilerOptions.flatModuleOutFile
+            : null;
+    if (flatModuleOutFile) {
+        return flatModuleOutFile.replace(/\.js$/i, '');
+    }
+
+    const tsSrcRootDir = path.dirname(tsConfigPath);
+
+    if (await pathExists(path.resolve(tsSrcRootDir, 'index.ts'))) {
+        return 'index';
+    }
+
+    const packageName =
+        buildAction._packageNameWithoutScope.lastIndexOf('/') > -1
+            ? buildAction._packageNameWithoutScope.substr(buildAction._packageNameWithoutScope.lastIndexOf('/') + 1)
+            : buildAction._packageNameWithoutScope;
+    if (await pathExists(path.resolve(tsSrcRootDir, packageName + '.ts'))) {
+        return packageName;
+    }
+
+    if (await pathExists(path.resolve(tsSrcRootDir, 'main.ts'))) {
+        return 'main';
+    }
+
+    if (await pathExists(path.resolve(tsSrcRootDir, 'public_api.ts'))) {
+        return 'public_api';
+    }
+
+    if (await pathExists(path.resolve(tsSrcRootDir, 'public-api.ts'))) {
+        return 'public-api';
+    }
+
+    return null;
 }
