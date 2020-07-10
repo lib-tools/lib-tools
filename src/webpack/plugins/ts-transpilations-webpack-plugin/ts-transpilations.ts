@@ -38,18 +38,16 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
         const tsConfigPath = tsTranspilation._tsConfigPath;
         const compilerOptions = tsTranspilation._tsCompilerConfig.options;
         const commandArgs: string[] = ['-p', tsConfigPath];
+        const scriptTargetText = ScriptTarget[tsTranspilation._scriptTarget];
 
         if (tsTranspilation._customTsOutDir) {
             commandArgs.push('--outDir');
             commandArgs.push(tsTranspilation._customTsOutDir);
         }
 
-        if (tsTranspilation.target) {
+        if (tsTranspilation._scriptTarget !== compilerOptions.target) {
             commandArgs.push('--target');
-            commandArgs.push(tsTranspilation.target);
-        } else if (tsTranspilation._scriptTarget && !compilerOptions.target) {
-            commandArgs.push('--target');
-            commandArgs.push(ScriptTarget[tsTranspilation._scriptTarget]);
+            commandArgs.push(scriptTargetText);
         }
 
         if (tsTranspilation._declaration !== compilerOptions.declaration) {
@@ -58,13 +56,6 @@ export async function preformTsTranspilations(buildAction: BuildActionInternal, 
             if (tsTranspilation._declaration === false) {
                 commandArgs.push('false');
             }
-        }
-
-        let scriptTargetText: string;
-        if (tsTranspilation.target) {
-            scriptTargetText = tsTranspilation.target.toUpperCase();
-        } else {
-            scriptTargetText = ScriptTarget[tsTranspilation._scriptTarget];
         }
 
         logger.info(`Compiling typescript files, target: ${scriptTargetText}`);
