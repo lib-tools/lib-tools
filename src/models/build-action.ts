@@ -380,19 +380,15 @@ export type ScriptTargetString =
  */
 export interface ScriptTranspilationEntry {
     /**
-     * Typescript configuration file for this transpilation.
-     */
-    tsConfig?: string;
-    /**
-     * Custom output directory for this transpilation.
+     * Custom output directory.
      */
     outDir?: string;
     /**
-     * Override script target for this transpilation.
+     * Override custom script target.
      */
     target?: ScriptTargetString;
     /**
-     * Override declaration option for this transpilation.
+     * Override declaration option.
      */
     declaration?: boolean;
 }
