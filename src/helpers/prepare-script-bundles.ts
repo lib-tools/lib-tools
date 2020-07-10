@@ -9,18 +9,17 @@ import { findUp, normalizePath } from '../utils';
 
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 
-export async function prepareScriptBundles(buildAction: BuildActionInternal): Promise<void> {
+export async function prepareScriptBundles(buildAction: BuildActionInternal, auto?: boolean): Promise<void> {
+    const bundleEntries: ScriptBundleEntryInternal[] = [];
     const projectName = buildAction._projectName;
 
-    const bundleEntries: ScriptBundleEntryInternal[] = [];
-
-    if (buildAction.scriptBundle && typeof buildAction.scriptBundle === 'object' && buildAction.scriptBundle.entries) {
+    if (buildAction.scriptBundle && buildAction.scriptBundle.entries) {
         const bundles = buildAction.scriptBundle.entries;
         for (let i = 0; i < bundles.length; i++) {
             const bundlePartial = bundles[i];
             bundleEntries.push(toBundleEntryInternal(bundleEntries, bundlePartial, i, buildAction));
         }
-    } else if (buildAction.scriptBundle) {
+    } else if (auto) {
         let shouldBundlesDefault = buildAction.scriptTranspilation === true;
         if (
             !shouldBundlesDefault &&
