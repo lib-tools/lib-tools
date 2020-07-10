@@ -1,5 +1,5 @@
 {
-  "$schema": "../../dist/schemas/schema.json#",
+  "$schema": "../../dist/schemas/schema.json",
   "projects": {
     "style-module-demo": {
       "root": "./",
