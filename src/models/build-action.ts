@@ -309,7 +309,7 @@ export interface StyleOptions {
      */
     includePaths?: string[];
     /**
-     * If true, automatically add `style` and 'files' entries to package.json file. By default, the first entry will be added.
+     * If true, automatically add `style` entry to package.json file. By default, the first entry will be added.
      */
     addToPackageJson?: boolean;
 }
@@ -409,6 +409,10 @@ export interface ScriptTranspilationOptions {
      * Default typescript configuration file to be used.
      */
     tsConfig?: string;
+    /**
+     * If true, automatically add entry points to package.json file.
+     */
+    addToPackageJson?: boolean;
 }
 
 /**
