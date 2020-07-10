@@ -176,23 +176,13 @@ export async function toBuildActionInternal(
     await prepareAssetEntries(buildActionInternal);
 
     // Styles
-    if (
-        buildActionInternal.style &&
-        buildActionInternal.style.entries &&
-        buildActionInternal.style.entries.length > 0
-    ) {
-        await prepareStyles(buildActionInternal);
-    }
+    await prepareStyles(buildActionInternal);
 
     // Script transpilations
-    if (buildActionInternal.scriptTranspilation) {
-        await prepareScriptTranspilations(buildActionInternal, buildOptions.auto);
-    }
+    await prepareScriptTranspilations(buildActionInternal, buildOptions.auto);
 
     // Script bundles
-    if (buildActionInternal.scriptBundle) {
-        await prepareScriptBundles(buildActionInternal);
-    }
+    await prepareScriptBundles(buildActionInternal, buildOptions.auto);
 
     return buildActionInternal;
 }
