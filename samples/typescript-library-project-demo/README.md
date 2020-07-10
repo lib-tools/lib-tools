@@ -1,3 +1,3 @@
 # typescript-library-project-demo
 
-The `lib-tools` demo for Typescript library project type that demonstrates `scriptTranspilation`.
+The `lib-tools` demo for Typescript library project type that demonstrates `scriptTranspilation` options.

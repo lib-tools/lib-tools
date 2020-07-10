@@ -1,3 +1,3 @@
-# Style Module Demo
+# style-module-demo
 
-SCSS styles module buuild demo.
+The `lib-tools` demo for scss/sass styles module project type that demonstrates `style` options.
