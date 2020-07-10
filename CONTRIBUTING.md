@@ -8,7 +8,7 @@ We use [Github issues](https://github.com/dagonmetric/lib-tools/issues) to track
 
 ## General Discussions
 
-We use [Gitter Channel](https://gitter.im/DagonMetric/general) for general DagonMetric's open source products discussion.
+We use [Gitter Channel](https://gitter.im/lib-tools/general) for general lib-tools's open source products discussion.
 
 ## Contributing code and content
 
@@ -24,7 +24,7 @@ This is a rough outline of what a contributor's workflow looks like:
 
 5. Run the build with `npm run build` and test with `npm run test` command if present, and ensure that all builds and tests succeed.
 
-6. Commit your changes using a descriptive commit message that follows our [commit message conventions](https://gist.github.com/dagonmetric-contributor/b3815561401555fa9ac2530f32e56dd3).
+6. Commit your changes using a descriptive commit message that follows our [commit message conventions](https://gist.github.com/mmzliveid/5d1ca6579da5ee60f5f4dee8d6201045).
 
 7. Push your branch to GitHub forked repo.
 

@@ -1,11 +1,11 @@
 {
   "$schema": "../../dist/schemas/schema.json",
   "projects": {
-    "typescript-library-project-demo": {
+    "full-config-demo": {
       "root": "./",
       "actions": {
         "build": {
-          "outputPath": "dist/packages/typescript-library-project-demo",
+          "outputPath": "dist/full-config-demo/typescript-library-project-demo",
           "scriptTranspilation": {
             "entries": [
               {
@@ -20,8 +20,17 @@
               }
             ],
             "tsConfig": "tsconfig.build.json",
-            "addToPackageJson": true
+            "addToPackageJson": true,
+            "entry": "public_api.js"
           }
+        }
+      }
+    },
+    "minimal-config-demo": {
+      "root": "./",
+      "actions": {
+        "build": {
+          "scriptTranspilation": true
         }
       }
     }

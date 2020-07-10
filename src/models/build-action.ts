@@ -1,11 +1,3 @@
-/**
- * @license
- * Copyright DagonMetric. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found under the LICENSE file in the root directory of this source tree.
- */
-
 import { OverridableAction } from './overridable-action';
 
 /**
@@ -398,9 +390,9 @@ export interface ScriptTranspilationEntry {
  */
 export interface ScriptTranspilationOptions {
     /**
-     * List of transpilation entries.
+     * List of transpilation entries or set `auto` to detect entries automatically.
      */
-    entries?: ScriptTranspilationEntry[];
+    entries?: ScriptTranspilationEntry[] | 'auto';
     /**
      * Typescript configuration file to be used.
      */
@@ -480,9 +472,9 @@ export interface ScriptBundleEntry {
  */
 export interface ScriptBundleOptions {
     /**
-     * Bundle entries.
+     * Bundle entries or set `auto` to detect entries automatically.
      */
-    entries?: ScriptBundleEntry[];
+    entries?: ScriptBundleEntry[] | 'auto';
     /**
      * The entry file to bundle.
      */
@@ -532,9 +524,9 @@ export interface BuildActionBase {
     clean?: CleanOptions | boolean;
 
     /**
-     * Asset entry array or boolean value for copying files to output directory. By default, README.md and LICENSE files are copied to output directory. Set `false` to disable copying of default files.
+     * List of asset entries for copying files to output directory. Set `auto`to copy README.md and LICENSE files to output directory.
      */
-    copy?: (string | AssetEntry)[] | boolean;
+    copy?: (string | AssetEntry)[] | 'auto';
 
     /**
      * Style compilation options for sass, scss or css files.
@@ -542,14 +534,14 @@ export interface BuildActionBase {
     style?: StyleOptions;
 
     /**
-     * Script transpilation options or boolean value. Set `true` to detect and generate default transpilations.
+     * Script transpilation options.
      */
-    scriptTranspilation?: ScriptTranspilationOptions | boolean;
+    scriptTranspilation?: ScriptTranspilationOptions;
 
     /**
-     * Script bundling options or boolean value. Set `true` to detect and bundle with default options.
+     * Script bundling options.
      */
-    scriptBundle?: ScriptBundleOptions | boolean;
+    scriptBundle?: ScriptBundleOptions;
 }
 
 /**
