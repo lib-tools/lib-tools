@@ -21,24 +21,6 @@
             ],
             "tsConfig": "tsconfig.build.json",
             "addToPackageJson": true
-          },
-          "scriptBundle": {
-            "entries": [
-              {
-                "libraryTarget": "esm",
-                "entryRoot": "transpilationOutput",
-                "transpilationEntryIndex": 0
-              },
-              {
-                "libraryTarget": "esm",
-                "entryRoot": "transpilationOutput",
-                "transpilationEntryIndex": 1
-              },
-              {
-                "libraryTarget": "umd",
-                "entryRoot": "prevBundleOutput"
-              }
-            ]
           }
         }
       }
