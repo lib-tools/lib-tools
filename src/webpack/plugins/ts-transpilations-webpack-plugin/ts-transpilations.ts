@@ -187,6 +187,7 @@ async function afterTsTranspileTask(
     }
 
     // Re-export
+    // TODO: To review
     if (buildAction._nestedPackage && tsTranspilation._declaration && tsTranspilation._detectedEntryName) {
         let reExportName = tsTranspilation._detectedEntryName;
         if (buildAction._nestedPackage && buildAction._packageNameWithoutScope) {
