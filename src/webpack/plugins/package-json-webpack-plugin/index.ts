@@ -16,8 +16,7 @@ export interface PackageJsonFileWebpackPluginOptions {
 
 export class PackageJsonFileWebpackPlugin {
     private readonly logger: Logger;
-    private readonly buildAction: BuildActionInternal;
-    private packageJsonHasAnyChanges = false;
+    // private packageJsonHasAnyChanges = false;
 
     get name(): string {
         return 'package-json-webpack-plugin';
@@ -27,7 +26,6 @@ export class PackageJsonFileWebpackPlugin {
         this.logger = new Logger({
             logLevel: this.options.logLevel || 'info'
         });
-        this.buildAction = this.options.buildAction;
     }
 
     apply(compiler: webpack.Compiler): void {
@@ -35,27 +33,26 @@ export class PackageJsonFileWebpackPlugin {
     }
 
     private async preparePackageJsonFile(): Promise<void> {
-        const packageJson = JSON.parse(JSON.stringify(this.buildAction._packageJson)) as PackageJsonLike;
+        const buildAction = this.options.buildAction;
+        const packageJson = JSON.parse(JSON.stringify(buildAction._packageJson)) as PackageJsonLike;
+        let packageJsonChanged = false;
 
         this.logger.debug('Checking package.json file');
 
         // Update entry points
-        if (this.buildAction._packageJsonEntryPoint) {
-            const packageEntryPoints = this.buildAction._packageJsonEntryPoint;
-            Object.keys(packageEntryPoints).forEach((key) => {
-                this.packageJsonHasAnyChanges = true;
-                this.logger.debug(`Updating package entry point '${key}' in package.json`);
-                packageJson[key] = packageEntryPoints[key];
-            });
-        }
+        Object.keys(buildAction._packageJsonEntryPoint).forEach((key) => {
+            packageJsonChanged = true;
+            this.logger.debug(`Updating package entry point '${key}'`);
+            packageJson[key] = buildAction._packageJsonEntryPoint[key];
+        });
 
-        const rootPackageJson = this.buildAction._rootPackageJson;
-        const packageJsonPathAreEqual = this.buildAction._rootPackageJsonPath === this.buildAction._packageJsonPath;
-        const nestedPackage = this.buildAction._nestedPackage;
+        const rootPackageJson = buildAction._rootPackageJson;
+        const packageJsonPathAreEqual = buildAction._rootPackageJsonPath === buildAction._packageJsonPath;
+        const nestedPackage = buildAction._nestedPackage;
 
         if (packageJson.devDependencies) {
-            this.packageJsonHasAnyChanges = true;
-            this.logger.debug(`Removing 'devDependencies' from package.json`);
+            packageJsonChanged = true;
+            this.logger.debug(`Removing 'devDependencies' field from package.json`);
             delete packageJson.devDependencies;
         }
 
@@ -66,7 +63,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.description === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.description))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'description' field in package.json`);
                 packageJson.description = rootPackageJson.description;
             }
@@ -76,7 +73,7 @@ export class PackageJsonFileWebpackPlugin {
                 rootPackageJson.keywords.length &&
                 ((packageJson.keywords && !packageJson.keywords.length) || (!nestedPackage && !packageJson.keywords))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'keywords' field in package.json`);
                 packageJson.keywords = [...rootPackageJson.keywords];
             }
@@ -87,7 +84,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.author === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.author))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'author' field in package.json`);
                 packageJson.author =
                     typeof rootPackageJson.author === 'string' ? rootPackageJson.author : { ...rootPackageJson.author };
@@ -99,7 +96,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.license === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.license))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'license' field in package.json`);
                 packageJson.license = rootPackageJson.license;
             }
@@ -110,7 +107,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.repository === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.repository))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'repository' field in package.json`);
                 packageJson.repository =
                     typeof rootPackageJson.repository === 'string'
@@ -124,7 +121,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.bugs === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.bugs))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'bugs' field in package.json`);
                 packageJson.bugs =
                     typeof rootPackageJson.bugs === 'string' ? rootPackageJson.bugs : { ...rootPackageJson.bugs };
@@ -136,7 +133,7 @@ export class PackageJsonFileWebpackPlugin {
                     packageJson.homepage === '[PLACEHOLDER]' ||
                     (!nestedPackage && !packageJson.homepage))
             ) {
-                this.packageJsonHasAnyChanges = true;
+                packageJsonChanged = true;
                 this.logger.debug(`Updating 'homepage' field in package.json`);
                 packageJson.homepage = rootPackageJson.homepage;
             }
@@ -144,23 +141,22 @@ export class PackageJsonFileWebpackPlugin {
 
         if (
             packageJson.sideEffects == null &&
-            ((this.buildAction._scriptTranspilationEntries && this.buildAction._scriptTranspilationEntries.length) ||
-                (this.buildAction._scriptBundleEntries && this.buildAction._scriptBundleEntries.length))
+            (buildAction._scriptTranspilationEntries.length || buildAction._scriptBundleEntries.length)
         ) {
-            this.packageJsonHasAnyChanges = true;
+            packageJsonChanged = true;
             this.logger.debug(`Updating 'sideEffects' field in package.json`);
             packageJson.sideEffects = false;
         }
 
         if (
             !packageJson.version ||
-            packageJson.version !== this.buildAction._packageVersion ||
+            packageJson.version !== buildAction._packageVersion ||
             versionPlaceholderRegex.test(packageJson.version) ||
             placeholderRegExp.test(packageJson.version)
         ) {
-            this.packageJsonHasAnyChanges = true;
+            packageJsonChanged = true;
             this.logger.debug(`Updating 'version' field in package.json`);
-            packageJson.version = this.buildAction._packageVersion;
+            packageJson.version = buildAction._packageVersion;
         }
 
         if (packageJson.peerDependencies) {
@@ -170,24 +166,21 @@ export class PackageJsonFileWebpackPlugin {
             for (const key of peerKeys) {
                 const peerPkgVer = peerDependencies[key];
                 if (versionPlaceholderRegex.test(peerPkgVer)) {
-                    this.packageJsonHasAnyChanges = true;
+                    packageJsonChanged = true;
                     if (!logged) {
                         this.logger.debug(`Replacing version placeholder in package.json -> peerDependencies`);
                         logged = true;
                     }
 
-                    peerDependencies[key] = peerPkgVer.replace(
-                        versionPlaceholderRegex,
-                        this.buildAction._packageVersion
-                    );
+                    peerDependencies[key] = peerPkgVer.replace(versionPlaceholderRegex, buildAction._packageVersion);
                 } else if (placeholderRegExp.test(peerPkgVer)) {
-                    this.packageJsonHasAnyChanges = true;
+                    packageJsonChanged = true;
                     if (!logged) {
                         this.logger.debug(`Replacing version placeholder in package.json -> peerDependencies`);
                         logged = true;
                     }
 
-                    peerDependencies[key] = peerPkgVer.replace(placeholderRegExp, this.buildAction._packageVersion);
+                    peerDependencies[key] = peerPkgVer.replace(placeholderRegExp, buildAction._packageVersion);
                 }
             }
 
@@ -195,21 +188,17 @@ export class PackageJsonFileWebpackPlugin {
         }
 
         // write package config
-        const packageJsonOutFilePath = path.resolve(this.buildAction._packageJsonOutDir, 'package.json');
+        const packageJsonOutFilePath = path.resolve(buildAction._packageJsonOutDir, 'package.json');
         const packageJsonOutFileExists = await pathExists(packageJsonOutFilePath);
 
-        if (!packageJsonOutFileExists || this.packageJsonHasAnyChanges) {
-            if (this.options.logLevel === 'debug') {
-                this.logger.debug(`Writting package.json file to disk`);
+        if (!packageJsonOutFileExists || packageJsonChanged) {
+            if (!packageJsonOutFileExists) {
+                this.logger.info(`Copying package.json file`);
             } else {
-                if (!packageJsonOutFileExists) {
-                    this.logger.info(`Copying package.json file`);
-                } else {
-                    this.logger.info(`Updating package.json file`);
-                }
+                this.logger.info(`Updating package.json file`);
             }
 
-            await ensureDir(this.buildAction._packageJsonOutDir);
+            await ensureDir(buildAction._packageJsonOutDir);
             await writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
         }
     }
