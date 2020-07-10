@@ -1,6 +1,6 @@
 {
   "name": "lib-tools",
-  "version": "0.0.1-alpha.8",
+  "version": "0.0.1-alpha.9",
   "description": "The Lib Tools helps you simplify the build/bundle, test and npm packaging workflows for common library project types such as Typescript/JavaScript library projects, Angular library projects and Assets module projects (e.g. sass, scss, css or icons).",
   "author": "Lib Tools Team",
   "license": "MIT",
