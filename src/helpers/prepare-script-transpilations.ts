@@ -17,22 +17,14 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
     const projectName = buildAction._projectName;
 
     // tsconfig.json
-    if (
-        buildAction.scriptTranspilation &&
-        typeof buildAction.scriptTranspilation === 'object' &&
-        buildAction.scriptTranspilation.tsConfig
-    ) {
+    if (buildAction.scriptTranspilation && buildAction.scriptTranspilation.tsConfig) {
         const tsConfigPath = path.resolve(projectRoot, buildAction.scriptTranspilation.tsConfig);
         buildAction._tsConfigPath = tsConfigPath;
         buildAction._tsConfigJson = readTsConfigFile(tsConfigPath);
         buildAction._tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
     }
 
-    if (
-        buildAction.scriptTranspilation &&
-        typeof buildAction.scriptTranspilation === 'object' &&
-        buildAction.scriptTranspilation.entries
-    ) {
+    if (buildAction.scriptTranspilation && buildAction.scriptTranspilation.entries) {
         const entries = buildAction.scriptTranspilation.entries;
         for (let i = 0; i < entries.length; i++) {
             const transpilationEntry = entries[i];
@@ -62,7 +54,7 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
             );
             buildAction._scriptTranspilationEntries.push(scriptTranspilationEntry);
         }
-    } else if (buildAction.scriptTranspilation || auto) {
+    } else if (auto) {
         let tsConfigPath: string | null = null;
         if (buildAction._tsConfigPath) {
             tsConfigPath = buildAction._tsConfigPath;
