@@ -228,6 +228,26 @@ async function toTranspilationEntryInternal(
             (typeof buildAction.scriptTranspilation === 'object' &&
                 buildAction.scriptTranspilation.addToPackageJson !== false))
     ) {
+        if (declaration) {
+            // TODO: To review
+            if (buildAction._nestedPackage) {
+                const typingEntryName = buildAction._packageNameWithoutScope.substr(
+                    buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
+                );
+
+                // TODO: To check
+                // buildAction._packageJsonEntryPoint.typings = typingsEntryFileRel; ?
+                buildAction._packageJsonEntryPoint.typings = normalizePath(
+                    path.relative(
+                        buildAction._packageJsonOutDir,
+                        path.join(buildAction._outputPath, `${typingEntryName}.d.ts`)
+                    )
+                );
+            } else {
+                buildAction._packageJsonEntryPoint.typings = `${detectedEntryName}.d.ts`;
+            }
+        }
+
         const jsEntryFile = normalizePath(
             `${path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, detectedEntryName))}.js`
         );
@@ -275,26 +295,6 @@ async function toTranspilationEntryInternal(
             buildAction._packageJsonEntryPoint.module = jsEntryFile;
         } else if (compilerOptions.module === ts.ModuleKind.UMD || compilerOptions.module === ts.ModuleKind.CommonJS) {
             buildAction._packageJsonEntryPoint.main = jsEntryFile;
-        }
-
-        if (declaration) {
-            // TODO: To review
-            if (buildAction._nestedPackage) {
-                const typingEntryName = buildAction._packageNameWithoutScope.substr(
-                    buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
-                );
-
-                // TODO: To check
-                // buildAction._packageJsonEntryPoint.typings = typingsEntryFileRel; ?
-                buildAction._packageJsonEntryPoint.typings = normalizePath(
-                    path.relative(
-                        buildAction._packageJsonOutDir,
-                        path.join(buildAction._outputPath, `${typingEntryName}.d.ts`)
-                    )
-                );
-            } else {
-                buildAction._packageJsonEntryPoint.typings = `${detectedEntryName}.d.ts`;
-            }
         }
     }
 
