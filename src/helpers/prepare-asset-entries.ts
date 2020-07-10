@@ -8,7 +8,7 @@ export async function prepareAssetEntries(buildAction: BuildActionInternal): Pro
         buildAction._assetEntries = buildAction.copy.map((assetEntry) =>
             typeof assetEntry === 'string' ? { from: assetEntry } : { ...assetEntry }
         );
-    } else if (buildAction.copy !== false) {
+    } else {
         const filesToCopy: string[] = [];
         const foundReadMeFile = await findUp(
             ['README.md', 'README'],
