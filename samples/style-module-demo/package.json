@@ -9,7 +9,7 @@
     "css",
     "style-module"
   ],
-  "author": "lib-tools team",
+  "author": "Lib Tools Team",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/lib-tools/lib-tools",
   "devDependencies": {
-    "lib-tools": "^0.0.1-alpha.5"
+    "lib-tools": "^0.0.1-alpha.9"
   }
 }
