@@ -4,7 +4,7 @@ import { BuildActionInternal } from '../models/internals';
 import { findUp } from '../utils';
 
 export async function prepareAssetEntries(buildAction: BuildActionInternal): Promise<void> {
-    if (buildAction.copy && Array.isArray(buildAction.copy)) {
+    if (buildAction.copy) {
         buildAction._assetEntries = buildAction.copy.map((assetEntry) =>
             typeof assetEntry === 'string' ? { from: assetEntry } : { ...assetEntry }
         );
