@@ -19,7 +19,8 @@
                 "outDir": "esm5"
               }
             ],
-            "tsConfig": "tsconfig.build.json"
+            "tsConfig": "tsconfig.build.json",
+            "addToPackageJson": true
           },
           "scriptBundle": {
             "entries": [
