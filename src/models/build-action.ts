@@ -390,9 +390,9 @@ export interface ScriptTranspilationEntry {
  */
 export interface ScriptTranspilationOptions {
     /**
-     * List of transpilation entries or set `auto` to detect entries automatically. Default to `auto`.
+     * List of transpilation entries. By default, entries are  detected automatically.
      */
-    entries?: ScriptTranspilationEntry[] | 'auto';
+    entries?: ScriptTranspilationEntry[];
     /**
      * Typescript configuration file to be used.
      */
@@ -472,9 +472,9 @@ export interface ScriptBundleEntry {
  */
 export interface ScriptBundleOptions {
     /**
-     * Bundle entries or set `auto` to detect entries automatically. Default to `auto`.
+     * List of bundle entries. By default, entries are automatically detected.
      */
-    entries?: ScriptBundleEntry[] | 'auto';
+    entries?: ScriptBundleEntry[];
     /**
      * The entry file to bundle.
      */
