@@ -45,18 +45,14 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
         for (let i = 0; i < entries.length; i++) {
             const transpilationEntry = entries[i];
             let tsConfigPath = '';
-            if (transpilationEntry.tsConfig) {
-                tsConfigPath = path.resolve(projectRoot, transpilationEntry.tsConfig);
-            } else {
-                if (buildAction._tsConfigPath) {
-                    tsConfigPath = buildAction._tsConfigPath;
-                } else if (i > 0 && buildAction._scriptTranspilationEntries[i - 1]._tsConfigPath) {
-                    tsConfigPath = buildAction._scriptTranspilationEntries[i - 1]._tsConfigPath;
-                } else if (i === 0) {
-                    const foundTsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
-                    if (foundTsConfigPath) {
-                        tsConfigPath = foundTsConfigPath;
-                    }
+            if (buildAction._tsConfigPath) {
+                tsConfigPath = buildAction._tsConfigPath;
+            } else if (i > 0 && buildAction._scriptTranspilationEntries[i - 1]._tsConfigPath) {
+                tsConfigPath = buildAction._scriptTranspilationEntries[i - 1]._tsConfigPath;
+            } else if (i === 0) {
+                const foundTsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
+                if (foundTsConfigPath) {
+                    tsConfigPath = foundTsConfigPath;
                 }
             }
 
@@ -232,11 +228,9 @@ async function toTranspilationEntryInternal(
             (typeof buildAction.scriptTranspilation === 'object' &&
                 buildAction.scriptTranspilation.addToPackageJson !== false))
     ) {
-        const entryNameRel = path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, detectedEntryName));
-        const jsEntryFileRel = normalizePath(`${entryNameRel}.js`);
-
-        // TODO: To check
-        const typingsEntryFileRel = normalizePath(`${entryNameRel}.d.ts`);
+        const jsEntryFile = normalizePath(
+            `${path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, detectedEntryName))}.js`
+        );
 
         if (
             compilerOptions.module &&
@@ -257,33 +251,34 @@ async function toTranspilationEntryInternal(
                 esYear = `${2013 + scriptTarget}`;
             }
 
-            buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFile;
             if (esYear === '2015') {
                 // (Angular) It is deprecated as of v9, might be removed in the future.
-                buildAction._packageJsonEntryPoint[`esm${esYear}`] = jsEntryFileRel;
+                buildAction._packageJsonEntryPoint[`esm${esYear}`] = jsEntryFile;
             }
-            buildAction._packageJsonEntryPoint.module = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint.module = jsEntryFile;
         } else if (
             compilerOptions.module &&
             compilerOptions.module >= ts.ModuleKind.ES2015 &&
             scriptTarget === ts.ScriptTarget.ES2015
         ) {
-            buildAction._packageJsonEntryPoint.es2015 = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint.es2015 = jsEntryFile;
             // (Angular) It is deprecated as of v9, might be removed in the future.
-            buildAction._packageJsonEntryPoint.esm2015 = jsEntryFileRel;
-            buildAction._packageJsonEntryPoint.module = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint.esm2015 = jsEntryFile;
+            buildAction._packageJsonEntryPoint.module = jsEntryFile;
         } else if (
             compilerOptions.module &&
             compilerOptions.module >= ts.ModuleKind.ES2015 &&
             scriptTarget === ts.ScriptTarget.ES5
         ) {
-            buildAction._packageJsonEntryPoint.esm5 = jsEntryFileRel;
-            buildAction._packageJsonEntryPoint.module = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint.esm5 = jsEntryFile;
+            buildAction._packageJsonEntryPoint.module = jsEntryFile;
         } else if (compilerOptions.module === ts.ModuleKind.UMD || compilerOptions.module === ts.ModuleKind.CommonJS) {
-            buildAction._packageJsonEntryPoint.main = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint.main = jsEntryFile;
         }
 
         if (declaration) {
+            // TODO: To review
             if (buildAction._nestedPackage) {
                 const typingEntryName = buildAction._packageNameWithoutScope.substr(
                     buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
@@ -298,7 +293,7 @@ async function toTranspilationEntryInternal(
                     )
                 );
             } else {
-                buildAction._packageJsonEntryPoint.typings = typingsEntryFileRel;
+                buildAction._packageJsonEntryPoint.typings = `${detectedEntryName}.d.ts`;
             }
         }
     }
