@@ -390,7 +390,7 @@ export interface ScriptTranspilationEntry {
  */
 export interface ScriptTranspilationOptions {
     /**
-     * List of transpilation entries or set `auto` to detect entries automatically.
+     * List of transpilation entries or set `auto` to detect entries automatically. Default to `auto`.
      */
     entries?: ScriptTranspilationEntry[] | 'auto';
     /**
@@ -472,7 +472,7 @@ export interface ScriptBundleEntry {
  */
 export interface ScriptBundleOptions {
     /**
-     * Bundle entries or set `auto` to detect entries automatically.
+     * Bundle entries or set `auto` to detect entries automatically. Default to `auto`.
      */
     entries?: ScriptBundleEntry[] | 'auto';
     /**
@@ -524,9 +524,9 @@ export interface BuildActionBase {
     clean?: CleanOptions | boolean;
 
     /**
-     * List of asset entries for copying files to output directory. Set `auto`to copy README.md and LICENSE files to output directory. Default to `auto`.
+     * List of asset entries for copying files to output directory. By default README.md and LICENSE files are copied to output directory.
      */
-    copy?: (string | AssetEntry)[] | 'auto';
+    copy?: (string | AssetEntry)[];
 
     /**
      * Style compilation options for sass, scss or css files.
