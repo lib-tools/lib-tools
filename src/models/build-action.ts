@@ -409,6 +409,10 @@ export interface ScriptTranspilationOptions {
      * If true, automatically add entry points to package.json file.
      */
     addToPackageJson?: boolean;
+    /**
+     * The entry file to add to package.json. By default it will be automatically detected.
+     */
+    entry?: string;
 }
 
 /**
@@ -480,11 +484,11 @@ export interface ScriptBundleOptions {
      */
     entries?: ScriptBundleEntry[];
     /**
-     * The entry file to be bundled.
+     * The entry file to bundle.
      */
     entry?: string;
     /**
-     * Represents your umd module id.
+     * Represent umd module id.
      */
     libraryName?: string;
     /**
