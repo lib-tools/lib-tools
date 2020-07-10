@@ -380,15 +380,15 @@ export type ScriptTargetString =
  */
 export interface ScriptTranspilationEntry {
     /**
-     * Custom output directory.
-     */
-    outDir?: string;
-    /**
      * Override custom script target.
      */
-    target?: ScriptTargetString;
+    target: ScriptTargetString;
     /**
-     * Override declaration option.
+     * Custom output directory.
+     */
+    outDir: string;
+    /**
+     * Override declaration option. Default `true` to first entry.
      */
     declaration?: boolean;
 }
@@ -402,7 +402,7 @@ export interface ScriptTranspilationOptions {
      */
     entries?: ScriptTranspilationEntry[];
     /**
-     * Default typescript configuration file to be used.
+     * Typescript configuration file to be used.
      */
     tsConfig?: string;
     /**
@@ -538,7 +538,7 @@ export interface BuildActionBase {
     style?: StyleOptions;
 
     /**
-     * Script transpilation options boolean value. Set `true` to detect and generate default transpilations.
+     * Script transpilation options or boolean value. Set `true` to detect and generate default transpilations.
      */
     scriptTranspilation?: ScriptTranspilationOptions | boolean;
 
