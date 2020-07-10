@@ -44,7 +44,7 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
         const entries = buildAction.scriptTranspilation.entries;
         for (let i = 0; i < entries.length; i++) {
             const transpilationEntry = entries[i];
-            let tsConfigPath = '';
+            let tsConfigPath: string | null = null;
             if (buildAction._tsConfigPath) {
                 tsConfigPath = buildAction._tsConfigPath;
             } else if (i > 0 && buildAction._scriptTranspilationEntries[i - 1]._tsConfigPath) {
@@ -98,7 +98,8 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
                 tsConfigPath,
                 {
                     target: `es${esSuffix}` as ScriptTargetString,
-                    outDir: `esm${esSuffix}`
+                    outDir: `esm${esSuffix}`,
+                    declaration: true
                 },
                 0,
                 buildAction
@@ -109,7 +110,8 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
                 tsConfigPath,
                 {
                     target: 'es2015',
-                    outDir: 'esm2015'
+                    outDir: 'esm2015',
+                    declaration: true
                 },
                 0,
                 buildAction
@@ -142,7 +144,7 @@ async function toTranspilationEntryInternal(
     const compilerOptions = tsCompilerConfig.options;
 
     // scriptTarget
-    let scriptTarget: ts.ScriptTarget = ts.ScriptTarget.ES2017;
+    let scriptTarget: ts.ScriptTarget = ts.ScriptTarget.ES2015;
     if (transpilationEntry.target) {
         const tsScriptTarget = toTsScriptTarget(transpilationEntry.target);
         if (tsScriptTarget == null) {
@@ -157,11 +159,9 @@ async function toTranspilationEntryInternal(
     }
 
     // declaration
-    let declaration = true;
+    let declaration = i === 0 ? true : false;
     if (transpilationEntry.declaration != null) {
         declaration = transpilationEntry.declaration;
-    } else if (compilerOptions.declaration != null) {
-        declaration = compilerOptions.declaration;
     }
 
     // tsOutDir
