@@ -95,7 +95,9 @@ export async function prepareScriptTranspilations(buildAction: BuildActionIntern
         const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
         if (tsCompilerConfig.options.target && tsCompilerConfig.options.target > ts.ScriptTarget.ES2015) {
             const esSuffix =
-                tsCompilerConfig.options.target > 98 ? 'Next' : `${2013 + tsCompilerConfig.options.target}`;
+                tsCompilerConfig.options.target >= ts.ScriptTarget.ESNext
+                    ? 'Next'
+                    : `${2013 + tsCompilerConfig.options.target}`;
             const esmTranspilation = await toTranspilationEntryInternal(
                 tsConfigPath,
                 {
@@ -223,13 +225,45 @@ async function toTranspilationEntryInternal(
     }
 
     // Add  entry points to package.json
-    if (detectedEntryName) {
+    if (
+        detectedEntryName &&
+        buildAction.scriptTranspilation !== false &&
+        (buildAction.scriptTranspilation == null ||
+            (typeof buildAction.scriptTranspilation === 'object' &&
+                buildAction.scriptTranspilation.addToPackageJson !== false))
+    ) {
         const entryNameRel = path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, detectedEntryName));
         const jsEntryFileRel = normalizePath(`${entryNameRel}.js`);
+
         // TODO: To check
         const typingsEntryFileRel = normalizePath(`${entryNameRel}.d.ts`);
 
         if (
+            compilerOptions.module &&
+            compilerOptions.module >= ts.ModuleKind.ES2015 &&
+            scriptTarget > ts.ScriptTarget.ES2015
+        ) {
+            let esYear: string;
+            if (scriptTarget === ts.ScriptTarget.ESNext) {
+                if (
+                    compilerOptions.module === ts.ModuleKind.ES2020 ||
+                    compilerOptions.module === ts.ModuleKind.ESNext
+                ) {
+                    esYear = '2020';
+                } else {
+                    esYear = '2015';
+                }
+            } else {
+                esYear = `${2013 + scriptTarget}`;
+            }
+
+            buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFileRel;
+            if (esYear === '2015') {
+                // (Angular) It is deprecated as of v9, might be removed in the future.
+                buildAction._packageJsonEntryPoint[`esm${esYear}`] = jsEntryFileRel;
+            }
+            buildAction._packageJsonEntryPoint.module = jsEntryFileRel;
+        } else if (
             compilerOptions.module &&
             compilerOptions.module >= ts.ModuleKind.ES2015 &&
             scriptTarget === ts.ScriptTarget.ES2015
@@ -237,7 +271,7 @@ async function toTranspilationEntryInternal(
             buildAction._packageJsonEntryPoint.es2015 = jsEntryFileRel;
             // (Angular) It is deprecated as of v9, might be removed in the future.
             buildAction._packageJsonEntryPoint.esm2015 = jsEntryFileRel;
-            // buildAction._packageJsonEntryPoint.module = jsEntryFileRel;
+            buildAction._packageJsonEntryPoint.module = jsEntryFileRel;
         } else if (
             compilerOptions.module &&
             compilerOptions.module >= ts.ModuleKind.ES2015 &&
