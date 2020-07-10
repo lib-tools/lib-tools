@@ -30,7 +30,7 @@
       "root": "./",
       "actions": {
         "build": {
-          "scriptTranspilation": true
+          "scriptTranspilation": {}
         }
       }
     }
