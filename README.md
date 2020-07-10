@@ -40,7 +40,7 @@ You can customize your build/test workflows with `workflows.json` configuration 
 
 ```json
 {
-  "$schema": "./node_modules/lib-tools/schemas/schema.json#",
+  "$schema": "./node_modules/lib-tools/schemas/schema.json",
   "projects": {
     "demo-project": {
       "root": "./",
