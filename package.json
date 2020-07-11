@@ -48,8 +48,8 @@
     "show-help": "node -r source-map-support/register dist/bin/lib --help",
     "build": "npm-run-all compile generate-schemas copy-files show-help",
     "build:samples": "npm-run-all --parallel build:sample:*",
-    "build:sample:style-module-demo": "node -r source-map-support/register ./dist/bin/lib build --config=samples/style-module-demo/workflows.json --version=1.0.0",
-    "build:sample:typescript-library-project-demo": "node -r source-map-support/register ./dist/bin/lib build --config=samples/typescript-library-project-demo/workflows.json --version=1.0.0"
+    "build:sample:style-module-demo": "node -r source-map-support/register ./dist/bin/lib build --workflow=samples/style-module-demo/workflow.json --version=1.0.0",
+    "build:sample:typescript-library-project-demo": "node -r source-map-support/register ./dist/bin/lib build --workflow=samples/typescript-library-project-demo/workflow.json --version=1.0.0"
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
