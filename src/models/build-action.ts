@@ -383,6 +383,10 @@ export interface ScriptCompilationEntry {
      * Override declaration option. Default `true` to first entry.
      */
     declaration?: boolean;
+    /**
+     * Set true for rollup bundling of compilation output. By default, it will be automatically determined.
+     */
+    bundle?: boolean;
 }
 
 /**
@@ -402,7 +406,7 @@ export interface ScriptBundleEntry {
     /**
      * Root directory for entry file resolution.
      */
-    entryRoot?: 'projectRoot' | 'transpilationOutput' | 'prevBundleOutput';
+    entryRoot?: 'projectRoot' | 'compilationOutput' | 'prevBundleOutput';
 
     /**
      * Specify typescript configuration file if `entry` is .ts file.
@@ -412,7 +416,7 @@ export interface ScriptBundleEntry {
     /**
      * If `entryRoot` is set to `transpilationOutput`, specify transpilation entry index (index starts from 0).
      */
-    transpilationEntryIndex?: number;
+    compilationIndex?: number;
 
     /**
      * Custom bundle output file path.
@@ -454,9 +458,9 @@ export interface ScriptOptions {
      */
     compilations?: ScriptCompilationEntry[];
     /**
-     * List of bundle entries. By default, entries are automatically detected.
+     * Custom bundle options.
      */
-    bundles?: ScriptBundleEntry[];
+    bundle?: ScriptBundleEntry;
     /**
      * Typescript configuration file to be used.
      */
