@@ -279,7 +279,7 @@ export interface StyleOptions {
     /**
      * List of style entries.
      */
-    entries?: StyleEntry[];
+    compilations?: StyleEntry[];
     /**
      * Default sourceMap option to all entries. If true, enable the outputing of sourcemap. Default is `true`.
      */
@@ -370,7 +370,7 @@ export type ScriptTargetString =
 /**
  * @additionalProperties false
  */
-export interface ScriptTranspilationEntry {
+export interface ScriptCompilationEntry {
     /**
      * Override custom script target.
      */
@@ -383,28 +383,6 @@ export interface ScriptTranspilationEntry {
      * Override declaration option. Default `true` to first entry.
      */
     declaration?: boolean;
-}
-
-/**
- * @additionalProperties false
- */
-export interface ScriptTranspilationOptions {
-    /**
-     * List of transpilation entries. By default, entries are  detected automatically.
-     */
-    entries?: ScriptTranspilationEntry[];
-    /**
-     * Typescript configuration file to be used.
-     */
-    tsConfig?: string;
-    /**
-     * If true, automatically add entry points to package.json file.
-     */
-    addToPackageJson?: boolean;
-    /**
-     * The entry file to add to package.json. By default it will be automatically detected.
-     */
-    entry?: string;
 }
 
 /**
@@ -470,13 +448,25 @@ export interface ScriptBundleEntry {
 /**
  * @additionalProperties false
  */
-export interface ScriptBundleOptions {
+export interface ScriptOptions {
+    /**
+     * List of compilation entries. By default, entries are  detected automatically.
+     */
+    compilations?: ScriptCompilationEntry[];
     /**
      * List of bundle entries. By default, entries are automatically detected.
      */
-    entries?: ScriptBundleEntry[];
+    bundles?: ScriptBundleEntry[];
     /**
-     * The entry file to bundle.
+     * Typescript configuration file to be used.
+     */
+    tsConfig?: string;
+    /**
+     * If true, automatically add entry points to package.json file.
+     */
+    addToPackageJson?: boolean;
+    /**
+     * The entry file to add to package.json. By default it will be automatically detected.
      */
     entry?: string;
     /**
@@ -534,14 +524,9 @@ export interface BuildActionBase {
     style?: StyleOptions;
 
     /**
-     * Script transpilation options.
+     * Script compilation and bundle options for javascript and typescript files.
      */
-    scriptTranspilation?: ScriptTranspilationOptions;
-
-    /**
-     * Script bundling options.
-     */
-    scriptBundle?: ScriptBundleOptions;
+    script?: ScriptOptions;
 }
 
 /**
