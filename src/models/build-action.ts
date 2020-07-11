@@ -524,7 +524,7 @@ export interface BuildActionBase {
     clean?: CleanOptions | boolean;
 
     /**
-     * List of asset entries for copying files to output directory. By default README.md and LICENSE files are copied to output directory.
+     * List of asset entries to copy to output directory. By default README, LICENSE/LICENCE, CHANGELOG/CHANGES/HISTORY, NOTICE files are copied automatically to output directory.
      */
     copy?: (string | AssetEntry)[];
 
