@@ -384,10 +384,20 @@ export interface ScriptCompilationEntry {
      */
     declaration?: boolean;
     /**
-     * Set true for rollup bundling of compilation output. By default, it will be automatically determined.
+     * Set true to bundle compilation output to esm module format.
      */
-    bundle?: boolean;
+    esmBundle?: boolean;
+    /**
+     * Set true to bundle compilation output to umd module format.
+     */
+    umdBundle?: boolean;
+    /**
+     * Set true to bundle compilation output to commonjs module format.
+     */
+    cjsBundle?: boolean;
 }
+
+export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'esm';
 
 /**
  * @additionalProperties false
@@ -396,17 +406,7 @@ export interface ScriptBundleEntry {
     /**
      * Bundle module format.
      */
-    libraryTarget: 'cjs' | 'umd' | 'esm';
-
-    /**
-     * The entry file to bundle.
-     */
-    entry?: string;
-
-    /**
-     * Specify typescript configuration file if `entry` is .ts file.
-     */
-    tsConfig?: string;
+    libraryTarget: ScriptBundleModuleKind;
 
     /**
      * Custom bundle output file path.
@@ -444,13 +444,14 @@ export interface ScriptBundleEntry {
  */
 export interface ScriptOptions {
     /**
-     * List of compilation entries. By default, entries are  detected automatically.
+     * List of compilation entries.
      */
     compilations?: ScriptCompilationEntry[];
     /**
-     * Custom bundle options.
+     * List of bundle entries.
      */
-    bundle?: ScriptBundleEntry;
+    bundles?: ScriptBundleEntry[];
+
     /**
      * Typescript configuration file to be used.
      */

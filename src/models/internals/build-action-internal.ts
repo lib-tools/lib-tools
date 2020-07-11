@@ -6,7 +6,8 @@ import {
     BuildAction,
     CleanCSSOptions,
     ScriptBundleEntry,
-    ScriptTranspilationEntry,
+    ScriptCompilationEntry,
+    ScriptOptions,
     StyleEntry
 } from '../build-action';
 import { PackageJsonLike } from './package-jon-like';
@@ -37,40 +38,40 @@ export interface TsConfigJsonOptions {
     angularCompilerOptions?: AngularCompilerJsonOptions;
 }
 
-export interface ScriptTranspilationEntryInternal extends ScriptTranspilationEntry {
-    _index: number;
+export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
+    _entryFilePath: string;
+    _outputFilePath: string;
+}
 
-    _tsConfigPath: string;
-    _tsConfigJson: TsConfigJsonOptions;
-    _tsCompilerConfig: ParsedCommandLine;
+export interface ScriptCompilationEntryInternal extends ScriptCompilationEntry {
     _declaration: boolean;
     _scriptTarget: ScriptTarget;
     _tsOutDirRootResolved: string;
-
-    _detectedEntryName: string | null;
     _customTsOutDir: string | null;
+    _bundle: ScriptBundleEntryInternal | null;
 }
 
-export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
-    _index: number;
-    _entryFilePath: string;
-    _outputFilePath: string;
+export interface TsConfigInfo {
+    tsConfigPath: string;
+    tsConfigJson: TsConfigJsonOptions;
+    tsCompilerConfig: ParsedCommandLine;
+}
 
-    _tsConfigPath: string | null;
-    _sourceScriptTarget: ScriptTarget | null;
-    _destScriptTarget: ScriptTarget | null;
+export interface ScriptOptionsInternal extends ScriptOptions {
+    _tsConfigInfo: TsConfigInfo | null;
+    _entryNameRel: string | null;
+    _bannerText: string | null;
+    _compilations: ScriptCompilationEntryInternal[];
+    _bundles: ScriptBundleEntryInternal[];
 }
 
 export interface BuildActionInternal extends BuildAction {
     _workspaceRoot: string;
     _configPath: string | null;
     _nodeModulesPath: string | null;
-
     _projectName: string;
     _projectRoot: string;
-
     _outputPath: string;
-
     _packageJsonPath: string;
     _packageJson: PackageJsonLike;
     _packageName: string;
@@ -88,15 +89,8 @@ export interface BuildActionInternal extends BuildAction {
     // styles
     _styleEntries: StyleEntryInternal[];
 
-    // Script transpilations
-    _scriptTranspilationEntries: ScriptTranspilationEntryInternal[];
-    _tsConfigPath?: string;
-    _tsConfigJson?: TsConfigJsonOptions;
-    _tsCompilerConfig?: ParsedCommandLine;
-
-    // Script bundles
-    _scriptBundleEntries: ScriptBundleEntryInternal[];
-    _bannerText?: string;
+    // scripts
+    _script: ScriptOptionsInternal;
 
     // package.json
     _packageJsonOutDir: string;
