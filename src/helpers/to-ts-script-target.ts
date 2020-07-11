@@ -4,7 +4,7 @@ import { ScriptTargetString } from '../models';
 
 const esDigitRegExp = /^es(2[0-9]{3})$/i;
 
-export function toTsScriptTarget(target: ScriptTargetString): ScriptTarget | null {
+export function toTsScriptTarget(target: ScriptTargetString): ScriptTarget {
     if (target === 'es5' || target === 'ES5') {
         return ScriptTarget.ES5;
     }
@@ -26,5 +26,5 @@ export function toTsScriptTarget(target: ScriptTargetString): ScriptTarget | nul
         }
     }
 
-    return null;
+    return ScriptTarget.ESNext;
 }
