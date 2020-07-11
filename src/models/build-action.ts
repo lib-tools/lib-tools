@@ -399,24 +399,14 @@ export interface ScriptBundleEntry {
     libraryTarget: 'cjs' | 'umd' | 'esm';
 
     /**
-     * The entry file to be bundled.
+     * The entry file to bundle.
      */
     entry?: string;
-
-    /**
-     * Root directory for entry file resolution.
-     */
-    entryRoot?: 'projectRoot' | 'compilationOutput' | 'prevBundleOutput';
 
     /**
      * Specify typescript configuration file if `entry` is .ts file.
      */
     tsConfig?: string;
-
-    /**
-     * If `entryRoot` is set to `transpilationOutput`, specify transpilation entry index (index starts from 0).
-     */
-    compilationIndex?: number;
 
     /**
      * Custom bundle output file path.
