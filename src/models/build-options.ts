@@ -1,37 +1,11 @@
+import { CommandOptions } from './command-options';
+
 /**
- * @additionalProperties true
+ * @additionalProperties false
  */
-export interface BuildOptions {
+export interface BuildOptions extends CommandOptions {
     /**
-     * Detect project structure and build without configuration file.
-     */
-    auto?: boolean;
-    /**
-     * The workflows configuration file path.
-     */
-    config?: string;
-    /**
-     * Define the build environment.
-     */
-    environment?: { [key: string]: boolean | string };
-    /**
-     * Filter projects by name(s) for build processing.
-     */
-    filter?: string | string[];
-    /**
-     * Logging level for output debugging.
-     */
-    logLevel?: 'debug' | 'info' | 'warn' | 'none';
-    /**
-     * Build with watch mode.
-     */
-    watch?: boolean;
-    /**
-     * Beep when build completed.
-     */
-    beep?: boolean;
-    /**
-     * Set version to override versions of the project packages.
+     * Set the version to override the version fields of the package.json files.
      */
     version?: string;
 }
