@@ -406,7 +406,7 @@ export interface ScriptBundleEntry {
     /**
      * Bundle module format.
      */
-    libraryTarget: ScriptBundleModuleKind;
+    moduleFormat: ScriptBundleModuleKind;
 
     /**
      * Custom bundle output file path.

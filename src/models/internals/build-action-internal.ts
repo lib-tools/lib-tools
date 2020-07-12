@@ -41,6 +41,9 @@ export interface TsConfigJsonOptions {
 export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
     _entryFilePath: string;
     _outputFilePath: string;
+    _bannerText: string | null;
+    _sourceMap: boolean;
+    _moduleName: string;
 }
 
 export interface ScriptCompilationEntryInternal extends ScriptCompilationEntry {
@@ -60,7 +63,6 @@ export interface TsConfigInfo {
 export interface ScriptOptionsInternal extends ScriptOptions {
     _tsConfigInfo: TsConfigInfo | null;
     _entryNameRel: string | null;
-    _bannerText: string | null;
     _compilations: ScriptCompilationEntryInternal[];
     _bundles: ScriptBundleEntryInternal[];
 }
