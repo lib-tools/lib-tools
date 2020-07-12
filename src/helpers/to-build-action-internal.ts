@@ -1,23 +1,27 @@
 import * as path from 'path';
 
 import { BuildAction } from '../models';
-import { BuildActionInternal, BuildOptionsInternal, PackageJsonLike, ProjectConfigInternal } from '../models/internals';
+import {
+    BuildActionInternal,
+    BuildCommandOptionsInternal,
+    PackageJsonLike,
+    ProjectConfigInternal
+} from '../models/internals';
 import { isInFolder, isSamePaths } from '../utils';
 
 import { applyEnvOverrides } from './apply-env-overrides';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
 import { prepareAssetEntries } from './prepare-asset-entries';
-import { prepareScriptBundles } from './prepare-script-bundles';
-import { prepareScriptTranspilations } from './prepare-script-transpilations';
+import { prepareScripts } from './prepare-scripts';
 import { prepareStyles } from './prepare-styles';
-import { readPackageJson } from './read-package-json';
+import { getCachedPackageJson } from './get-cached-package-json';
 
 const versionPlaceholderRegex = /0\.0\.0-PLACEHOLDER/i;
 
 export async function toBuildActionInternal(
     projectConfig: ProjectConfigInternal,
-    buildOptions: BuildOptionsInternal
+    buildOptions: BuildCommandOptionsInternal
 ): Promise<BuildActionInternal> {
     if (!projectConfig.actions || !projectConfig.actions.build) {
         throw new Error('No build actions in configuration.');
@@ -29,18 +33,20 @@ export async function toBuildActionInternal(
     const projectName = projectConfig._projectName;
 
     // apply env
-    applyEnvOverrides(buildAction, buildOptions.environment);
+    if (!projectConfig._auto) {
+        applyEnvOverrides(buildAction, buildOptions.environment);
+    }
 
     const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
     if (!packageJsonPath) {
         throw new Error('Could not detect package.json file.');
     }
-    const packageJson = await readPackageJson(packageJsonPath);
+    const packageJson = await getCachedPackageJson(packageJsonPath);
 
     const rootPackageJsonPath = await findPackageJsonPath(workspaceRoot);
     let rootPackageJson: PackageJsonLike | null = null;
     if (rootPackageJsonPath) {
-        rootPackageJson = await readPackageJson(rootPackageJsonPath);
+        rootPackageJson = await getCachedPackageJson(rootPackageJsonPath);
     }
 
     const packageName = packageJson.name;
@@ -166,8 +172,6 @@ export async function toBuildActionInternal(
         _rootPackageJson: rootPackageJson,
         _assetEntries: [],
         _styleEntries: [],
-        _scriptTranspilationEntries: [],
-        _scriptBundleEntries: [],
         _packageJsonOutDir: packageJsonOutDir,
         _packageJsonEntryPoint: {}
     };
@@ -178,11 +182,8 @@ export async function toBuildActionInternal(
     // Styles
     await prepareStyles(buildActionInternal);
 
-    // Script transpilations
-    await prepareScriptTranspilations(buildActionInternal, buildOptions.auto);
-
-    // Script bundles
-    await prepareScriptBundles(buildActionInternal, buildOptions.auto);
+    // Scripts
+    await prepareScripts(buildActionInternal, projectConfig._auto);
 
     return buildActionInternal;
 }
