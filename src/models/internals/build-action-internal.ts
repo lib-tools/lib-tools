@@ -90,7 +90,7 @@ export interface BuildActionInternal extends BuildAction {
     _styleEntries: StyleEntryInternal[];
 
     // scripts
-    _script: ScriptOptionsInternal;
+    _script?: ScriptOptionsInternal;
 
     // package.json
     _packageJsonOutDir: string;
