@@ -8,13 +8,13 @@ import {
     ScriptBundleEntry,
     ScriptBundleModuleKind,
     ScriptCompilationEntry,
+    ScriptOptions,
     ScriptTargetString
 } from '../models';
 import {
     BuildActionInternal,
     ScriptBundleEntryInternal,
     ScriptCompilationEntryInternal,
-    ScriptOptionsInternal,
     TsConfigInfo
 } from '../models/internals';
 import { findUp, isInFolder, isSamePaths, normalizePath } from '../utils';
@@ -23,7 +23,7 @@ import { getCachedTsConfigFile } from './get-cached-ts-config-file';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
 
-export async function prepareScripts(buildAction: BuildActionInternal, auto?: boolean): Promise<ScriptOptionsInternal> {
+export async function prepareScripts(buildAction: BuildActionInternal, auto?: boolean): Promise<void> {
     const workspaceRoot = buildAction._workspaceRoot;
     const projectRoot = buildAction._projectRoot;
     const projectName = buildAction._projectName;
@@ -131,8 +131,9 @@ export async function prepareScripts(buildAction: BuildActionInternal, auto?: bo
     }
 
     if (buildAction.script && buildAction.script.bundles) {
+        const scriptOptions = buildAction.script;
         for (const bundleEntry of buildAction.script.bundles) {
-            const bundleEntryInternal = toBundleEntryInternal(bundleEntry, tsConfigInfo, buildAction);
+            const bundleEntryInternal = toBundleEntryInternal(bundleEntry, scriptOptions, tsConfigInfo, buildAction);
             scriptBundles.push(bundleEntryInternal);
         }
     }
@@ -142,7 +143,7 @@ export async function prepareScripts(buildAction: BuildActionInternal, auto?: bo
         bannerText = await prepareBannerText(buildAction.script.banner, buildAction);
     }
 
-    return {
+    buildAction._script = {
         ...buildAction.script,
         _tsConfigInfo: tsConfigInfo,
         _entryNameRel: entryNameRel,
@@ -423,11 +424,10 @@ async function detectEntryName(
 
 function toBundleEntryInternal(
     bundleEntry: ScriptBundleEntry,
+    scriptOptions: ScriptOptions,
     tsConfigInfo: TsConfigInfo | null,
     buildAction: BuildActionInternal
 ): ScriptBundleEntryInternal {
-    const scriptOptions = buildAction._script || {};
-
     if (!scriptOptions.entry) {
         throw new Error(
             `The entry file could not be detected automatically. Please set it manually in 'projects[${buildAction._projectName}].actions.build.script.entry'.`
