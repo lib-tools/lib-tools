@@ -6,17 +6,17 @@ import { Configuration, Plugin } from 'webpack';
 
 import {
     applyProjectExtends,
+    getCachedWorkflowConfigSchema,
     normalizeEnvironment,
-    readWorkflowsConfigSchema,
     toBuildActionInternal,
-    toWorkflowsConfigInternal
+    toWorkflowConfigInternal
 } from '../../helpers';
-import { BuildCommandOptions, WorkflowsConfig } from '../../models';
+import { BuildCommandOptions, WorkflowConfig } from '../../models';
 import {
     BuildActionInternal,
-    BuildOptionsInternal,
+    BuildCommandOptionsInternal,
     ProjectConfigInternal,
-    WorkflowsConfigInternal
+    WorkflowConfigInternal
 } from '../../models/internals';
 import { findUp, readJsonWithComments } from '../../utils';
 
@@ -33,7 +33,7 @@ export async function getWebpackBuildConfig(
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
     const environment = env ? normalizeEnvironment(env, prod) : {};
 
-    let buildOptions: BuildOptionsInternal = { environment };
+    let buildOptions: BuildCommandOptionsInternal = { environment };
     if (verbose) {
         buildOptions.logLevel = 'debug';
     }
@@ -92,7 +92,7 @@ export async function getWebpackBuildConfig(
         }
     } else {
         if (argv) {
-            buildOptions = { ...(argv as BuildOptionsInternal), ...buildOptions };
+            buildOptions = { ...(argv as BuildCommandOptionsInternal), ...buildOptions };
         }
 
         if (buildOptions.filter && Array.isArray(buildOptions.filter) && buildOptions.filter.length) {
@@ -100,7 +100,7 @@ export async function getWebpackBuildConfig(
         }
     }
 
-    const workflowConfig = await getWorkflowsConfig(buildOptions);
+    const workflowConfig = await getWorkflowConfig(buildOptions);
 
     const filteredProjectConfigs = Object.keys(workflowConfig.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
@@ -137,58 +137,55 @@ export async function getWebpackBuildConfig(
     return webpackConfigs;
 }
 
-async function getWorkflowsConfig(buildOptions: BuildOptionsInternal): Promise<WorkflowsConfigInternal> {
+async function getWorkflowConfig(buildOptions: BuildCommandOptionsInternal): Promise<WorkflowConfigInternal> {
     let foundConfigPath: string | null = null;
-    if (!buildOptions.config) {
-        foundConfigPath = await findUp(['workflows.json'], process.cwd(), path.parse(process.cwd()).root);
+    if (buildOptions.workflow && buildOptions.workflow !== 'auto') {
+        foundConfigPath = path.isAbsolute(buildOptions.workflow)
+            ? buildOptions.workflow
+            : path.resolve(process.cwd(), buildOptions.workflow);
+
+        if (!(await pathExists(foundConfigPath))) {
+            throw new Error(`Workflow configuration file ${buildOptions} doesn't exist.`);
+        }
     }
 
-    if (buildOptions.auto && !buildOptions.config && foundConfigPath === null) {
-        throw new Error('This feature is not implemented.');
-    } else {
-        let configPath: string;
-        if (buildOptions.config) {
-            configPath = path.isAbsolute(buildOptions.config)
-                ? buildOptions.config
-                : path.resolve(process.cwd(), buildOptions.config);
+    if (!buildOptions.workflow || buildOptions.workflow === 'auto') {
+        foundConfigPath = await findUp(['workflow.json'], process.cwd(), path.parse(process.cwd()).root);
+    }
 
-            if (!(await pathExists(configPath))) {
-                throw new Error(`Config file doesn't exist at ${configPath}.`);
-            }
-        } else {
-            if (!foundConfigPath) {
-                throw new Error('Could not detect workflows.json file.');
-            }
-
-            configPath = foundConfigPath;
-        }
-
+    if (foundConfigPath) {
         try {
-            const workflowsConfig = (await readJsonWithComments(configPath)) as WorkflowsConfig;
-            const schema = await readWorkflowsConfigSchema();
-
-            if (schema.$schema) {
-                delete schema.$schema;
-            }
-
-            const valid = ajv.addSchema(schema, 'workflowsSchema').validate('workflowsSchema', workflowsConfig);
-
+            const workflowConfig = (await readJsonWithComments(foundConfigPath)) as WorkflowConfig;
+            const schema = await getCachedWorkflowConfigSchema();
+            const valid = ajv.addSchema(schema, 'workflowSchema').validate('workflowSchema', workflowConfig);
             if (!valid) {
-                const errorsText = ajv.errorsText();
-                throw new Error(`Invalid configuration.\n\n${errorsText}`);
+                throw new Error(`Invalid configuration.\n\n${ajv.errorsText()}`);
             }
 
-            const workspaceRoot = path.dirname(configPath);
-            return toWorkflowsConfigInternal(workflowsConfig, configPath, workspaceRoot);
-        } catch (error) {
-            throw new Error(`Invalid configuration, error: ${(error as Error).message || error}.`);
+            const workspaceRoot = path.extname(foundConfigPath) ? path.dirname(foundConfigPath) : foundConfigPath;
+            return toWorkflowConfigInternal(workflowConfig, foundConfigPath, workspaceRoot);
+        } catch (err) {
+            throw new Error(`Invalid configuration. ${(err as Error).message || err}.`);
         }
+    } else {
+        if (buildOptions.workflow !== 'auto') {
+            throw new Error(`Workflow configuration file could not be detected.`);
+        }
+
+        const projects = getProjectConfigsForAuto();
+
+        return {
+            _workspaceRoot: process.cwd(),
+            _configPath: null,
+            _auto: true,
+            projects
+        };
     }
 }
 
 async function getWebpackBuildConfigInternal(
     buildAction: BuildActionInternal,
-    buildOptions: BuildOptionsInternal
+    buildOptions: BuildCommandOptionsInternal
 ): Promise<Configuration> {
     const plugins: Plugin[] = [
         new ProjectBuildInfoWebpackPlugin({
@@ -210,7 +207,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Typescript transpilation plugin
-    if (buildAction._scriptTranspilationEntries && buildAction._scriptTranspilationEntries.length > 0) {
+    if (buildAction._script && buildAction._script._compilations.length > 0) {
         const pluginModule = await import('../plugins/ts-transpilations-webpack-plugin');
         const TsTranspilationsWebpackPlugin = pluginModule.TsTranspilationsWebpackPlugin;
         plugins.push(
@@ -234,7 +231,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Rollup bundles plugin
-    if (buildAction._scriptBundleEntries && buildAction._scriptBundleEntries.length > 0) {
+    if (buildAction._script && buildAction._script._bundles.length > 0) {
         const pluginModule = await import('../plugins/rollup-bundles-webpack-plugin');
         const RollupBundlesWebpackPlugin = pluginModule.RollupBundlesWebpackPlugin;
         plugins.push(
@@ -300,4 +297,11 @@ function prepareFilterNames(filter: string | string[]): string[] {
 
 function isFromWebpackCli(): boolean {
     return process.argv.length >= 2 && /(\\|\/)?webpack(\.js)?$/i.test(process.argv[1]);
+}
+
+function getProjectConfigsForAuto(): { [key: string]: ProjectConfigInternal } {
+    const projects: { [key: string]: ProjectConfigInternal } = {};
+
+    // TODO: To implement
+    return projects;
 }
