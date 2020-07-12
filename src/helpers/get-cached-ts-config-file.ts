@@ -4,7 +4,7 @@ import { formatTsDiagnostics } from './format-ts-diagnostics';
 
 const cache = new Map<string, { [key: string]: unknown }>();
 
-export function readTsConfigFile(tsConfigPath: string): { [key: string]: unknown } {
+export function getCachedTsConfigFile(tsConfigPath: string): { [key: string]: unknown } {
     const cachedTsConfigJson = cache.get(tsConfigPath);
     if (cachedTsConfigJson) {
         return cachedTsConfigJson;

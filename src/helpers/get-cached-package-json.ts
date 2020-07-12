@@ -4,7 +4,7 @@ import { readJson } from 'fs-extra';
 
 const cache = new Map<string, PackageJsonLike>();
 
-export async function readPackageJson(packageJsonPath: string): Promise<PackageJsonLike> {
+export async function getCachedPackageJson(packageJsonPath: string): Promise<PackageJsonLike> {
     const cachedPackageJson = cache.get(packageJsonPath);
     if (cachedPackageJson) {
         return cachedPackageJson;

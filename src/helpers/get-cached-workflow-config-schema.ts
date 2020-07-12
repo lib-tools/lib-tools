@@ -2,13 +2,13 @@ import * as path from 'path';
 
 import { readJson } from 'fs-extra';
 
-const cache: { libConfigSchema: { [key: string]: unknown } | null } = {
-    libConfigSchema: null
+const cache: { schema: { [key: string]: unknown } | null } = {
+    schema: null
 };
 
-export async function readWorkflowsConfigSchema(): Promise<{ [key: string]: unknown }> {
-    if (cache.libConfigSchema != null) {
-        return cache.libConfigSchema;
+export async function getCachedWorkflowConfigSchema(): Promise<{ [key: string]: unknown }> {
+    if (cache.schema != null) {
+        return cache.schema;
     }
 
     const schemaRootPath = path.resolve(__dirname, '../../schemas');
@@ -18,7 +18,7 @@ export async function readWorkflowsConfigSchema(): Promise<{ [key: string]: unkn
         delete schema.$schema;
     }
 
-    cache.libConfigSchema = schema;
+    cache.schema = schema;
 
     return schema;
 }
