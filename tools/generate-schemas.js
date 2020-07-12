@@ -34,7 +34,7 @@ function generateSchemas() {
 
     fs.ensureDirSync(defaultSchemaOutDir);
 
-    _generateSchema(tsConfigInput, 'WorkflowsConfig', path.resolve(defaultSchemaOutDir, 'schema.json'));
+    _generateSchema(tsConfigInput, 'WorkflowConfig', path.resolve(defaultSchemaOutDir, 'schema.json'));
     _generateSchema(tsConfigInput, 'ProjectConfig', path.resolve(defaultSchemaOutDir, 'project-config-schema.json'));
 }
 
