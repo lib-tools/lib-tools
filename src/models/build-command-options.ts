@@ -1,13 +1,13 @@
 /**
  * @additionalProperties true
  */
-export interface CommandOptions {
+export interface BuildCommandOptions {
     /**
-     * The workflow configuration file location for set `auto` to determine and run workflow actions for the project structure automatically.
+     * The workflow configuration file location or set `auto` to analyze project structure and build automatically.
      */
     workflow?: string | 'auto';
     /**
-     * Define the environment.
+     * Environment name to override the build configuration with `envOverrides[environment]` options.
      */
     environment?: { [key: string]: boolean | string };
     /**
@@ -15,7 +15,7 @@ export interface CommandOptions {
      */
     prod?: boolean;
     /**
-     * Run specific project(s) filtering by project name(s).
+     * Build the specific project(s) filtered by project name(s).
      */
     filter?: string | string[];
     /**
@@ -28,7 +28,11 @@ export interface CommandOptions {
      */
     verbose?: boolean;
     /**
-     * Beep when all workflow actions completed.
+     * Set the version to override the version field of the package.json file.
+     */
+    version?: string;
+    /**
+     * Beep when all build actions completed.
      */
     beep?: boolean;
 }
