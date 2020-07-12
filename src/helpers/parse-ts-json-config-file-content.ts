@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import * as ts from 'typescript';
 
-import { readTsConfigFile } from './read-ts-config-file';
+import { getCachedTsConfigFile } from './get-cached-ts-config-file';
 
 const cache = new Map<string, ts.ParsedCommandLine>();
 
@@ -12,7 +12,7 @@ export function parseTsJsonConfigFileContent(tsConfigPath: string): ts.ParsedCom
         return cachedTsCompilerConfig;
     }
 
-    const tsConfigJson = readTsConfigFile(tsConfigPath);
+    const tsConfigJson = getCachedTsConfigFile(tsConfigPath);
 
     const tsCompilerConfig = ts.parseJsonConfigFileContent(
         tsConfigJson,
