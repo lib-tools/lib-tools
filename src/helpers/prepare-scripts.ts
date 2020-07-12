@@ -19,8 +19,8 @@ import {
 } from '../models/internals';
 import { findUp, isInFolder, isSamePaths, normalizePath } from '../utils';
 
+import { getCachedTsConfigFile } from './get-cached-ts-config-file';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
-import { readTsConfigFile } from './read-ts-config-file';
 import { toTsScriptTarget } from './to-ts-script-target';
 
 export async function prepareScripts(buildAction: BuildActionInternal, auto?: boolean): Promise<ScriptOptionsInternal> {
@@ -45,7 +45,7 @@ export async function prepareScripts(buildAction: BuildActionInternal, auto?: bo
     }
 
     if (tsConfigPath) {
-        const tsConfigJson = readTsConfigFile(tsConfigPath);
+        const tsConfigJson = getCachedTsConfigFile(tsConfigPath);
         const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
         tsConfigInfo = {
             tsConfigPath,
