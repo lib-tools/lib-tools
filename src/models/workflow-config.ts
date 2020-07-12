@@ -1,10 +1,10 @@
 import { ProjectConfig } from './project-config';
 
 /**
- * The main workflows configuration.
+ * Workflow configuration.
  * @additionalProperties true
  */
-export interface WorkflowsConfig {
+export interface WorkflowConfig {
     /**
      * Link to schema.
      */

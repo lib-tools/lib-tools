@@ -1,7 +1,6 @@
 import { BuildAction } from './build-action';
 
 /**
- * The project configuration.
  * @additionalProperties false
  */
 export interface ProjectConfig {
