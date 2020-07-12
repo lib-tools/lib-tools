@@ -3,10 +3,6 @@ import * as rollup from 'rollup';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-const builtins = require('builtins')();
-
-import { ModuleExternalsEntry } from '../models';
 import { BuildActionInternal, ScriptBundleEntryInternal } from '../models/internals';
 import { LoggerBase } from '../utils';
 
@@ -33,40 +29,30 @@ export function getRollupConfig(
     //     });
     // }
 
-    // externals & globals
-    const rollupExternalMap = {
-        externals: [] as string[],
-        globals: {}
-    };
+    const globals = bundle.externals || {};
+    const externals = Object.keys(globals);
 
-    const rawExternals: ModuleExternalsEntry[] = [];
-    if (bundle.externals) {
-        if (Array.isArray(bundle.externals)) {
-            rawExternals.push(...bundle.externals);
-        } else {
-            rawExternals.push(bundle.externals);
-        }
+    if (bundle.moduleFormat === 'cjs') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
+        const builtins = require('builtins')() as string[];
+        builtins
+            .filter((e) => !externals.includes(e))
+            .forEach((e) => {
+                externals.push(e);
+            });
     }
-
-    if (rawExternals.length) {
-        rawExternals.forEach((external) => {
-            mapToRollupGlobalsAndExternals(external, rollupExternalMap);
-        });
-    }
-
-    const externals = rollupExternalMap.externals || [];
-    const builtinExternals = builtins as string[];
-    builtinExternals
-        .filter((e) => !externals.includes(e))
-        .forEach((e) => {
-            externals.push(e);
-        });
 
     if (bundle.dependenciesAsExternals !== false && buildAction._packageJson && buildAction._packageJson.dependencies) {
         Object.keys(buildAction._packageJson.dependencies)
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
                 externals.push(e);
+                if (!globals[e]) {
+                    const globalVar = getGlobalVariable(e);
+                    if (globalVar) {
+                        globals[e] = globalVar;
+                    }
+                }
             });
     }
 
@@ -79,30 +65,13 @@ export function getRollupConfig(
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
                 externals.push(e);
+                if (!globals[e]) {
+                    const globalVar = getGlobalVariable(e);
+                    if (globalVar) {
+                        globals[e] = globalVar;
+                    }
+                }
             });
-    }
-
-    const globals: { [key: string]: string } = rollupExternalMap.globals || {};
-    for (const key of externals) {
-        if (globals[key] == null) {
-            let normalizedValue = key
-                .replace(/@angular\//, 'ng.')
-                .replace(/@dagonmetric\//, '')
-                .replace(/\//g, '.');
-            normalizedValue = dashCaseToCamelCase(normalizedValue);
-            globals[key] = normalizedValue;
-            // const foundMap = getRollupPredefinedGlobalsMap(key);
-            // if (foundMap) {
-            //     globals = { ...globals, ...foundMap };
-            // } else {
-            //     let normalizedValue = key
-            //         .replace(/@angular\//, 'ng.')
-            //         .replace(/@dagonmetric\//, '')
-            //         .replace(/\//g, '.');
-            //     normalizedValue = dashCaseToCamelCase(normalizedValue);
-            //     globals[key] = normalizedValue;
-            // }
-        }
     }
 
     // plugins
@@ -171,37 +140,11 @@ export function getRollupConfig(
     };
 }
 
-function mapToRollupGlobalsAndExternals(
-    external: ModuleExternalsEntry,
-    mapResult: { externals: string[]; globals: { [key: string]: string } }
-): void {
-    if (!external) {
-        return;
+function getGlobalVariable(externalKey: string): string | null {
+    if (/@angular\//.test(externalKey)) {
+        const normalizedValue = externalKey.replace(/@angular\//, 'ng.').replace(/\//g, '.');
+        return dashCaseToCamelCase(normalizedValue);
     }
 
-    if (typeof external === 'string') {
-        if (!mapResult.externals.includes(external)) {
-            mapResult.externals.push(external);
-        }
-    } else if (typeof external === 'object') {
-        Object.keys(external).forEach((k: string) => {
-            const tempValue = external[k];
-            if (typeof tempValue === 'string') {
-                mapResult.globals[k] = tempValue;
-                if (!mapResult.externals.includes(k)) {
-                    mapResult.externals.push(k);
-                }
-            } else if (typeof tempValue === 'object' && Object.keys(tempValue).length) {
-                const selectedKey = tempValue.root ? tempValue.root : Object.keys(tempValue)[0];
-                mapResult.globals[k] = tempValue[selectedKey];
-                if (!mapResult.externals.includes(k)) {
-                    mapResult.externals.push(k);
-                }
-            } else {
-                if (!mapResult.externals.includes(k)) {
-                    mapResult.externals.push(k);
-                }
-            }
-        });
-    }
+    return null;
 }
