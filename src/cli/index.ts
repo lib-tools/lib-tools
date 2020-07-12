@@ -17,49 +17,9 @@ function initYargs(): yargs.Argv {
 
     const yargsInstance = yargs
         .usage(cliUsage)
-        .example('lib build', 'Build the project(s) using workflow.json configuration file')
-        .example('lib --workflow=auto', 'Determine and run workflow actions for the project structure automatically.')
+        .example('lib build', 'Build the project(s) using workflow.json configuration file.')
+        .example('lib build --workflow=auto', 'Analyze project structure and build automatically.')
         .example('lib --help', 'Show help')
-        .option('workflow', {
-            describe:
-                'The workflow configuration file location for set `auto` to determine and run workflow actions for the project structure automatically.',
-            type: 'string'
-        })
-        .option('env', {
-            alias: 'environment',
-            describe: 'Define the environment.'
-        })
-        .option('prod', {
-            describe: 'Shortcut flag to set environment to `production`.',
-            type: 'boolean'
-        })
-        .option('filter', {
-            describe: 'Run specific project(s) filtering by project name(s).',
-            type: 'array'
-        })
-        .option('logLevel', {
-            describe: 'Logging level for output information.',
-            type: 'string'
-        })
-        .option('verbose', {
-            describe: 'Shortcut flag to set logLevel to `debug`.',
-            type: 'boolean'
-        })
-        .option('beep', {
-            describe: 'Beep when all workflow actions completed.',
-            type: 'boolean'
-        })
-        .option('h', {
-            alias: 'help',
-            describe: 'Show help',
-            type: 'boolean'
-        })
-        .option('v', {
-            alias: 'version',
-            describe: 'Show version',
-            type: 'boolean',
-            global: false
-        })
         .command(
             'build',
             'Build the project(s)',
@@ -67,9 +27,44 @@ function initYargs(): yargs.Argv {
                 return childYargs
                     .usage(buildCommandUsage)
                     .example('lib build', 'Build the project(s).')
-                    .option('version', {
-                        describe: 'Set the version to override the version fields of the package.json files.',
+                    .option('workflow', {
+                        describe:
+                            'The workflow configuration file location or set `auto` to analyze project structure and build automatically.',
                         type: 'string'
+                    })
+                    .option('env', {
+                        alias: 'environment',
+                        describe:
+                            'Environment name to override the build configuration with `envOverrides[environment]` options.'
+                    })
+                    .option('prod', {
+                        describe: 'Shortcut flag to set environment to `production`.',
+                        type: 'boolean'
+                    })
+                    .option('filter', {
+                        describe: 'Build the specific project(s) filtered by project name(s).',
+                        type: 'array'
+                    })
+                    .option('logLevel', {
+                        describe: 'Logging level for output information.',
+                        type: 'string'
+                    })
+                    .option('verbose', {
+                        describe: 'Shortcut flag to set logLevel to `debug`.',
+                        type: 'boolean'
+                    })
+                    .option('version', {
+                        describe: 'Set the version to override the version field of the package.json file.',
+                        type: 'string'
+                    })
+                    .option('beep', {
+                        describe: 'Beep when all build actions completed.',
+                        type: 'boolean'
+                    })
+                    .option('h', {
+                        alias: 'help',
+                        describe: 'Show help',
+                        type: 'boolean'
                     });
             },
             () => {
@@ -79,6 +74,18 @@ function initYargs(): yargs.Argv {
         .version(false)
         .help('help')
         .showHelpOnFail(false)
+        .option('v', {
+            alias: 'version',
+            describe: 'Show version',
+            type: 'boolean',
+            global: false
+        })
+        .option('h', {
+            alias: 'help',
+            describe: 'Show help',
+            type: 'boolean',
+            global: false
+        })
         .fail((msg, err, yi) => {
             if (err) {
                 throw err;
