@@ -16,7 +16,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
 
     const styleOptions = buildAction.style;
 
-    if (!styleOptions.entries || !styleOptions.entries.length) {
+    if (!styleOptions.compilations || !styleOptions.compilations.length) {
         return;
     }
 
@@ -24,17 +24,17 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
     const projectRoot = buildAction._projectRoot;
     let packageJsonStyleEntry: string | undefined;
 
-    for (let i = 0; i < styleOptions.entries.length; i++) {
-        const styleEntry = styleOptions.entries[i];
+    for (let i = 0; i < styleOptions.compilations.length; i++) {
+        const styleEntry = styleOptions.compilations[i];
         if (!styleEntry.input || !styleEntry.input.trim().length) {
             throw new Error(
-                `Style input file is required, correct value in projects[${projectName}].style.entries[${i}].input.`
+                `Style input file is required, please correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].input'.`
             );
         }
 
         if (!inputExtRegExp.test(styleEntry.input)) {
             throw new Error(
-                `Unsupported style input file '${styleEntry.input}', correct value in projects[${projectName}].style.entries[${i}].input.`
+                `Unsupported style input file '${styleEntry.input}', please correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].input'.`
             );
         }
 
@@ -42,7 +42,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
         const inputFileExists = await pathExists(inputFilePath);
         if (!inputFileExists) {
             throw new Error(
-                `Style input file path '${inputFilePath}' doesn't exist, correct value in projects[${projectName}].style.entries[${i}].input.`
+                `Style input file '${inputFilePath}' doesn't exist, please correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].input'.`
             );
         }
 
@@ -57,7 +57,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
             } else {
                 if (!outputExtRegExp.test(extName)) {
                     throw new Error(
-                        `Unsupported style output file '${styleEntry.input}', correct value in projects[${projectName}].style.entries[${i}].output.`
+                        `Unsupported style output file '${styleEntry.input}', correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].output'.`
                     );
                 }
 
