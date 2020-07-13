@@ -47,10 +47,9 @@ export interface TsConfigJsonOptions {
 export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
     _entryFilePath: string;
     _outputFilePath: string;
-    _bannerText: string | null;
+    _moduleName: string;
     _sourceMap: boolean;
     _minify: boolean;
-    _moduleName: string;
 }
 
 export interface ScriptCompilationEntryInternal extends ScriptCompilationEntry {
@@ -72,7 +71,7 @@ export interface ScriptOptionsInternal extends ScriptOptions {
 
 export interface BuildActionInternal extends BuildAction {
     _workspaceRoot: string;
-    _configPath: string | null;
+    _config: 'auto' | string;
     _nodeModulesPath: string | null;
     _projectName: string;
     _projectRoot: string;

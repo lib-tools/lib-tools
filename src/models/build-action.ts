@@ -488,11 +488,6 @@ export interface ScriptOptions {
      *  Controls whether an output source map is built.
      */
     sourceMap?: boolean;
-
-    /**
-     * Banner text to add at the top of each generated files. It can be text file path or raw text.
-     */
-    banner?: string;
 }
 
 /**
@@ -523,6 +518,11 @@ export interface BuildActionBase {
      * Script compilation and bundle options for javascript and typescript files.
      */
     script?: ScriptOptions;
+
+    /**
+     * Banner text to add at the top of each generated files. It can be file path or raw text.
+     */
+    banner?: string;
 }
 
 /**
