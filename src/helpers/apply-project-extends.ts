@@ -35,7 +35,7 @@ async function applyProjectExtendsInternal(
     }
 
     const currentConfigFile =
-        projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
+        projectConfig._config === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._config;
     const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
     let baseProjectConfig: ProjectConfigInternal | null;
 
@@ -60,8 +60,8 @@ async function applyProjectExtendsInternal(
         delete clonedBaseProject.extends;
     }
 
-    if (clonedBaseProject._configPath) {
-        delete clonedBaseProject._configPath;
+    if (clonedBaseProject._config) {
+        delete clonedBaseProject._config;
     }
 
     if ((clonedBaseProject as ProjectConfigStandalone).$schema) {
@@ -82,7 +82,7 @@ function getBaseProjectConfigFromProjectCollection(
     }
 
     const currentConfigFile =
-        projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
+        projectConfig._config === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._config;
     const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
 
     const projectNameToExtend = projectConfig.extends.substr('project:'.length).trim();
@@ -117,7 +117,7 @@ async function getBaseProjectConfigFromFile(
     }
 
     const currentConfigFile =
-        projectConfig._configPath === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._configPath;
+        projectConfig._config === rootConfigPath ? path.parse(rootConfigPath).base : projectConfig._config;
     const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
 
     const parts = projectConfig.extends.split(':');
@@ -129,7 +129,7 @@ async function getBaseProjectConfigFromFile(
 
     const extendsFilePath = path.isAbsolute(parts[1])
         ? path.resolve(parts[1])
-        : path.resolve(path.dirname(projectConfig._configPath || rootConfigPath), parts[1]);
+        : path.resolve(path.dirname(projectConfig._config || rootConfigPath), parts[1]);
 
     if (!(await pathExists(extendsFilePath))) {
         throw new Error(
@@ -148,7 +148,7 @@ async function getBaseProjectConfigFromFile(
                 );
             }
 
-            const skipValidate = extendsFilePath === rootConfigPath || extendsFilePath === projectConfig._configPath;
+            const skipValidate = extendsFilePath === rootConfigPath || extendsFilePath === projectConfig._config;
             if (!skipValidate) {
                 if (workflowConfig.$schema) {
                     delete workflowConfig.$schema;
@@ -176,7 +176,7 @@ async function getBaseProjectConfigFromFile(
 
             return {
                 ...foundBaseProjectInternal,
-                _configPath: extendsFilePath,
+                _config: extendsFilePath,
                 _workspaceRoot: projectConfig._workspaceRoot,
                 _projectName: projectConfig._projectName,
                 _projectRoot: projectConfig._projectRoot
@@ -196,8 +196,7 @@ async function getBaseProjectConfigFromFile(
 
             return {
                 ...foundBaseProject,
-                _auto: false,
-                _configPath: extendsFilePath,
+                _config: extendsFilePath,
                 _workspaceRoot: projectConfig._workspaceRoot,
                 _projectName: projectConfig._projectName,
                 _projectRoot: projectConfig._projectRoot
