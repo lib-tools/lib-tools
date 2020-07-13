@@ -22,17 +22,17 @@ export class ScriptBundlesWebpackPlugin {
     }
 
     apply(compiler: webpack.Compiler): void {
-        compiler.hooks.emit.tapPromise(this.name, async () => this.performRollupBundles());
+        compiler.hooks.emit.tapPromise(this.name, async () => this.performScriptBundles());
     }
 
-    async performRollupBundles(): Promise<void> {
+    async performScriptBundles(): Promise<void> {
         const buildAction = this.options.buildAction;
 
         if (!buildAction._script || !buildAction._script._bundles.length) {
             return;
         }
 
-        const performRollupBundlesModule = await import('./perform-rollup-bundles');
-        await performRollupBundlesModule.performRollupBundles(buildAction, this.logger);
+        const scriptBundlesModule = await import('./script-bundles');
+        await scriptBundlesModule.performScriptBundles(buildAction, this.logger);
     }
 }
