@@ -1,13 +1,12 @@
 import * as path from 'path';
 
-import { pathExists, readFile } from 'fs-extra';
+import { pathExists } from 'fs-extra';
 import { ModuleKind, ScriptTarget } from 'typescript';
 
 import {
-    ModuleExternalsEntry,
-    ScriptBundleEntry,
     ScriptBundleModuleKind,
-    ScriptCompilationEntry,
+    ScriptBundleOptions,
+    ScriptCompilationOptions,
     ScriptOptions,
     ScriptTargetString
 } from '../models';
@@ -23,7 +22,7 @@ import { getCachedTsConfigFile } from './get-cached-ts-config-file';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
 
-export async function prepareScripts(buildAction: BuildActionInternal, auto?: boolean): Promise<void> {
+export async function prepareScripts(buildAction: BuildActionInternal): Promise<void> {
     const workspaceRoot = buildAction._workspaceRoot;
     const projectRoot = buildAction._projectRoot;
     const projectName = buildAction._projectName;
@@ -40,7 +39,7 @@ export async function prepareScripts(buildAction: BuildActionInternal, auto?: bo
                 `The tsConfig file ${tsConfigPath} doesn't exist. Please correct value in 'projects[${projectName}].actions.build.script.tsConfig'.`
             );
         }
-    } else if (buildAction.script || auto) {
+    } else if (buildAction.script || buildAction._config === 'auto') {
         tsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
     }
 
@@ -84,7 +83,7 @@ export async function prepareScripts(buildAction: BuildActionInternal, auto?: bo
         tsConfigInfo &&
         tsConfigInfo.tsCompilerConfig.options.target &&
         tsConfigInfo.tsCompilerConfig.options.target >= ScriptTarget.ES2015 &&
-        (buildAction.script || auto)
+        (buildAction.script || buildAction._config === 'auto')
     ) {
         if (tsConfigInfo.tsCompilerConfig.options.target > ScriptTarget.ES2015) {
             const esSuffix =
@@ -138,23 +137,17 @@ export async function prepareScripts(buildAction: BuildActionInternal, auto?: bo
         }
     }
 
-    let bannerText: string | null = null;
-    if (buildAction.script && buildAction.script.banner) {
-        bannerText = await prepareBannerText(buildAction.script.banner, buildAction);
-    }
-
     buildAction._script = {
         ...buildAction.script,
         _tsConfigInfo: tsConfigInfo,
         _entryNameRel: entryNameRel,
-        _bannerText: bannerText,
         _compilations: scriptCompilations,
         _bundles: scriptBundles
     };
 }
 
 function toScriptCompilationEntryInternal(
-    compilationEntry: ScriptCompilationEntry,
+    compilationEntry: ScriptCompilationOptions,
     entryNameRel: string,
     tsConfigInfo: TsConfigInfo,
     buildAction: BuildActionInternal
@@ -216,7 +209,7 @@ function toScriptCompilationEntryInternal(
         const bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, `${outFileName}.js`);
 
         bundleEntry = {
-            moduleFormat: 'esm',
+            moduleFormat: 'es',
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
@@ -306,7 +299,7 @@ function toScriptCompilationEntryInternal(
                 path.relative(buildAction._packageJsonOutDir, bundleEntry._outputFilePath)
             );
 
-            if (bundleEntry.moduleFormat === 'esm') {
+            if (bundleEntry.moduleFormat === 'es') {
                 if (
                     compilerOptions.module &&
                     compilerOptions.module >= ModuleKind.ES2015 &&
@@ -357,6 +350,8 @@ function toScriptCompilationEntryInternal(
 
     return {
         ...compilationEntry,
+        _tsConfigInfo: tsConfigInfo,
+        _entryNameRel: entryNameRel,
         _scriptTarget: scriptTarget,
         _declaration: declaration,
         _tsOutDirRootResolved: tsOutDir,
@@ -423,7 +418,7 @@ async function detectEntryName(
 }
 
 function toBundleEntryInternal(
-    bundleEntry: ScriptBundleEntry,
+    bundleEntry: ScriptBundleOptions,
     scriptOptions: ScriptOptions,
     tsConfigInfo: TsConfigInfo | null,
     buildAction: BuildActionInternal
@@ -436,32 +431,23 @@ function toBundleEntryInternal(
 
     const projectRoot = buildAction._projectRoot;
     const entryFilePath = path.resolve(projectRoot, scriptOptions.entry);
-    const currentBundleEntry = { ...bundleEntry };
 
-    // externals
-    if (currentBundleEntry.externals == null && scriptOptions.externals) {
-        currentBundleEntry.externals = JSON.parse(JSON.stringify(scriptOptions.externals)) as ModuleExternalsEntry[];
-    }
-
-    // dependenciesAsExternals
-    if (currentBundleEntry.dependenciesAsExternals == null && scriptOptions.dependenciesAsExternals != null) {
-        currentBundleEntry.dependenciesAsExternals = scriptOptions.dependenciesAsExternals;
-    }
-
-    // peerDependenciesAsExternals
-    if (currentBundleEntry.peerDependenciesAsExternals == null && scriptOptions.peerDependenciesAsExternals != null) {
-        currentBundleEntry.peerDependenciesAsExternals = scriptOptions.peerDependenciesAsExternals;
-    }
-
-    // includeCommonJs
-    if (currentBundleEntry.includeCommonJs == null && scriptOptions.includeCommonJs != null) {
-        currentBundleEntry.includeCommonJs = scriptOptions.includeCommonJs;
-    }
+    // if (!moduleName && buildAction._packageName) {
+    //     if (buildAction._packageName.startsWith('@')) {
+    //         moduleName = buildAction._packageName.substring(1).split('/').join('.');
+    //     } else {
+    //         moduleName = buildAction._packageName.split('/').join('.');
+    //     }
+    //     moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
+    //         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    //         return g1 ? g1.toUpperCase() : '';
+    //     });
+    // }
 
     // outputFilePath
     let bundleOutFilePath = '';
-    if (currentBundleEntry.outputFilePath) {
-        bundleOutFilePath = path.resolve(buildAction._outputPath, currentBundleEntry.outputFilePath);
+    if (bundleEntry.outputFile) {
+        bundleOutFilePath = path.resolve(buildAction._outputPath, bundleEntry.outputFile);
         if (!/\.js$/i.test(bundleOutFilePath)) {
             bundleOutFilePath = path.resolve(bundleOutFilePath, `${path.parse(entryFilePath).name}.js`);
         }
@@ -476,7 +462,7 @@ function toBundleEntryInternal(
         const scriptTarget = compilerOptions?.target;
         const moduleKind = compilerOptions?.module;
 
-        if (bundleEntry.moduleFormat === 'esm') {
+        if (bundleEntry.moduleFormat === 'es') {
             if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget > ScriptTarget.ES2015) {
                 let esYear: string;
                 if (scriptTarget === ScriptTarget.ESNext) {
@@ -517,62 +503,8 @@ function toBundleEntryInternal(
     }
 
     return {
-        ...currentBundleEntry,
+        ...bundleEntry,
         _entryFilePath: entryFilePath,
         _outputFilePath: bundleOutFilePath
     };
-}
-
-async function prepareBannerText(banner: string, buildAction: BuildActionInternal): Promise<string> {
-    let bannerText = banner;
-
-    if (/\.txt$/i.test(bannerText)) {
-        const bannerFilePath = await findUp(bannerText, buildAction._projectRoot, buildAction._workspaceRoot);
-        if (bannerFilePath) {
-            bannerText = await readFile(bannerFilePath, 'utf-8');
-        } else {
-            throw new Error(
-                `The banner text file: ${path.resolve(
-                    buildAction._projectRoot,
-                    bannerText
-                )} doesn't exist. Correct value in 'projects[${buildAction._projectName}].scriptBundle.banner'.`
-            );
-        }
-    }
-
-    if (!bannerText) {
-        return bannerText;
-    }
-
-    bannerText = addCommentToBanner(bannerText);
-    bannerText = bannerText.replace(/[$|[]CURRENT[_-]?YEAR[$|\]]/gim, new Date().getFullYear().toString());
-    bannerText = bannerText.replace(/[$|[](PROJECT|PACKAGE)[_-]?NAME[$|\]]/gim, buildAction._packageName);
-    bannerText = bannerText.replace(/[$|[](PROJECT|PACKAGE)?[_-]?VERSION[$|\]]/gim, buildAction._packageVersion);
-    bannerText = bannerText.replace(/0\.0\.0-PLACEHOLDER/i, buildAction._packageVersion);
-
-    return bannerText;
-}
-
-function addCommentToBanner(banner: string): string {
-    if (banner.trim().startsWith('/')) {
-        return banner;
-    }
-
-    const commentLines: string[] = [];
-    const bannerLines = banner.split('\n');
-    for (let i = 0; i < bannerLines.length; i++) {
-        if (bannerLines[i] === '' || bannerLines[i] === '\r') {
-            continue;
-        }
-
-        const bannerText = bannerLines[i].trim();
-        if (i === 0) {
-            commentLines.push('/**');
-        }
-        commentLines.push(` * ${bannerText}`);
-    }
-    commentLines.push(' */');
-    banner = commentLines.join('\n');
-
-    return banner;
 }
