@@ -432,18 +432,6 @@ function toBundleEntryInternal(
     const projectRoot = buildAction._projectRoot;
     const entryFilePath = path.resolve(projectRoot, scriptOptions.entry);
 
-    // if (!moduleName && buildAction._packageName) {
-    //     if (buildAction._packageName.startsWith('@')) {
-    //         moduleName = buildAction._packageName.substring(1).split('/').join('.');
-    //     } else {
-    //         moduleName = buildAction._packageName.split('/').join('.');
-    //     }
-    //     moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
-    //         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    //         return g1 ? g1.toUpperCase() : '';
-    //     });
-    // }
-
     // outputFilePath
     let bundleOutFilePath = '';
     if (bundleEntry.outputFile) {
