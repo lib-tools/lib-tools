@@ -3,19 +3,19 @@ import * as webpack from 'webpack';
 import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, LoggerBase } from '../../../utils';
 
-export interface TsTranspilationsWebpackPluginOptions {
+export interface ScriptCompilationsWebpackPluginOptions {
     buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
 }
 
-export class TsTranspilationsWebpackPlugin {
+export class ScriptCompilationsWebpackPlugin {
     private readonly logger: Logger;
 
     get name(): string {
-        return 'ts-transpilations-webpack-plugin';
+        return 'script-compilations-webpack-plugin';
     }
 
-    constructor(private readonly options: TsTranspilationsWebpackPluginOptions) {
+    constructor(private readonly options: ScriptCompilationsWebpackPluginOptions) {
         this.logger = new Logger({
             logLevel: this.options.logLevel || 'info'
         });
