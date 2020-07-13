@@ -29,6 +29,12 @@ export interface AngularCompilerJsonOptions {
     flatModuleId?: string;
 }
 
+export interface TsConfigInfo {
+    tsConfigPath: string;
+    tsConfigJson: TsConfigJsonOptions;
+    tsCompilerConfig: ParsedCommandLine;
+}
+
 export interface TsConfigJsonOptions {
     extends?: string;
     compilerOptions?: {
@@ -53,12 +59,8 @@ export interface ScriptCompilationEntryInternal extends ScriptCompilationEntry {
     _tsOutDirRootResolved: string;
     _customTsOutDir: string | null;
     _bundle: ScriptBundleEntryInternal | null;
-}
-
-export interface TsConfigInfo {
-    tsConfigPath: string;
-    tsConfigJson: TsConfigJsonOptions;
-    tsCompilerConfig: ParsedCommandLine;
+    _tsConfigInfo: TsConfigInfo;
+    _entryNameRel: string;
 }
 
 export interface ScriptOptionsInternal extends ScriptOptions {
@@ -94,6 +96,8 @@ export interface BuildActionInternal extends BuildAction {
 
     // scripts
     _script?: ScriptOptionsInternal;
+
+    _bannerText: string | null;
 
     // package.json
     _packageJsonOutDir: string;
