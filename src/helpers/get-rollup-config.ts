@@ -16,20 +16,23 @@ export function getRollupConfig(
     inputOptions: rollup.InputOptions;
     outputOptions: rollup.OutputOptions;
 } {
-    const moduleName = bundle._moduleName;
-    // if (!moduleName && buildAction._packageName) {
-    //     if (buildAction._packageName.startsWith('@')) {
-    //         moduleName = buildAction._packageName.substring(1).split('/').join('.');
-    //     } else {
-    //         moduleName = buildAction._packageName.split('/').join('.');
-    //     }
-    //     moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
-    //         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    //         return g1 ? g1.toUpperCase() : '';
-    //     });
-    // }
+    const scriptOptions = buildAction.script || {};
+    let moduleName = scriptOptions.moduleName;
+    if (!moduleName && buildAction._packageName) {
+        if (buildAction._packageName.startsWith('@')) {
+            moduleName = buildAction._packageName.substring(1).split('/').join('.');
+        } else {
+            moduleName = buildAction._packageName.split('/').join('.');
+        }
+        moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+            return g1 ? g1.toUpperCase() : '';
+        });
+    }
 
-    const globals = bundle.externals || {};
+    const globals = scriptOptions.externals
+        ? (JSON.parse(JSON.stringify(scriptOptions.externals)) as { [key: string]: string })
+        : {};
     const externals = Object.keys(globals);
 
     if (bundle.moduleFormat === 'cjs') {
@@ -42,7 +45,11 @@ export function getRollupConfig(
             });
     }
 
-    if (bundle.dependenciesAsExternals !== false && buildAction._packageJson && buildAction._packageJson.dependencies) {
+    if (
+        scriptOptions.dependenciesAsExternals !== false &&
+        buildAction._packageJson &&
+        buildAction._packageJson.dependencies
+    ) {
         Object.keys(buildAction._packageJson.dependencies)
             .filter((e) => !externals.includes(e))
             .forEach((e) => {
@@ -57,7 +64,7 @@ export function getRollupConfig(
     }
 
     if (
-        bundle.peerDependenciesAsExternals !== false &&
+        scriptOptions.peerDependenciesAsExternals !== false &&
         buildAction._packageJson &&
         buildAction._packageJson.peerDependencies
     ) {
@@ -83,7 +90,7 @@ export function getRollupConfig(
     if (bundle.includeCommonJs) {
         let commonjsOption = {
             extensions: ['.js'],
-            sourceMap: bundle._sourceMap
+            sourceMap: scriptOptions.sourceMap
         };
 
         if (typeof bundle.includeCommonJs === 'object') {
@@ -127,7 +134,7 @@ export function getRollupConfig(
         amd: { id: buildAction._packageName },
         format: bundle.moduleFormat,
         globals,
-        sourcemap: bundle._sourceMap
+        sourcemap: scriptOptions.sourceMap
     };
 
     if (buildAction._bannerText) {
