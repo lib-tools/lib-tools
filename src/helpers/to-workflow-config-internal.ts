@@ -28,9 +28,8 @@ export function toWorkflowConfigInternal(
 
         const projectInternal: ProjectConfigInternal = {
             ...project,
-            _auto: false,
             _workspaceRoot: workspaceRoot,
-            _configPath: configPath,
+            _config: configPath,
             _projectName: key,
             _projectRoot: projectRoot
         };
