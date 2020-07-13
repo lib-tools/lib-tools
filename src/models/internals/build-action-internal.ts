@@ -96,7 +96,7 @@ export interface BuildActionInternal extends BuildAction {
     // scripts
     _script?: ScriptOptionsInternal;
 
-    _bannerText: string | null;
+    _bannerText?: string;
 
     // package.json
     _packageJsonOutDir: string;
