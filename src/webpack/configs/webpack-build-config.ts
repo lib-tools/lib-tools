@@ -110,8 +110,8 @@ export async function getWebpackBuildConfig(
 
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        if (projectConfigInternal._configPath) {
-            const configPath = projectConfig._configPath as string;
+        if (projectConfigInternal._config && projectConfigInternal._config !== 'auto') {
+            const configPath = projectConfig._config;
             await applyProjectExtends(projectConfigInternal, workflowConfig.projects, configPath);
         }
 
@@ -206,36 +206,36 @@ async function getWebpackBuildConfigInternal(
         );
     }
 
-    // Typescript transpilation plugin
-    if (buildAction._script && buildAction._script._compilations.length > 0) {
-        const pluginModule = await import('../plugins/ts-transpilations-webpack-plugin');
-        const TsTranspilationsWebpackPlugin = pluginModule.TsTranspilationsWebpackPlugin;
-        plugins.push(
-            new TsTranspilationsWebpackPlugin({
-                buildAction,
-                logLevel: buildOptions.logLevel
-            })
-        );
-    }
-
     // styles
     if (buildAction._styleEntries && buildAction._styleEntries.length > 0) {
-        const pluginModule = await import('../plugins/styles-bundle-webpack-plugin');
-        const StyleBundleWebpackPlugin = pluginModule.StyleBundleWebpackPlugin;
+        const pluginModule = await import('../plugins/styles-webpack-plugin');
+        const StylesWebpackPlugin = pluginModule.StylesWebpackPlugin;
         plugins.push(
-            new StyleBundleWebpackPlugin({
+            new StylesWebpackPlugin({
                 buildAction,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
-    // Rollup bundles plugin
-    if (buildAction._script && buildAction._script._bundles.length > 0) {
-        const pluginModule = await import('../plugins/rollup-bundles-webpack-plugin');
-        const RollupBundlesWebpackPlugin = pluginModule.RollupBundlesWebpackPlugin;
+    // Script compilation plugin
+    if (buildAction._script && buildAction._script._compilations.length > 0) {
+        const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
+        const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
         plugins.push(
-            new RollupBundlesWebpackPlugin({
+            new ScriptBundlesWebpackPlugin({
+                buildAction,
+                logLevel: buildOptions.logLevel
+            })
+        );
+    }
+
+    // Script bundles plugin
+    if (buildAction._script && buildAction._script._bundles.length > 0) {
+        const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
+        const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
+        plugins.push(
+            new ScriptBundlesWebpackPlugin({
                 buildAction,
                 logLevel: buildOptions.logLevel
             })
