@@ -13,6 +13,7 @@ import { applyEnvOverrides } from './apply-env-overrides';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
 import { prepareAssetEntries } from './prepare-asset-entries';
+import { prepareBannerText } from './prepare-banner-text';
 import { prepareScripts } from './prepare-scripts';
 import { prepareStyles } from './prepare-styles';
 import { getCachedPackageJson } from './get-cached-package-json';
@@ -33,7 +34,7 @@ export async function toBuildActionInternal(
     const projectName = projectConfig._projectName;
 
     // apply env
-    if (!projectConfig._auto) {
+    if (projectConfig._config !== 'auto') {
         applyEnvOverrides(buildAction, buildOptions.environment);
     }
 
@@ -154,7 +155,7 @@ export async function toBuildActionInternal(
 
     const buildActionInternal: BuildActionInternal = {
         ...buildAction,
-        _configPath: projectConfig._configPath,
+        _config: projectConfig._config,
         _workspaceRoot: workspaceRoot,
         _nodeModulesPath: nodeModulesPath,
         _projectRoot: projectRoot,
@@ -176,6 +177,9 @@ export async function toBuildActionInternal(
         _packageJsonEntryPoint: {}
     };
 
+    // Banner
+    await prepareBannerText(buildActionInternal);
+
     // Copy assets
     await prepareAssetEntries(buildActionInternal);
 
@@ -183,7 +187,7 @@ export async function toBuildActionInternal(
     await prepareStyles(buildActionInternal);
 
     // Scripts
-    await prepareScripts(buildActionInternal, projectConfig._auto);
+    await prepareScripts(buildActionInternal);
 
     return buildActionInternal;
 }
