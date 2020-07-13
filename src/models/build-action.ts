@@ -309,13 +309,6 @@ export interface StyleOptions {
 /**
  * @additionalProperties false
  */
-export interface ModuleExternalEntry {
-    [key: string]: string;
-}
-
-/**
- * @additionalProperties false
- */
 export interface CommonJsOptions {
     /**
      * Some modules contain dynamic require calls, or require modules that contain circular dependencies, which are not handled well by static imports. Including those modules as dynamicRequireTargets will simulate a CommonJS (NodeJS-like) environment for them with support for dynamic and circular dependencies.
@@ -361,7 +354,7 @@ export type ScriptTargetString =
 /**
  * @additionalProperties false
  */
-export interface ScriptCompilationEntry {
+export interface ScriptCompilationOptions {
     /**
      * Override custom script target.
      */
@@ -393,7 +386,7 @@ export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'es';
 /**
  * @additionalProperties false
  */
-export interface ScriptBundleEntry {
+export interface ScriptBundleOptions {
     /**
      * Specify the format of the generated bundle.
      */
@@ -405,22 +398,7 @@ export interface ScriptBundleEntry {
     outputFile?: string;
 
     /**
-     * External id and global variable name mapping.
-     */
-    externals?: ModuleExternalEntry;
-
-    /**
-     * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
-     */
-    dependenciesAsExternals?: boolean;
-
-    /**
-     * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
-     */
-    peerDependenciesAsExternals?: boolean;
-
-    /**
-     * If true or options object, commonjs modules are converted to ES6 and included in bundle.
+     * Set true or options object to include commonjs modules in bundle.
      */
     includeCommonJs?: boolean | CommonJsOptions;
 
@@ -437,12 +415,12 @@ export interface ScriptOptions {
     /**
      * List of compilation entries.
      */
-    compilations?: ScriptCompilationEntry[];
+    compilations?: ScriptCompilationOptions[];
 
     /**
      * List of bundle entries.
      */
-    bundles?: ScriptBundleEntry[];
+    bundles?: ScriptBundleOptions[];
 
     /**
      * Typescript configuration file to be used.
@@ -467,7 +445,7 @@ export interface ScriptOptions {
     /**
      * External id and global variable name mapping.
      */
-    externals?: ModuleExternalEntry;
+    externals?: { [key: string]: string };
 
     /**
      * If true or options object, commonjs modules are converted to ES6 and included in bundle.

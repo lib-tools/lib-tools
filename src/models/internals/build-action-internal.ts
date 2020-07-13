@@ -5,8 +5,8 @@ import {
     AutoPrefixerOptions,
     BuildAction,
     CleanCSSOptions,
-    ScriptBundleEntry,
-    ScriptCompilationEntry,
+    ScriptBundleOptions,
+    ScriptCompilationOptions,
     ScriptOptions,
     StyleEntry
 } from '../build-action';
@@ -44,15 +44,12 @@ export interface TsConfigJsonOptions {
     angularCompilerOptions?: AngularCompilerJsonOptions;
 }
 
-export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
+export interface ScriptBundleEntryInternal extends ScriptBundleOptions {
     _entryFilePath: string;
     _outputFilePath: string;
-    _moduleName: string;
-    _sourceMap: boolean;
-    _minify: boolean;
 }
 
-export interface ScriptCompilationEntryInternal extends ScriptCompilationEntry {
+export interface ScriptCompilationEntryInternal extends ScriptCompilationOptions {
     _declaration: boolean;
     _scriptTarget: ScriptTarget;
     _tsOutDirRootResolved: string;
