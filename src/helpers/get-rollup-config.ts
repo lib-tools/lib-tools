@@ -130,8 +130,8 @@ export function getRollupConfig(
         sourcemap: bundle._sourceMap
     };
 
-    if (bundle._bannerText) {
-        outputOptions.banner = bundle._bannerText;
+    if (buildAction._bannerText) {
+        outputOptions.banner = buildAction._bannerText;
     }
 
     return {
