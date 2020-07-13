@@ -216,18 +216,18 @@ function toScriptCompilationEntryInternal(
         const bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, `${outFileName}.js`);
 
         bundleEntry = {
-            libraryTarget: 'esm',
+            moduleFormat: 'esm',
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
     } else if (compilationEntry.umdBundle || compilationEntry.cjsBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const libraryTarget: ScriptBundleModuleKind = compilationEntry.cjsBundle ? 'cjs' : 'umd';
-        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.${libraryTarget}.js`);
+        const moduleFormat: ScriptBundleModuleKind = compilationEntry.cjsBundle ? 'cjs' : 'umd';
+        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.${moduleFormat}.js`);
 
         bundleEntry = {
-            libraryTarget,
+            moduleFormat,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
@@ -306,7 +306,7 @@ function toScriptCompilationEntryInternal(
                 path.relative(buildAction._packageJsonOutDir, bundleEntry._outputFilePath)
             );
 
-            if (bundleEntry.libraryTarget === 'esm') {
+            if (bundleEntry.moduleFormat === 'esm') {
                 if (
                     compilerOptions.module &&
                     compilerOptions.module >= ModuleKind.ES2015 &&
@@ -476,7 +476,7 @@ function toBundleEntryInternal(
         const scriptTarget = compilerOptions?.target;
         const moduleKind = compilerOptions?.module;
 
-        if (bundleEntry.libraryTarget === 'esm') {
+        if (bundleEntry.moduleFormat === 'esm') {
             if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget > ScriptTarget.ES2015) {
                 let esYear: string;
                 if (scriptTarget === ScriptTarget.ESNext) {
