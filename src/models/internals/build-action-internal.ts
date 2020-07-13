@@ -43,6 +43,7 @@ export interface ScriptBundleEntryInternal extends ScriptBundleEntry {
     _outputFilePath: string;
     _bannerText: string | null;
     _sourceMap: boolean;
+    _minify: boolean;
     _moduleName: string;
 }
 

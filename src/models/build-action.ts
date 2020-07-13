@@ -309,18 +309,9 @@ export interface StyleOptions {
 /**
  * @additionalProperties false
  */
-export interface ModuleExternalsObjectEntry {
-    [key: string]:
-        | string
-        | {
-              [key: string]: string;
-          };
+export interface ModuleExternalEntry {
+    [key: string]: string;
 }
-
-/**
- * @additionalProperties false
- */
-export type ModuleExternalsEntry = string | ModuleExternalsObjectEntry;
 
 /**
  * @additionalProperties false
@@ -397,26 +388,26 @@ export interface ScriptCompilationEntry {
     cjsBundle?: boolean;
 }
 
-export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'esm';
+export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'es';
 
 /**
  * @additionalProperties false
  */
 export interface ScriptBundleEntry {
     /**
-     * Bundle module format.
+     * Specify the format of the generated bundle.
      */
     moduleFormat: ScriptBundleModuleKind;
 
     /**
-     * Custom bundle output file path.
+     * Custom bundle output file.
      */
-    outputFilePath?: string;
+    outputFile?: string;
 
     /**
-     * The externals configuration option provides a way of excluding dependencies from the output bundle.
+     * External id and global variable name mapping.
      */
-    externals?: ModuleExternalsEntry | ModuleExternalsEntry[];
+    externals?: ModuleExternalEntry;
 
     /**
      * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
@@ -447,6 +438,7 @@ export interface ScriptOptions {
      * List of compilation entries.
      */
     compilations?: ScriptCompilationEntry[];
+
     /**
      * List of bundle entries.
      */
@@ -456,38 +448,47 @@ export interface ScriptOptions {
      * Typescript configuration file to be used.
      */
     tsConfig?: string;
+
     /**
      * If true, automatically add entry points to package.json file.
      */
     addToPackageJson?: boolean;
+
     /**
-     * The entry file to add to package.json. By default it will be automatically detected.
+     * Entry file to bundle or entry point name to add to package.json. By default it will be automatically detected.
      */
     entry?: string;
+
     /**
      * Represent umd module id.
      */
-    libraryName?: string;
+    moduleName?: string;
+
     /**
-     * The externals configuration option provides a way of excluding dependencies from the output bundle.
+     * External id and global variable name mapping.
      */
-    externals?: ModuleExternalsEntry | ModuleExternalsEntry[];
+    externals?: ModuleExternalEntry;
+
     /**
      * If true or options object, commonjs modules are converted to ES6 and included in bundle.
      */
     includeCommonJs?: boolean | CommonJsOptions;
+
     /**
      * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
      */
     dependenciesAsExternals?: boolean;
+
     /**
      * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
      */
     peerDependenciesAsExternals?: boolean;
+
     /**
      *  Controls whether an output source map is built.
      */
     sourceMap?: boolean;
+
     /**
      * Banner text to add at the top of each generated files. It can be text file path or raw text.
      */
