@@ -1,8 +1,7 @@
 import { ProjectConfig } from '../project-config';
 
 export interface ProjectConfigInternal extends ProjectConfig {
-    _auto: boolean;
-    _configPath: string | null;
+    _config: 'auto' | string;
     _workspaceRoot: string;
     _projectRoot: string;
     _projectName: string;
