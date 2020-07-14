@@ -1,3 +1,4 @@
+export * from './apply-env-overrides';
 export * from './apply-project-extends';
 export * from './get-cached-package-json';
 export * from './get-cached-project-config-schema';
