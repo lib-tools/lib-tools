@@ -158,19 +158,15 @@ async function getWorkflowConfig(buildOptions: BuildCommandOptionsInternal): Pro
     }
 
     if (foundConfigPath) {
-        try {
-            const workflowConfig = (await readJsonWithComments(foundConfigPath)) as WorkflowConfig;
-            const schema = await getCachedWorkflowConfigSchema();
-            const valid = ajv.addSchema(schema, 'workflowSchema').validate('workflowSchema', workflowConfig);
-            if (!valid) {
-                throw new Error(`Invalid configuration.\n\n${ajv.errorsText()}`);
-            }
-
-            const workspaceRoot = path.extname(foundConfigPath) ? path.dirname(foundConfigPath) : foundConfigPath;
-            return toWorkflowConfigInternal(workflowConfig, foundConfigPath, workspaceRoot);
-        } catch (err) {
-            throw new Error(`Invalid configuration. ${(err as Error).message || err}.`);
+        const workflowConfig = (await readJsonWithComments(foundConfigPath)) as WorkflowConfig;
+        const schema = await getCachedWorkflowConfigSchema();
+        const valid = ajv.addSchema(schema, 'workflowSchema').validate('workflowSchema', workflowConfig);
+        if (!valid) {
+            throw new Error(`Invalid configuration. ${ajv.errorsText()}`);
         }
+
+        const workspaceRoot = path.extname(foundConfigPath) ? path.dirname(foundConfigPath) : foundConfigPath;
+        return toWorkflowConfigInternal(workflowConfig, foundConfigPath, workspaceRoot);
     } else {
         if (buildOptions.workflow !== 'auto') {
             throw new Error(`Workflow configuration file could not be detected.`);
