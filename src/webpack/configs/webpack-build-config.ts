@@ -149,7 +149,7 @@ async function getWorkflowConfig(buildOptions: BuildCommandOptionsInternal): Pro
             : path.resolve(process.cwd(), buildOptions.workflow);
 
         if (!(await pathExists(foundConfigPath))) {
-            throw new Error(`Workflow configuration file ${buildOptions} doesn't exist.`);
+            throw new Error(`Workflow configuration file ${foundConfigPath} doesn't exist.`);
         }
     }
 
