@@ -53,7 +53,6 @@ export async function toBuildActionInternal(
         packageScope = packageName.substr(0, slashIndex);
         packageNameWithoutScope = packageName.substr(slashIndex + 1);
     }
-    const privatePackage = packageJson.private ? true : false;
 
     let packageVersion: string;
     if (buildOptions.version) {
@@ -133,7 +132,7 @@ export async function toBuildActionInternal(
 
     if (!outputPathAbs) {
         throw new Error(
-            `The outputPath could not be automatically detected. Set value in 'projects[${projectName}].outputPath' manually.`
+            `The outputPath could not be automatically detected. Set value in 'projects[${projectName}].actions.build.outputPath' manually.`
         );
     }
 
@@ -160,7 +159,6 @@ export async function toBuildActionInternal(
         _packageName: packageName,
         _packageNameWithoutScope: packageNameWithoutScope,
         _packageVersion: packageVersion,
-        _privatePackage: privatePackage,
         _nestedPackage: nestedPackage,
         _packageScope: packageScope,
         _rootPackageJsonPath: rootPackageJsonPath,
