@@ -23,9 +23,7 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
     }
 
     const logger = new Logger({
-        logLevel: argv.logLevel ? (argv.logLevel as LogLevelString) : 'info',
-        debugPrefix: 'DEBUG:',
-        warnPrefix: 'WARNING:'
+        logLevel: argv.logLevel ? (argv.logLevel as LogLevelString) : 'info'
     });
 
     const watch = argv.watch ? true : false;
