@@ -195,13 +195,7 @@ function toScriptCompilationEntryInternal(
     }
 
     let bundleEntry: ScriptBundleEntryInternal | null = null;
-    if (
-        compilationEntry.esmBundle ||
-        (compilationEntry.esmBundle !== false &&
-            scriptTarget >= ScriptTarget.ES5 &&
-            compilerOptions.module &&
-            compilerOptions.module >= ModuleKind.ES2015)
-    ) {
+    if (compilationEntry.esmBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const esSuffix = ScriptTarget[scriptTarget].replace(/^ES/i, '');
         const fesmFolderName = `fesm${esSuffix}`;
