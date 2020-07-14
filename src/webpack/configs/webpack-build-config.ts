@@ -107,6 +107,10 @@ export async function getWebpackBuildConfig(
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
         .map((projectName) => workflowConfig.projects[projectName]);
 
+    if (!filteredProjectConfigs.length) {
+        throw new Error('No project config to build.');
+    }
+
     const webpackConfigs: Configuration[] = [];
 
     for (const projectConfig of filteredProjectConfigs) {
