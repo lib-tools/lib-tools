@@ -1,13 +1,13 @@
 {
   "$schema": "../../dist/schemas/schema.json",
   "projects": {
-    "full-config-demo": {
+    "typescript-library-project-demo": {
       "root": "./",
       "actions": {
         "build": {
           "outputPath": "dist/full-config-demo/typescript-library-project-demo",
-          "scriptTranspilation": {
-            "entries": [
+          "script": {
+            "compilations": [
               {
                 "declaration": true,
                 "target": "ES2015",
@@ -23,14 +23,6 @@
             "addToPackageJson": true,
             "entry": "public_api.js"
           }
-        }
-      }
-    },
-    "minimal-config-demo": {
-      "root": "./",
-      "actions": {
-        "build": {
-          "scriptTranspilation": {}
         }
       }
     }

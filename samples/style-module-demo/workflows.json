@@ -7,7 +7,7 @@
         "build": {
           "outputPath": "dist",
           "style": {
-            "entries": [
+            "compilations": [
               {
                 "input": "src/scss/bootstrap.scss",
                 "output": "css/bootstrap.css"
