@@ -11,6 +11,9 @@ export async function performScriptBundles(buildAction: BuildActionInternal, log
         return;
     }
 
+    const scriptOptions = buildAction.script || {};
+    const sourceMap = scriptOptions.sourceMap !== false ? true : false;
+
     for (const bundleOptions of buildAction._script._bundles) {
         const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
 
@@ -19,12 +22,12 @@ export async function performScriptBundles(buildAction: BuildActionInternal, log
         const rollupBuild = await rollup.rollup(rollupOptions.inputOptions);
         await rollupBuild.write(rollupOptions.outputOptions);
 
-        if (bundleOptions._minify) {
+        if (bundleOptions.minify) {
             const minFilePath = bundleOptions._outputFilePath.replace(/\.js$/i, '.min.js');
 
             logger.debug(`Minifying ${path.basename(bundleOptions._outputFilePath)}`);
 
-            await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions._sourceMap, logger);
+            await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, sourceMap, logger);
         }
     }
 }
