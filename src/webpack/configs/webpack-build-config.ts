@@ -5,6 +5,7 @@ import { pathExists } from 'fs-extra';
 import { Configuration, Plugin } from 'webpack';
 
 import {
+    applyEnvOverrides,
     applyProjectExtends,
     getCachedWorkflowConfigSchema,
     normalizeEnvironment,
@@ -32,8 +33,8 @@ export async function getWebpackBuildConfig(
     const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
     const environment = env ? normalizeEnvironment(env, prod) : {};
-
     let buildOptions: BuildCommandOptionsInternal = { environment };
+
     if (verbose) {
         buildOptions.logLevel = 'debug';
     }
@@ -110,16 +111,19 @@ export async function getWebpackBuildConfig(
 
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        if (projectConfigInternal._config && projectConfigInternal._config !== 'auto') {
-            const configPath = projectConfig._config;
-            await applyProjectExtends(projectConfigInternal, workflowConfig.projects, configPath);
-        }
-
-        if (projectConfigInternal.skip) {
-            continue;
+        if (projectConfigInternal._config !== 'auto') {
+            await applyProjectExtends(projectConfigInternal, workflowConfig.projects, projectConfig._config);
         }
 
         if (!projectConfigInternal.actions || !projectConfigInternal.actions.build) {
+            continue;
+        }
+
+        if (projectConfigInternal._config !== 'auto') {
+            applyEnvOverrides(projectConfigInternal.actions.build, buildOptions.environment);
+        }
+
+        if (projectConfigInternal.skip) {
             continue;
         }
 
