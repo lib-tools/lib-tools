@@ -9,7 +9,6 @@ import {
 } from '../models/internals';
 import { isInFolder, isSamePaths } from '../utils';
 
-import { applyEnvOverrides } from './apply-env-overrides';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
 import { prepareAssetEntries } from './prepare-asset-entries';
@@ -32,11 +31,6 @@ export async function toBuildActionInternal(
     const workspaceRoot = projectConfig._workspaceRoot;
     const projectRoot = projectConfig._projectRoot;
     const projectName = projectConfig._projectName;
-
-    // apply env
-    if (projectConfig._config !== 'auto') {
-        applyEnvOverrides(buildAction, buildOptions.environment);
-    }
 
     const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
     if (!packageJsonPath) {
