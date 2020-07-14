@@ -224,7 +224,7 @@ async function getWebpackBuildConfigInternal(
     }
 
     if (buildAction._script) {
-        // Script compilation plugin
+        // Script compilations plugin
         if (buildAction._script._compilations.length > 0) {
             const pluginModule = await import('../plugins/script-compilations-webpack-plugin');
             const ScriptCompilationsWebpackPlugin = pluginModule.ScriptCompilationsWebpackPlugin;
