@@ -137,6 +137,7 @@ export async function getWebpackBuildConfig(
             buildActionInternal,
             buildOptions
         )) as Configuration | null;
+
         if (wpConfig) {
             webpackConfigs.push(wpConfig);
         }
@@ -222,28 +223,30 @@ async function getWebpackBuildConfigInternal(
         );
     }
 
-    // Script compilation plugin
-    if (buildAction._script && buildAction._script._compilations.length > 0) {
-        const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
-        const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
-        plugins.push(
-            new ScriptBundlesWebpackPlugin({
-                buildAction,
-                logLevel: buildOptions.logLevel
-            })
-        );
-    }
+    if (buildAction._script) {
+        // Script compilation plugin
+        if (buildAction._script._compilations.length > 0) {
+            const pluginModule = await import('../plugins/script-compilations-webpack-plugin');
+            const ScriptCompilationsWebpackPlugin = pluginModule.ScriptCompilationsWebpackPlugin;
+            plugins.push(
+                new ScriptCompilationsWebpackPlugin({
+                    buildAction,
+                    logLevel: buildOptions.logLevel
+                })
+            );
+        }
 
-    // Script bundles plugin
-    if (buildAction._script && buildAction._script._bundles.length > 0) {
-        const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
-        const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
-        plugins.push(
-            new ScriptBundlesWebpackPlugin({
-                buildAction,
-                logLevel: buildOptions.logLevel
-            })
-        );
+        // Script bundles plugin
+        if (buildAction._script._bundles.length > 0) {
+            const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
+            const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
+            plugins.push(
+                new ScriptBundlesWebpackPlugin({
+                    buildAction,
+                    logLevel: buildOptions.logLevel
+                })
+            );
+        }
     }
 
     // Copy plugin
