@@ -68,9 +68,9 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
             );
         }
 
-        for (const scriptCompilationEntry of buildAction.script.compilations) {
+        for (const compilation of buildAction.script.compilations) {
             const scriptCompilationEntryInternal = toScriptCompilationEntryInternal(
-                scriptCompilationEntry,
+                compilation,
                 entryNameRel,
                 tsConfigInfo,
                 buildAction
