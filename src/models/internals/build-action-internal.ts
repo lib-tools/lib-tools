@@ -78,7 +78,6 @@ export interface BuildActionInternal extends BuildAction {
     _packageName: string;
     _packageNameWithoutScope: string;
     _packageVersion: string;
-    _privatePackage: boolean;
     _nestedPackage: boolean;
     _packageScope: string | null;
     _rootPackageJsonPath: string | null;
