@@ -133,8 +133,8 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
 
     if (buildAction.script && buildAction.script.bundles) {
         const scriptOptions = buildAction.script;
-        for (const bundleEntry of buildAction.script.bundles) {
-            const bundleEntryInternal = toBundleEntryInternal(bundleEntry, scriptOptions, tsConfigInfo, buildAction);
+        for (const bundleOptions of buildAction.script.bundles) {
+            const bundleEntryInternal = toBundleEntryInternal(bundleOptions, scriptOptions, tsConfigInfo, buildAction);
             scriptBundles.push(bundleEntryInternal);
         }
     }
@@ -196,7 +196,7 @@ function toScriptCompilationEntryInternal(
         tsOutDir = path.resolve(tsOutDir, relSubDir);
     }
 
-    let bundleEntry: ScriptBundleOptionsInternal | null = null;
+    let bundleOptions: ScriptBundleOptionsInternal | null = null;
     const sourceMap = compilerOptions.sourceMap ? true : false;
     if (compilationEntry.esBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
@@ -205,7 +205,7 @@ function toScriptCompilationEntryInternal(
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
         const bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, `${outFileName}.js`);
 
-        bundleEntry = {
+        bundleOptions = {
             moduleFormat: 'es',
             sourceMap,
             minify: false,
@@ -218,7 +218,7 @@ function toScriptCompilationEntryInternal(
         const moduleFormat: ScriptBundleModuleKind = compilationEntry.cjsBundle ? 'cjs' : 'umd';
         const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.${moduleFormat}.js`);
 
-        bundleEntry = {
+        bundleOptions = {
             moduleFormat,
             sourceMap,
             minify: true,
@@ -295,12 +295,12 @@ function toScriptCompilationEntryInternal(
             buildAction._packageJsonEntryPoint.main = jsEntryFile;
         }
 
-        if (bundleEntry != null) {
+        if (bundleOptions != null) {
             const jsEntryFileForBundle = normalizePath(
-                path.relative(buildAction._packageJsonOutDir, bundleEntry._outputFilePath)
+                path.relative(buildAction._packageJsonOutDir, bundleOptions._outputFilePath)
             );
 
-            if (bundleEntry.moduleFormat === 'es') {
+            if (bundleOptions.moduleFormat === 'es') {
                 if (
                     compilerOptions.module &&
                     compilerOptions.module >= ModuleKind.ES2015 &&
@@ -357,7 +357,7 @@ function toScriptCompilationEntryInternal(
         _declaration: declaration,
         _tsOutDirRootResolved: tsOutDir,
         _customTsOutDir: customTsOutDir,
-        _bundle: bundleEntry
+        _bundle: bundleOptions
     };
 }
 
@@ -419,7 +419,7 @@ async function detectEntryName(
 }
 
 function toBundleEntryInternal(
-    bundleEntry: ScriptBundleOptions,
+    bundleOptions: ScriptBundleOptions,
     scriptOptions: ScriptOptions,
     tsConfigInfo: TsConfigInfo | null,
     buildAction: BuildActionInternal
@@ -435,8 +435,8 @@ function toBundleEntryInternal(
 
     // outputFilePath
     let bundleOutFilePath = '';
-    if (bundleEntry.outputFile) {
-        bundleOutFilePath = path.resolve(buildAction._outputPath, bundleEntry.outputFile);
+    if (bundleOptions.outputFile) {
+        bundleOutFilePath = path.resolve(buildAction._outputPath, bundleOptions.outputFile);
         if (!/\.js$/i.test(bundleOutFilePath)) {
             bundleOutFilePath = path.resolve(bundleOutFilePath, `${path.parse(entryFilePath).name}.js`);
         }
@@ -451,7 +451,7 @@ function toBundleEntryInternal(
         const scriptTarget = compilerOptions?.target;
         const moduleKind = compilerOptions?.module;
 
-        if (bundleEntry.moduleFormat === 'es') {
+        if (bundleOptions.moduleFormat === 'es') {
             if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget > ScriptTarget.ES2015) {
                 let esYear: string;
                 if (scriptTarget === ScriptTarget.ESNext) {
@@ -492,7 +492,7 @@ function toBundleEntryInternal(
     }
 
     return {
-        ...bundleEntry,
+        ...bundleOptions,
         _entryFilePath: entryFilePath,
         _outputFilePath: bundleOutFilePath
     };
