@@ -215,24 +215,25 @@ async function afterTsTranspileTask(
     }
 
     // Bundle
-    if (compilation._bundle) {
-        const bundleOptions = compilation._bundle;
-        const scriptTargetText = ScriptTarget[compilation._scriptTarget];
-        const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
+    if (compilation._bundles.length > 0) {
+        for (const bundleOptions of compilation._bundles) {
+            const scriptTargetText = ScriptTarget[compilation._scriptTarget];
+            const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
 
-        logger.info(
-            `Bundling with rollup, format: ${rollupOptions.outputOptions.format} and script target: ${scriptTargetText}`
-        );
+            logger.info(
+                `Bundling with rollup, format: ${rollupOptions.outputOptions.format} and script target: ${scriptTargetText}`
+            );
 
-        const rollupBuild = await rollup.rollup(rollupOptions.inputOptions);
-        await rollupBuild.write(rollupOptions.outputOptions);
+            const rollupBuild = await rollup.rollup(rollupOptions.inputOptions);
+            await rollupBuild.write(rollupOptions.outputOptions);
 
-        if (bundleOptions.minify) {
-            const minFilePath = bundleOptions._outputFilePath.replace(/\.js$/i, '.min.js');
+            if (bundleOptions.minify) {
+                const minFilePath = bundleOptions._outputFilePath.replace(/\.js$/i, '.min.js');
 
-            logger.info(`Writing minify file ${path.basename(minFilePath)}`);
+                logger.info(`Writing minify file ${path.basename(minFilePath)}`);
 
-            await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions.sourceMap, logger);
+                await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions.sourceMap, logger);
+            }
         }
     }
 }
