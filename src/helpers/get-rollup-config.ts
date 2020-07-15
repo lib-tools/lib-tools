@@ -9,7 +9,7 @@ import { LoggerBase } from '../utils';
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export function getRollupConfig(
-    bundle: ScriptBundleEntryInternal,
+    bundleOptions: ScriptBundleEntryInternal,
     buildAction: BuildActionInternal,
     logger: LoggerBase
 ): {
@@ -35,7 +35,7 @@ export function getRollupConfig(
         : {};
     const externals = Object.keys(globals);
 
-    if (bundle.moduleFormat === 'cjs') {
+    if (bundleOptions.moduleFormat === 'cjs') {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
         const builtins = require('builtins')() as string[];
         builtins
@@ -83,28 +83,23 @@ export function getRollupConfig(
 
     // plugins
     const plugins: rollup.Plugin[] = [];
-    if (bundle.moduleFormat === 'umd' || bundle.moduleFormat === 'cjs' || bundle.includeCommonJs) {
+    if (bundleOptions.moduleFormat === 'umd' || bundleOptions.moduleFormat === 'cjs' || bundleOptions.includeCommonJs) {
         plugins.push(resolve());
     }
 
-    if (bundle.includeCommonJs) {
-        let commonjsOption = {
+    if (bundleOptions.includeCommonJs) {
+        const customOptions = typeof bundleOptions.includeCommonJs === 'object' ? bundleOptions.includeCommonJs : {};
+        const commonjsOption = {
             extensions: ['.js'],
-            sourceMap: scriptOptions.sourceMap
+            sourceMap: bundleOptions.sourceMap,
+            ...customOptions
         };
-
-        if (typeof bundle.includeCommonJs === 'object') {
-            commonjsOption = {
-                ...bundle.includeCommonJs,
-                ...commonjsOption
-            };
-        }
 
         plugins.push(commonjs(commonjsOption));
     }
 
     const inputOptions: rollup.InputOptions = {
-        input: bundle._entryFilePath,
+        input: bundleOptions._entryFilePath,
         // preserveSymlinks: preserveSymlinks,
         external: (id: string): boolean => {
             return externals.some((dep) => id === dep || id.startsWith(`${dep}/`));
@@ -128,13 +123,13 @@ export function getRollupConfig(
     };
 
     const outputOptions: rollup.OutputOptions = {
-        file: bundle._outputFilePath,
+        file: bundleOptions._outputFilePath,
         exports: 'named',
         name: moduleName,
         amd: { id: buildAction._packageName },
-        format: bundle.moduleFormat,
+        format: bundleOptions.moduleFormat,
         globals,
-        sourcemap: scriptOptions.sourceMap
+        sourcemap: bundleOptions.sourceMap
     };
 
     if (buildAction._bannerText) {
