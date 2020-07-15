@@ -6,7 +6,7 @@ import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
 import { getRollupConfig, minifyJsBundle } from '../../../helpers';
-import { BuildActionInternal, ScriptCompilationEntryInternal } from '../../../models/internals';
+import { BuildActionInternal, ScriptCompilationOptionsInternal } from '../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
@@ -89,7 +89,7 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
 }
 
 async function afterTsTranspileTask(
-    compilation: ScriptCompilationEntryInternal,
+    compilation: ScriptCompilationOptionsInternal,
     buildAction: BuildActionInternal,
     tscCommand: string,
     logger: LoggerBase
