@@ -376,6 +376,21 @@ export interface TsCompilationBundleOptions {
      * Options object to convert CommonJS modules to ES6, so they can be included in bundle.
      */
     commonjs?: CommonJsOptions;
+
+    /**
+     * External id and global variable name mapping for bundling options.
+     */
+    externals?: { [key: string]: string };
+
+    /**
+     * If true, 'dependencies' keys in package.json are marked as externals and not included in bundle. Default to 'true'.
+     */
+    dependenciesAsExternals?: boolean;
+
+    /**
+     * If true, 'peerDependenciesAsExternals' keys in package.json are marked as externals and not included in bundle. Default to 'true'.
+     */
+    peerDependenciesAsExternals?: boolean;
 }
 
 /**
