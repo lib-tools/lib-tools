@@ -14,7 +14,7 @@ export async function performScriptBundles(buildAction: BuildActionInternal, log
     for (const bundleOptions of buildAction._script._bundles) {
         const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
 
-        logger.info(`Bundling to ${rollupOptions.outputOptions.format} format with rollup`);
+        logger.info(`Bundling with rollup, format: ${rollupOptions.outputOptions.format}`);
 
         const rollupBuild = await rollup.rollup(rollupOptions.inputOptions);
         await rollupBuild.write(rollupOptions.outputOptions);
@@ -22,7 +22,7 @@ export async function performScriptBundles(buildAction: BuildActionInternal, log
         if (bundleOptions.minify) {
             const minFilePath = bundleOptions._outputFilePath.replace(/\.js$/i, '.min.js');
 
-            logger.debug(`Writing minify file ${path.basename(minFilePath)}`);
+            logger.info(`Writing minify file ${path.basename(minFilePath)}`);
 
             await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions.sourceMap, logger);
         }
