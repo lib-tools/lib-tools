@@ -3,13 +3,13 @@ import * as rollup from 'rollup';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
-import { BuildActionInternal, ScriptBundleEntryInternal } from '../models/internals';
+import { BuildActionInternal, ScriptBundleOptionsInternal } from '../models/internals';
 import { LoggerBase } from '../utils';
 
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export function getRollupConfig(
-    bundleOptions: ScriptBundleEntryInternal,
+    bundleOptions: ScriptBundleOptionsInternal,
     buildAction: BuildActionInternal,
     logger: LoggerBase
 ): {
