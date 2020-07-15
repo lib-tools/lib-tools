@@ -8,7 +8,7 @@ import { LoggerBase } from '../utils';
 export async function minifyJsBundle(
     inputPath: string,
     outputPath: string,
-    sourceMap: boolean,
+    sourceMap: boolean | null | undefined,
     logger: LoggerBase
 ): Promise<void> {
     const content = await readFile(inputPath, 'utf-8');
