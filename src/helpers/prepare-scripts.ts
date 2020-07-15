@@ -3,13 +3,7 @@ import * as path from 'path';
 import { pathExists } from 'fs-extra';
 import { ModuleKind, ScriptTarget } from 'typescript';
 
-import {
-    ScriptBundleModuleKind,
-    ScriptBundleOptions,
-    ScriptCompilationOptions,
-    ScriptOptions,
-    ScriptTargetString
-} from '../models';
+import { ScriptBundleOptions, ScriptCompilationOptions, ScriptOptions, ScriptTargetString } from '../models';
 import {
     BuildActionInternal,
     ScriptBundleOptionsInternal,
@@ -201,7 +195,7 @@ function toScriptCompilationEntryInternal(
         tsOutDir = path.resolve(tsOutDir, relSubDir);
     }
 
-    let bundleOptions: ScriptBundleOptionsInternal | null = null;
+    const bundles: ScriptBundleOptionsInternal[] = [];
     const sourceMap = compilerOptions.sourceMap ? true : false;
     if (compilationOptions.esBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
@@ -210,26 +204,44 @@ function toScriptCompilationEntryInternal(
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
         const bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, `${outFileName}.js`);
 
-        bundleOptions = {
+        const bundleOptions: ScriptBundleOptionsInternal = {
             moduleFormat: 'es',
             sourceMap,
             minify: false,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
-    } else if (compilationOptions.umdBundle || compilationOptions.cjsBundle) {
+        bundles.push(bundleOptions);
+    }
+
+    if (compilationOptions.umdBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const moduleFormat: ScriptBundleModuleKind = compilationOptions.cjsBundle ? 'cjs' : 'umd';
-        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.${moduleFormat}.js`);
+        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.umd.js`);
 
-        bundleOptions = {
-            moduleFormat,
+        const bundleOptions: ScriptBundleOptionsInternal = {
+            moduleFormat: 'umd',
             sourceMap,
             minify: true,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
+        bundles.push(bundleOptions);
+    }
+
+    if (compilationOptions.cjsBundle) {
+        const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
+        const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
+        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.cjs.js`);
+
+        const bundleOptions: ScriptBundleOptionsInternal = {
+            moduleFormat: 'cjs',
+            sourceMap,
+            minify: true,
+            _entryFilePath: entryFilePath,
+            _outputFilePath: bundleOutFilePath
+        };
+        bundles.push(bundleOptions);
     }
 
     // Add  entry points to package.json
@@ -300,56 +312,58 @@ function toScriptCompilationEntryInternal(
             buildAction._packageJsonEntryPoint.main = jsEntryFile;
         }
 
-        if (bundleOptions != null) {
-            const jsEntryFileForBundle = normalizePath(
-                path.relative(buildAction._packageJsonOutDir, bundleOptions._outputFilePath)
-            );
+        if (bundles.length > 0) {
+            for (const bundleOptions of bundles) {
+                const jsEntryFileForBundle = normalizePath(
+                    path.relative(buildAction._packageJsonOutDir, bundleOptions._outputFilePath)
+                );
 
-            if (bundleOptions.moduleFormat === 'es') {
-                if (
-                    compilerOptions.module &&
-                    compilerOptions.module >= ModuleKind.ES2015 &&
-                    scriptTarget > ScriptTarget.ES2015
-                ) {
-                    let esYear: string;
-                    if (scriptTarget === ScriptTarget.ESNext) {
-                        if (
-                            compilerOptions.module === ModuleKind.ES2020 ||
-                            compilerOptions.module === ModuleKind.ESNext
-                        ) {
-                            esYear = '2020';
+                if (bundleOptions.moduleFormat === 'es') {
+                    if (
+                        compilerOptions.module &&
+                        compilerOptions.module >= ModuleKind.ES2015 &&
+                        scriptTarget > ScriptTarget.ES2015
+                    ) {
+                        let esYear: string;
+                        if (scriptTarget === ScriptTarget.ESNext) {
+                            if (
+                                compilerOptions.module === ModuleKind.ES2020 ||
+                                compilerOptions.module === ModuleKind.ESNext
+                            ) {
+                                esYear = '2020';
+                            } else {
+                                esYear = '2015';
+                            }
                         } else {
-                            esYear = '2015';
+                            esYear = `${2013 + scriptTarget}`;
                         }
-                    } else {
-                        esYear = `${2013 + scriptTarget}`;
-                    }
 
-                    buildAction._packageJsonEntryPoint[`fesm${esYear}`] = jsEntryFileForBundle;
-                    buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFileForBundle;
-                    if (!buildAction._packageJsonEntryPoint.module) {
+                        buildAction._packageJsonEntryPoint[`fesm${esYear}`] = jsEntryFileForBundle;
+                        buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFileForBundle;
+                        if (!buildAction._packageJsonEntryPoint.module) {
+                            buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
+                        }
+                    } else if (
+                        compilerOptions.module &&
+                        compilerOptions.module >= ModuleKind.ES2015 &&
+                        scriptTarget === ScriptTarget.ES2015
+                    ) {
+                        buildAction._packageJsonEntryPoint.fesm2015 = jsEntryFileForBundle;
+                        buildAction._packageJsonEntryPoint.es2015 = jsEntryFileForBundle;
+                        if (!buildAction._packageJsonEntryPoint.module) {
+                            buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
+                        }
+                    } else if (
+                        compilerOptions.module &&
+                        compilerOptions.module >= ModuleKind.ES2015 &&
+                        scriptTarget === ScriptTarget.ES5
+                    ) {
+                        buildAction._packageJsonEntryPoint.fesm5 = jsEntryFileForBundle;
                         buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
                     }
-                } else if (
-                    compilerOptions.module &&
-                    compilerOptions.module >= ModuleKind.ES2015 &&
-                    scriptTarget === ScriptTarget.ES2015
-                ) {
-                    buildAction._packageJsonEntryPoint.fesm2015 = jsEntryFileForBundle;
-                    buildAction._packageJsonEntryPoint.es2015 = jsEntryFileForBundle;
-                    if (!buildAction._packageJsonEntryPoint.module) {
-                        buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
-                    }
-                } else if (
-                    compilerOptions.module &&
-                    compilerOptions.module >= ModuleKind.ES2015 &&
-                    scriptTarget === ScriptTarget.ES5
-                ) {
-                    buildAction._packageJsonEntryPoint.fesm5 = jsEntryFileForBundle;
-                    buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
+                } else {
+                    buildAction._packageJsonEntryPoint.main = jsEntryFileForBundle;
                 }
-            } else {
-                buildAction._packageJsonEntryPoint.main = jsEntryFileForBundle;
             }
         }
     }
@@ -362,7 +376,7 @@ function toScriptCompilationEntryInternal(
         _declaration: declaration,
         _tsOutDirRootResolved: tsOutDir,
         _customTsOutDir: customTsOutDir,
-        _bundle: bundleOptions
+        _bundles: bundles
     };
 }
 
