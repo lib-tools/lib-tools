@@ -351,6 +351,43 @@ export type ScriptTargetString =
     | 'latest'
     | 'Latest';
 
+export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'es';
+
+/**
+ * @additionalProperties false
+ */
+export interface TsCompilationBundleOptions {
+    /**
+     * Custom bundle output file.
+     */
+    outputFile?: string;
+
+    /**
+     * If true, minify file will be generated.
+     */
+    minify?: boolean;
+
+    /**
+     *  If true, sourcemap file will be generated.
+     */
+    sourceMap?: boolean;
+
+    /**
+     * Options object to convert CommonJS modules to ES6, so they can be included in bundle.
+     */
+    commonjs?: CommonJsOptions;
+}
+
+/**
+ * @additionalProperties false
+ */
+export interface ScriptBundleOptions extends TsCompilationBundleOptions {
+    /**
+     * Specify the format of the generated bundle.
+     */
+    moduleFormat: ScriptBundleModuleKind;
+}
+
 /**
  * @additionalProperties false
  */
@@ -370,7 +407,7 @@ export interface ScriptCompilationOptions {
     /**
      * Set true to bundle compilation output to esm module format.
      */
-    esmBundle?: boolean;
+    esBundle?: boolean;
     /**
      * Set true to bundle compilation output to umd module format.
      */
@@ -379,38 +416,6 @@ export interface ScriptCompilationOptions {
      * Set true to bundle compilation output to commonjs module format.
      */
     cjsBundle?: boolean;
-}
-
-export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'es';
-
-/**
- * @additionalProperties false
- */
-export interface ScriptBundleOptions {
-    /**
-     * Specify the format of the generated bundle.
-     */
-    moduleFormat: ScriptBundleModuleKind;
-
-    /**
-     * Custom bundle output file.
-     */
-    outputFile?: string;
-
-    /**
-     * If true, minify file will be generated.
-     */
-    minify?: boolean;
-
-    /**
-     *  If true, sourcemap file will be generated.
-     */
-    sourceMap?: boolean;
-
-    /**
-     * Options object or boolean value to include commonjs modules in umd or cjs bundle.
-     */
-    includeCommonJs?: boolean | CommonJsOptions;
 }
 
 /**
