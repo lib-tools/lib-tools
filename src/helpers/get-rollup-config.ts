@@ -83,16 +83,15 @@ export function getRollupConfig(
 
     // plugins
     const plugins: rollup.Plugin[] = [];
-    if (bundleOptions.moduleFormat === 'umd' || bundleOptions.moduleFormat === 'cjs' || bundleOptions.includeCommonJs) {
+    if (bundleOptions.moduleFormat === 'umd' || bundleOptions.moduleFormat === 'cjs' || bundleOptions.commonjs) {
         plugins.push(resolve());
     }
 
-    if (bundleOptions.includeCommonJs) {
-        const customOptions = typeof bundleOptions.includeCommonJs === 'object' ? bundleOptions.includeCommonJs : {};
+    if (bundleOptions.commonjs) {
         const commonjsOption = {
+            ...bundleOptions.commonjs,
             extensions: ['.js'],
-            sourceMap: bundleOptions.sourceMap,
-            ...customOptions
+            sourceMap: bundleOptions.sourceMap
         };
 
         plugins.push(commonjs(commonjsOption));
