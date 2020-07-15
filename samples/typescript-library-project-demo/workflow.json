@@ -12,19 +12,29 @@
                 "declaration": true,
                 "target": "ES2015",
                 "outDir": "esm2015",
-                "esBundle": true
+                "esBundle": {
+                  "outputFile": "fesm2015/demo.js"
+                }
               },
               {
                 "declaration": false,
                 "target": "es5",
                 "outDir": "esm5",
                 "esBundle": true,
-                "umdBundle": true
+                "umdBundle": {
+                  "outputFile": "bundles/demo.umd.js"
+                }
               }
             ],
             "tsConfig": "tsconfig.build.json",
             "addToPackageJson": true,
-            "entry": "public_api.ts"
+            "entry": "public_api.ts",
+            "moduleName": "demo",
+            "peerDependenciesAsExternals": true,
+            "dependenciesAsExternals": true,
+            "externals": {
+              "tslib": "tslib"
+            }
           }
         }
       }
