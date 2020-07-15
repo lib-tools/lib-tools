@@ -134,8 +134,13 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
     if (buildAction.script && buildAction.script.bundles) {
         const scriptOptions = buildAction.script;
         for (const bundleOptions of buildAction.script.bundles) {
-            const bundleEntryInternal = toBundleEntryInternal(bundleOptions, scriptOptions, tsConfigInfo, buildAction);
-            scriptBundles.push(bundleEntryInternal);
+            const bundleOptionsInternal = toBundleEntryInternal(
+                bundleOptions,
+                scriptOptions,
+                tsConfigInfo,
+                buildAction
+            );
+            scriptBundles.push(bundleOptionsInternal);
         }
     }
 
