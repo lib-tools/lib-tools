@@ -44,17 +44,17 @@ export interface TsConfigJsonOptions {
     angularCompilerOptions?: AngularCompilerJsonOptions;
 }
 
-export interface ScriptBundleEntryInternal extends ScriptBundleOptions {
+export interface ScriptBundleOptionsInternal extends ScriptBundleOptions {
     _entryFilePath: string;
     _outputFilePath: string;
 }
 
-export interface ScriptCompilationEntryInternal extends ScriptCompilationOptions {
+export interface ScriptCompilationOptionsInternal extends ScriptCompilationOptions {
     _declaration: boolean;
     _scriptTarget: ScriptTarget;
     _tsOutDirRootResolved: string;
     _customTsOutDir: string | null;
-    _bundle: ScriptBundleEntryInternal | null;
+    _bundle: ScriptBundleOptionsInternal | null;
     _tsConfigInfo: TsConfigInfo;
     _entryNameRel: string;
 }
@@ -62,8 +62,8 @@ export interface ScriptCompilationEntryInternal extends ScriptCompilationOptions
 export interface ScriptOptionsInternal extends ScriptOptions {
     _tsConfigInfo: TsConfigInfo | null;
     _entryNameRel: string | null;
-    _compilations: ScriptCompilationEntryInternal[];
-    _bundles: ScriptBundleEntryInternal[];
+    _compilations: ScriptCompilationOptionsInternal[];
+    _bundles: ScriptBundleOptionsInternal[];
 }
 
 export interface BuildActionInternal extends BuildAction {
