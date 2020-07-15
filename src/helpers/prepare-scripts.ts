@@ -154,7 +154,7 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
 }
 
 function toScriptCompilationEntryInternal(
-    compilationEntry: ScriptCompilationOptions,
+    compilationOptions: ScriptCompilationOptions,
     entryNameRel: string,
     tsConfigInfo: TsConfigInfo,
     buildAction: BuildActionInternal
@@ -165,23 +165,23 @@ function toScriptCompilationEntryInternal(
 
     // scriptTarget
     let scriptTarget: ScriptTarget = ScriptTarget.ES2015;
-    if (compilationEntry.target) {
-        scriptTarget = toTsScriptTarget(compilationEntry.target);
+    if (compilationOptions.target) {
+        scriptTarget = toTsScriptTarget(compilationOptions.target);
     } else if (compilerOptions.target) {
         scriptTarget = compilerOptions.target;
     }
 
     // declaration
     let declaration = true;
-    if (compilationEntry.declaration != null) {
-        declaration = compilationEntry.declaration;
+    if (compilationOptions.declaration != null) {
+        declaration = compilationOptions.declaration;
     }
 
     // tsOutDir
     let tsOutDir: string;
     let customTsOutDir: string | null = null;
-    if (compilationEntry.outDir) {
-        tsOutDir = path.resolve(buildAction._outputPath, compilationEntry.outDir);
+    if (compilationOptions.outDir) {
+        tsOutDir = path.resolve(buildAction._outputPath, compilationOptions.outDir);
         customTsOutDir = tsOutDir;
     } else {
         if (compilerOptions.outDir) {
@@ -203,7 +203,7 @@ function toScriptCompilationEntryInternal(
 
     let bundleOptions: ScriptBundleOptionsInternal | null = null;
     const sourceMap = compilerOptions.sourceMap ? true : false;
-    if (compilationEntry.esBundle) {
+    if (compilationOptions.esBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const esSuffix = ScriptTarget[scriptTarget].replace(/^ES/i, '');
         const fesmFolderName = `fesm${esSuffix}`;
@@ -217,10 +217,10 @@ function toScriptCompilationEntryInternal(
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
-    } else if (compilationEntry.umdBundle || compilationEntry.cjsBundle) {
+    } else if (compilationOptions.umdBundle || compilationOptions.cjsBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const moduleFormat: ScriptBundleModuleKind = compilationEntry.cjsBundle ? 'cjs' : 'umd';
+        const moduleFormat: ScriptBundleModuleKind = compilationOptions.cjsBundle ? 'cjs' : 'umd';
         const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.${moduleFormat}.js`);
 
         bundleOptions = {
@@ -355,7 +355,7 @@ function toScriptCompilationEntryInternal(
     }
 
     return {
-        ...compilationEntry,
+        ...compilationOptions,
         _tsConfigInfo: tsConfigInfo,
         _entryNameRel: entryNameRel,
         _scriptTarget: scriptTarget,
