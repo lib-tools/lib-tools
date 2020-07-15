@@ -398,14 +398,19 @@ export interface ScriptBundleOptions {
     outputFile?: string;
 
     /**
-     * Set true or options object to include commonjs modules in bundle.
-     */
-    includeCommonJs?: boolean | CommonJsOptions;
-
-    /**
      * If true, minify file will be generated.
      */
     minify?: boolean;
+
+    /**
+     *  If true, sourcemap file will be generated.
+     */
+    sourceMap?: boolean;
+
+    /**
+     * Options object or boolean value to include commonjs modules in umd or cjs bundle.
+     */
+    includeCommonJs?: boolean | CommonJsOptions;
 }
 
 /**
@@ -438,34 +443,24 @@ export interface ScriptOptions {
     entry?: string;
 
     /**
-     * Represent umd module id.
+     * Define module id for umd bundle.
      */
     moduleName?: string;
 
     /**
-     * External id and global variable name mapping.
+     * External id and global variable name mapping for bundling options.
      */
     externals?: { [key: string]: string };
 
     /**
-     * If true or options object, commonjs modules are converted to ES6 and included in bundle.
-     */
-    includeCommonJs?: boolean | CommonJsOptions;
-
-    /**
-     * If true, the bundle system will automatically mark 'dependencies' in package.json to be externals. Default is 'true'.
+     * If true, 'dependencies' keys in package.json are marked as externals and not included in bundle. Default to 'true'.
      */
     dependenciesAsExternals?: boolean;
 
     /**
-     * If true, the bundle system will automatically mark 'peerDependencies' in package.json to be externals. Default is 'true'.
+     * If true, 'peerDependenciesAsExternals' keys in package.json are marked as externals and not included in bundle. Default to 'true'.
      */
     peerDependenciesAsExternals?: boolean;
-
-    /**
-     *  Controls whether an output source map is built.
-     */
-    sourceMap?: boolean;
 }
 
 /**
