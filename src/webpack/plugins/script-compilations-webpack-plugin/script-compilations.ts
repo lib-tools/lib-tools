@@ -2,8 +2,10 @@ import * as path from 'path';
 
 import * as spawn from 'cross-spawn';
 import { pathExists, writeFile } from 'fs-extra';
+import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
+import { getRollupConfig, minifyJsBundle } from '../../../helpers';
 import { BuildActionInternal, ScriptCompilationEntryInternal } from '../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizePath } from '../../../utils';
 
@@ -209,6 +211,26 @@ async function afterTsTranspileTask(
 
             const reEportMetaDataFileAbs = reEportTypingsOutFileAbs.replace(/\.d\.ts$/i, '.metadata.json');
             await writeFile(reEportMetaDataFileAbs, JSON.stringify(metadataJson, null, 2));
+        }
+    }
+
+    // Bundle
+    if (compilation._bundle) {
+        const bundleOptions = compilation._bundle;
+        const scriptTargetText = ScriptTarget[compilation._scriptTarget];
+        const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
+
+        logger.info(`Bundling to ${rollupOptions.outputOptions.format}-${scriptTargetText} format with rollup`);
+
+        const rollupBuild = await rollup.rollup(rollupOptions.inputOptions);
+        await rollupBuild.write(rollupOptions.outputOptions);
+
+        if (bundleOptions.minify) {
+            const minFilePath = bundleOptions._outputFilePath.replace(/\.js$/i, '.min.js');
+
+            logger.debug(`Writing minify file ${path.basename(minFilePath)}`);
+
+            await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions.sourceMap, logger);
         }
     }
 }
