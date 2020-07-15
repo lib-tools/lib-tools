@@ -11,12 +11,15 @@
               {
                 "declaration": true,
                 "target": "ES2015",
-                "outDir": "esm2015"
+                "outDir": "esm2015",
+                "esBundle": true
               },
               {
                 "declaration": false,
                 "target": "es5",
-                "outDir": "esm5"
+                "outDir": "esm5",
+                "esBundle": true,
+                "umdBundle": true
               }
             ],
             "tsConfig": "tsconfig.build.json",
