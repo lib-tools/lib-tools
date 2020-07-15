@@ -12,8 +12,8 @@ import {
 } from '../models';
 import {
     BuildActionInternal,
-    ScriptBundleEntryInternal,
-    ScriptCompilationEntryInternal,
+    ScriptBundleOptionsInternal,
+    ScriptCompilationOptionsInternal,
     TsConfigInfo
 } from '../models/internals';
 import { findUp, isInFolder, isSamePaths, normalizePath } from '../utils';
@@ -27,8 +27,8 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
     const projectRoot = buildAction._projectRoot;
     const projectName = buildAction._projectName;
 
-    const scriptCompilations: ScriptCompilationEntryInternal[] = [];
-    const scriptBundles: ScriptBundleEntryInternal[] = [];
+    const scriptCompilations: ScriptCompilationOptionsInternal[] = [];
+    const scriptBundles: ScriptBundleOptionsInternal[] = [];
     let tsConfigPath: string | null = null;
     let tsConfigInfo: TsConfigInfo | null = null;
 
@@ -68,65 +68,67 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
             );
         }
 
-        for (const compilation of buildAction.script.compilations) {
-            const scriptCompilationEntryInternal = toScriptCompilationEntryInternal(
-                compilation,
-                entryNameRel,
-                tsConfigInfo,
-                buildAction
-            );
-            scriptCompilations.push(scriptCompilationEntryInternal);
-        }
-    } else if (
-        entryNameRel &&
-        tsConfigPath &&
-        tsConfigInfo &&
-        tsConfigInfo.tsCompilerConfig.options.target &&
-        tsConfigInfo.tsCompilerConfig.options.target >= ScriptTarget.ES2015 &&
-        (buildAction.script || buildAction._config === 'auto')
-    ) {
-        if (tsConfigInfo.tsCompilerConfig.options.target > ScriptTarget.ES2015) {
-            const esSuffix =
-                tsConfigInfo.tsCompilerConfig.options.target >= ScriptTarget.ESNext
-                    ? 'Next'
-                    : `${2013 + tsConfigInfo.tsCompilerConfig.options.target}`;
+        if (Array.isArray(buildAction.script.compilations)) {
+            for (const compilation of buildAction.script.compilations) {
+                const scriptCompilationEntryInternal = toScriptCompilationEntryInternal(
+                    compilation,
+                    entryNameRel,
+                    tsConfigInfo,
+                    buildAction
+                );
+                scriptCompilations.push(scriptCompilationEntryInternal);
+            }
+        } else if (buildAction.script.compilations === 'auto') {
+            if (
+                tsConfigInfo.tsCompilerConfig.options.target &&
+                tsConfigInfo.tsCompilerConfig.options.target > ScriptTarget.ES2015
+            ) {
+                const esSuffix =
+                    tsConfigInfo.tsCompilerConfig.options.target >= ScriptTarget.ESNext
+                        ? 'Next'
+                        : `${2013 + tsConfigInfo.tsCompilerConfig.options.target}`;
 
-            const esmScriptCompilationEntry = toScriptCompilationEntryInternal(
+                const esmScriptCompilationEntry = toScriptCompilationEntryInternal(
+                    {
+                        target: `es${esSuffix}` as ScriptTargetString,
+                        outDir: `esm${esSuffix}`,
+                        declaration: true,
+                        esBundle: true
+                    },
+                    entryNameRel,
+                    tsConfigInfo,
+                    buildAction
+                );
+                scriptCompilations.push(esmScriptCompilationEntry);
+            } else {
+                const esmScriptCompilationEntry = toScriptCompilationEntryInternal(
+                    {
+                        target: 'es2015',
+                        outDir: 'esm2015',
+                        declaration: true,
+                        esBundle: true
+                    },
+                    entryNameRel,
+                    tsConfigInfo,
+                    buildAction
+                );
+                scriptCompilations.push(esmScriptCompilationEntry);
+            }
+
+            const esm5ScriptCompilationEntry = toScriptCompilationEntryInternal(
                 {
-                    target: `es${esSuffix}` as ScriptTargetString,
-                    outDir: `esm${esSuffix}`,
-                    declaration: true
+                    target: 'es5',
+                    outDir: 'esm5',
+                    declaration: false,
+                    esBundle: true,
+                    umdBundle: true
                 },
                 entryNameRel,
                 tsConfigInfo,
                 buildAction
             );
-            scriptCompilations.push(esmScriptCompilationEntry);
-        } else {
-            const esmScriptCompilationEntry = toScriptCompilationEntryInternal(
-                {
-                    target: 'es2015',
-                    outDir: 'esm2015',
-                    declaration: true
-                },
-                entryNameRel,
-                tsConfigInfo,
-                buildAction
-            );
-            scriptCompilations.push(esmScriptCompilationEntry);
+            scriptCompilations.push(esm5ScriptCompilationEntry);
         }
-
-        const esm5ScriptCompilationEntry = toScriptCompilationEntryInternal(
-            {
-                target: 'es5',
-                outDir: 'esm5',
-                declaration: false
-            },
-            entryNameRel,
-            tsConfigInfo,
-            buildAction
-        );
-        scriptCompilations.push(esm5ScriptCompilationEntry);
     }
 
     if (buildAction.script && buildAction.script.bundles) {
@@ -151,7 +153,7 @@ function toScriptCompilationEntryInternal(
     entryNameRel: string,
     tsConfigInfo: TsConfigInfo,
     buildAction: BuildActionInternal
-): ScriptCompilationEntryInternal {
+): ScriptCompilationOptionsInternal {
     const tsConfigPath = tsConfigInfo.tsConfigPath;
     const tsCompilerConfig = tsConfigInfo.tsCompilerConfig;
     const compilerOptions = tsCompilerConfig.options;
@@ -194,7 +196,7 @@ function toScriptCompilationEntryInternal(
         tsOutDir = path.resolve(tsOutDir, relSubDir);
     }
 
-    let bundleEntry: ScriptBundleEntryInternal | null = null;
+    let bundleEntry: ScriptBundleOptionsInternal | null = null;
     const sourceMap = compilerOptions.sourceMap ? true : false;
     if (compilationEntry.esBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
@@ -421,7 +423,7 @@ function toBundleEntryInternal(
     scriptOptions: ScriptOptions,
     tsConfigInfo: TsConfigInfo | null,
     buildAction: BuildActionInternal
-): ScriptBundleEntryInternal {
+): ScriptBundleOptionsInternal {
     if (!scriptOptions.entry) {
         throw new Error(
             `The entry file could not be detected automatically. Please set it manually in 'projects[${buildAction._projectName}].actions.build.script.entry'.`
