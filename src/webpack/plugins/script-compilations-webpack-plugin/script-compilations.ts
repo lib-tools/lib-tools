@@ -55,7 +55,7 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
             }
         }
 
-        logger.info(`Compiling with typescript, target: ${scriptTargetText}`);
+        logger.info(`Compiling with ${path.basename(tscCommand)}, target: ${scriptTargetText}`);
 
         await new Promise((res, rej) => {
             const errors: string[] = [];
