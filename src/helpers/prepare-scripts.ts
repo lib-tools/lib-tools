@@ -202,59 +202,74 @@ function toScriptCompilationEntryInternal(
     const bundles: ScriptBundleOptionsInternal[] = [];
     const sourceMap = compilerOptions.sourceMap ? true : false;
     if (compilationOptions.esBundle) {
+        const bundleOptions = typeof compilationOptions.esBundle === 'object' ? compilationOptions.esBundle : {};
+
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const esSuffix = ScriptTarget[scriptTarget].replace(/^ES/i, '');
         const fesmFolderName = `fesm${esSuffix}`;
-        const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, `${outFileName}.js`);
+        const outFileName = bundleOptions.outputFile
+            ? bundleOptions.outputFile
+            : `${fesmFolderName}/${buildAction._packageNameWithoutScope.replace(/\//gm, '-')}.umd.js`;
+        const bundleOutFilePath = path.resolve(buildAction._outputPath, outFileName);
         const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
 
-        const bundleOptions: ScriptBundleOptionsInternal = {
+        const bundleOptionsInternal: ScriptBundleOptionsInternal = {
             moduleFormat: 'es',
             sourceMap,
             minify: false,
+            ...bundleOptions,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath,
             _externals: globalsAndExternals.externals,
             _globals: globalsAndExternals.globals
         };
-        bundles.push(bundleOptions);
+        bundles.push(bundleOptionsInternal);
     }
 
     if (compilationOptions.umdBundle) {
+        const bundleOptions = typeof compilationOptions.umdBundle === 'object' ? compilationOptions.umdBundle : {};
+
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
-        const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.umd.js`);
+        const outFileName = bundleOptions.outputFile
+            ? bundleOptions.outputFile
+            : `bundles/${buildAction._packageNameWithoutScope.replace(/\//gm, '-')}.umd.js`;
+        const bundleOutFilePath = path.resolve(buildAction._outputPath, outFileName);
         const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
 
-        const bundleOptions: ScriptBundleOptionsInternal = {
+        const bundleOptionsInternal: ScriptBundleOptionsInternal = {
             moduleFormat: 'umd',
             sourceMap,
             minify: true,
+            ...bundleOptions,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath,
             _externals: globalsAndExternals.externals,
             _globals: globalsAndExternals.globals
         };
-        bundles.push(bundleOptions);
+        bundles.push(bundleOptionsInternal);
     }
 
     if (compilationOptions.cjsBundle) {
+        const bundleOptions = typeof compilationOptions.cjsBundle === 'object' ? compilationOptions.cjsBundle : {};
+
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
-        const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.cjs.js`);
+        const outFileName = bundleOptions.outputFile
+            ? bundleOptions.outputFile
+            : `bundles/${buildAction._packageNameWithoutScope.replace(/\//gm, '-')}.cjs.js`;
+        const bundleOutFilePath = path.resolve(buildAction._outputPath, outFileName);
         const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
 
-        const bundleOptions: ScriptBundleOptionsInternal = {
+        const bundleOptionsInternal: ScriptBundleOptionsInternal = {
             moduleFormat: 'cjs',
             sourceMap,
             minify: true,
+            ...bundleOptions,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath,
             _externals: globalsAndExternals.externals,
             _globals: globalsAndExternals.globals
         };
-        bundles.push(bundleOptions);
+        bundles.push(bundleOptionsInternal);
     }
 
     // Add  entry points to package.json
