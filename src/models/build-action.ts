@@ -407,15 +407,15 @@ export interface ScriptCompilationOptions {
     /**
      * Set true to bundle compilation output to esm module format.
      */
-    esBundle?: boolean;
+    esBundle?: boolean | TsCompilationBundleOptions;
     /**
      * Set true to bundle compilation output to umd module format.
      */
-    umdBundle?: boolean;
+    umdBundle?: boolean | TsCompilationBundleOptions;
     /**
      * Set true to bundle compilation output to commonjs module format.
      */
-    cjsBundle?: boolean;
+    cjsBundle?: boolean | TsCompilationBundleOptions;
 }
 
 /**
@@ -423,12 +423,12 @@ export interface ScriptCompilationOptions {
  */
 export interface ScriptOptions {
     /**
-     * List of compilation entries.
+     * List of compilation options or `auto` for automatic compilations based on project structure.
      */
-    compilations?: ScriptCompilationOptions[];
+    compilations?: 'auto' | ScriptCompilationOptions[];
 
     /**
-     * List of bundle entries.
+     * List of bundle options.
      */
     bundles?: ScriptBundleOptions[];
 
