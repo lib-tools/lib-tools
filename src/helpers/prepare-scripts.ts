@@ -195,6 +195,7 @@ function toScriptCompilationEntryInternal(
     }
 
     let bundleEntry: ScriptBundleEntryInternal | null = null;
+    const sourceMap = compilerOptions.sourceMap ? true : false;
     if (compilationEntry.esmBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const esSuffix = ScriptTarget[scriptTarget].replace(/^ES/i, '');
@@ -204,6 +205,8 @@ function toScriptCompilationEntryInternal(
 
         bundleEntry = {
             moduleFormat: 'es',
+            sourceMap,
+            minify: false,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
@@ -215,6 +218,8 @@ function toScriptCompilationEntryInternal(
 
         bundleEntry = {
             moduleFormat,
+            sourceMap,
+            minify: true,
             _entryFilePath: entryFilePath,
             _outputFilePath: bundleOutFilePath
         };
