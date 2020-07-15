@@ -6,6 +6,7 @@ import { ModuleKind, ScriptTarget } from 'typescript';
 import { ScriptBundleOptions, ScriptCompilationOptions, ScriptOptions, ScriptTargetString } from '../models';
 import {
     BuildActionInternal,
+    PackageJsonLike,
     ScriptBundleOptionsInternal,
     ScriptCompilationOptionsInternal,
     TsConfigInfo
@@ -15,6 +16,9 @@ import { findUp, isInFolder, isSamePaths, normalizePath } from '../utils';
 import { getCachedTsConfigFile } from './get-cached-ts-config-file';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
+
+const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+let buildInsExternals: string[] | null = null;
 
 export async function prepareScripts(buildAction: BuildActionInternal): Promise<void> {
     const workspaceRoot = buildAction._workspaceRoot;
@@ -203,13 +207,16 @@ function toScriptCompilationEntryInternal(
         const fesmFolderName = `fesm${esSuffix}`;
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
         const bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, `${outFileName}.js`);
+        const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
 
         const bundleOptions: ScriptBundleOptionsInternal = {
             moduleFormat: 'es',
             sourceMap,
             minify: false,
             _entryFilePath: entryFilePath,
-            _outputFilePath: bundleOutFilePath
+            _outputFilePath: bundleOutFilePath,
+            _externals: globalsAndExternals.externals,
+            _globals: globalsAndExternals.globals
         };
         bundles.push(bundleOptions);
     }
@@ -218,13 +225,16 @@ function toScriptCompilationEntryInternal(
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
         const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.umd.js`);
+        const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
 
         const bundleOptions: ScriptBundleOptionsInternal = {
             moduleFormat: 'umd',
             sourceMap,
             minify: true,
             _entryFilePath: entryFilePath,
-            _outputFilePath: bundleOutFilePath
+            _outputFilePath: bundleOutFilePath,
+            _externals: globalsAndExternals.externals,
+            _globals: globalsAndExternals.globals
         };
         bundles.push(bundleOptions);
     }
@@ -233,13 +243,16 @@ function toScriptCompilationEntryInternal(
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const outFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
         const bundleOutFilePath = path.resolve(buildAction._outputPath, `bundles/${outFileName}.cjs.js`);
+        const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
 
         const bundleOptions: ScriptBundleOptionsInternal = {
             moduleFormat: 'cjs',
             sourceMap,
             minify: true,
             _entryFilePath: entryFilePath,
-            _outputFilePath: bundleOutFilePath
+            _outputFilePath: bundleOutFilePath,
+            _externals: globalsAndExternals.externals,
+            _globals: globalsAndExternals.globals
         };
         bundles.push(bundleOptions);
     }
@@ -510,9 +523,108 @@ function toBundleEntryInternal(
         }
     }
 
+    const globalsAndExternals = getExternalsAndGlobals(scriptOptions, bundleOptions, buildAction._packageJson);
+
     return {
         ...bundleOptions,
         _entryFilePath: entryFilePath,
-        _outputFilePath: bundleOutFilePath
+        _outputFilePath: bundleOutFilePath,
+        _externals: globalsAndExternals.externals,
+        _globals: globalsAndExternals.globals
     };
+}
+
+function getExternalsAndGlobals(
+    scriptOptions: ScriptOptions,
+    bundleOptions: Partial<ScriptBundleOptions>,
+    packageJson: PackageJsonLike
+): { externals: string[]; globals: { [key: string]: string } } {
+    let globals: { [key: string]: string } = {};
+    if (scriptOptions.externals) {
+        globals = {
+            ...globals,
+            ...scriptOptions.externals
+        };
+    }
+    if (bundleOptions.externals) {
+        globals = {
+            ...globals,
+            ...bundleOptions.externals
+        };
+    }
+
+    const externals = Object.keys(globals);
+
+    if (bundleOptions.moduleFormat === 'cjs') {
+        if (buildInsExternals == null) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
+            buildInsExternals = require('builtins')() as string[];
+        }
+
+        buildInsExternals
+            .filter((e) => !externals.includes(e))
+            .forEach((e) => {
+                externals.push(e);
+            });
+    }
+
+    let dependenciesAsExternals = true;
+    if (bundleOptions.dependenciesAsExternals != null) {
+        dependenciesAsExternals = bundleOptions.dependenciesAsExternals;
+    } else if (scriptOptions.dependenciesAsExternals != null) {
+        dependenciesAsExternals = scriptOptions.dependenciesAsExternals;
+    }
+
+    if (dependenciesAsExternals && packageJson.dependencies) {
+        Object.keys(packageJson.dependencies)
+            .filter((e) => !externals.includes(e))
+            .forEach((e) => {
+                externals.push(e);
+                if (!globals[e]) {
+                    const globalVar = getGlobalVariable(e);
+                    if (globalVar) {
+                        globals[e] = globalVar;
+                    }
+                }
+            });
+    }
+
+    let peerDependenciesAsExternals = true;
+    if (bundleOptions.peerDependenciesAsExternals != null) {
+        peerDependenciesAsExternals = bundleOptions.peerDependenciesAsExternals;
+    } else if (scriptOptions.peerDependenciesAsExternals != null) {
+        peerDependenciesAsExternals = scriptOptions.peerDependenciesAsExternals;
+    }
+
+    if (peerDependenciesAsExternals && packageJson.peerDependencies) {
+        Object.keys(packageJson.peerDependencies)
+            .filter((e) => !externals.includes(e))
+            .forEach((e) => {
+                externals.push(e);
+                if (!globals[e]) {
+                    const globalVar = getGlobalVariable(e);
+                    if (globalVar) {
+                        globals[e] = globalVar;
+                    }
+                }
+            });
+    }
+
+    return {
+        externals,
+        globals
+    };
+}
+
+function getGlobalVariable(externalKey: string): string | null {
+    if (externalKey === 'tslib') {
+        return externalKey;
+    }
+
+    if (/@angular\//.test(externalKey)) {
+        const normalizedValue = externalKey.replace(/@angular\//, 'ng.').replace(/\//g, '.');
+        return dashCaseToCamelCase(normalizedValue);
+    }
+
+    return null;
 }
