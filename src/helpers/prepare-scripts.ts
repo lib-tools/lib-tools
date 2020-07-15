@@ -340,58 +340,56 @@ function toScriptCompilationEntryInternal(
             buildAction._packageJsonEntryPoint.main = jsEntryFile;
         }
 
-        if (bundles.length > 0) {
-            for (const bundleOptions of bundles) {
-                const jsEntryFileForBundle = normalizePath(
-                    path.relative(buildAction._packageJsonOutDir, bundleOptions._outputFilePath)
-                );
+        for (const bundleOptions of bundles) {
+            const jsEntryFileForBundle = normalizePath(
+                path.relative(buildAction._packageJsonOutDir, bundleOptions._outputFilePath)
+            );
 
-                if (bundleOptions.moduleFormat === 'es') {
-                    if (
-                        compilerOptions.module &&
-                        compilerOptions.module >= ModuleKind.ES2015 &&
-                        scriptTarget > ScriptTarget.ES2015
-                    ) {
-                        let esYear: string;
-                        if (scriptTarget === ScriptTarget.ESNext) {
-                            if (
-                                compilerOptions.module === ModuleKind.ES2020 ||
-                                compilerOptions.module === ModuleKind.ESNext
-                            ) {
-                                esYear = '2020';
-                            } else {
-                                esYear = '2015';
-                            }
+            if (bundleOptions.moduleFormat === 'es') {
+                if (
+                    compilerOptions.module &&
+                    compilerOptions.module >= ModuleKind.ES2015 &&
+                    scriptTarget > ScriptTarget.ES2015
+                ) {
+                    let esYear: string;
+                    if (scriptTarget === ScriptTarget.ESNext) {
+                        if (
+                            compilerOptions.module === ModuleKind.ES2020 ||
+                            compilerOptions.module === ModuleKind.ESNext
+                        ) {
+                            esYear = '2020';
                         } else {
-                            esYear = `${2013 + scriptTarget}`;
+                            esYear = '2015';
                         }
+                    } else {
+                        esYear = `${2013 + scriptTarget}`;
+                    }
 
-                        buildAction._packageJsonEntryPoint[`fesm${esYear}`] = jsEntryFileForBundle;
-                        buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFileForBundle;
-                        if (!buildAction._packageJsonEntryPoint.module) {
-                            buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
-                        }
-                    } else if (
-                        compilerOptions.module &&
-                        compilerOptions.module >= ModuleKind.ES2015 &&
-                        scriptTarget === ScriptTarget.ES2015
-                    ) {
-                        buildAction._packageJsonEntryPoint.fesm2015 = jsEntryFileForBundle;
-                        buildAction._packageJsonEntryPoint.es2015 = jsEntryFileForBundle;
-                        if (!buildAction._packageJsonEntryPoint.module) {
-                            buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
-                        }
-                    } else if (
-                        compilerOptions.module &&
-                        compilerOptions.module >= ModuleKind.ES2015 &&
-                        scriptTarget === ScriptTarget.ES5
-                    ) {
-                        buildAction._packageJsonEntryPoint.fesm5 = jsEntryFileForBundle;
+                    buildAction._packageJsonEntryPoint[`fesm${esYear}`] = jsEntryFileForBundle;
+                    buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFileForBundle;
+                    if (!buildAction._packageJsonEntryPoint.module) {
                         buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
                     }
-                } else {
-                    buildAction._packageJsonEntryPoint.main = jsEntryFileForBundle;
+                } else if (
+                    compilerOptions.module &&
+                    compilerOptions.module >= ModuleKind.ES2015 &&
+                    scriptTarget === ScriptTarget.ES2015
+                ) {
+                    buildAction._packageJsonEntryPoint.fesm2015 = jsEntryFileForBundle;
+                    buildAction._packageJsonEntryPoint.es2015 = jsEntryFileForBundle;
+                    if (!buildAction._packageJsonEntryPoint.module) {
+                        buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
+                    }
+                } else if (
+                    compilerOptions.module &&
+                    compilerOptions.module >= ModuleKind.ES2015 &&
+                    scriptTarget === ScriptTarget.ES5
+                ) {
+                    buildAction._packageJsonEntryPoint.fesm5 = jsEntryFileForBundle;
+                    buildAction._packageJsonEntryPoint.module = jsEntryFileForBundle;
                 }
+            } else {
+                buildAction._packageJsonEntryPoint.main = jsEntryFileForBundle;
             }
         }
     }
