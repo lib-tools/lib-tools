@@ -196,7 +196,7 @@ function toScriptCompilationEntryInternal(
 
     let bundleEntry: ScriptBundleEntryInternal | null = null;
     const sourceMap = compilerOptions.sourceMap ? true : false;
-    if (compilationEntry.esmBundle) {
+    if (compilationEntry.esBundle) {
         const entryFilePath = path.resolve(tsOutDir, `${entryNameRel}.js`);
         const esSuffix = ScriptTarget[scriptTarget].replace(/^ES/i, '');
         const fesmFolderName = `fesm${esSuffix}`;
