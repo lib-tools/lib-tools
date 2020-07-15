@@ -54,9 +54,9 @@ export interface ScriptCompilationOptionsInternal extends ScriptCompilationOptio
     _scriptTarget: ScriptTarget;
     _tsOutDirRootResolved: string;
     _customTsOutDir: string | null;
-    _bundle: ScriptBundleOptionsInternal | null;
     _tsConfigInfo: TsConfigInfo;
     _entryNameRel: string;
+    _bundles: ScriptBundleOptionsInternal[];
 }
 
 export interface ScriptOptionsInternal extends ScriptOptions {
