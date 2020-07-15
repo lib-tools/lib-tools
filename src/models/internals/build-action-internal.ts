@@ -47,6 +47,8 @@ export interface TsConfigJsonOptions {
 export interface ScriptBundleOptionsInternal extends ScriptBundleOptions {
     _entryFilePath: string;
     _outputFilePath: string;
+    _externals: string[];
+    _globals: { [key: string]: string };
 }
 
 export interface ScriptCompilationOptionsInternal extends ScriptCompilationOptions {
