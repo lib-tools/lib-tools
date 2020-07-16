@@ -173,7 +173,7 @@ async function afterTsTranspileTask(
     // Re-export
     // TODO: To review
     if (buildAction._nestedPackage && compilation._declaration) {
-        let reExportName = compilation._entryNameRel;
+        let reExportName = compilation._entryName;
         if (buildAction._nestedPackage && buildAction._packageNameWithoutScope) {
             reExportName = buildAction._packageNameWithoutScope.substr(
                 buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
@@ -187,7 +187,7 @@ async function afterTsTranspileTask(
 
         logger.debug('Re-exporting typing files to output root');
 
-        const reExportTypingsContent = `${bannerContent}export * from './${relPath}/${compilation._entryNameRel}';\n`;
+        const reExportTypingsContent = `${bannerContent}export * from './${relPath}/${compilation._entryName}';\n`;
         const reEportTypingsOutFileAbs = path.resolve(outputRootDir, `${reExportName}.d.ts`);
         await writeFile(reEportTypingsOutFileAbs, reExportTypingsContent);
 
@@ -204,7 +204,7 @@ async function afterTsTranspileTask(
                 __symbolic: 'module',
                 version: 3,
                 metadata: {},
-                exports: [{ from: `./${relPath}/${compilation._entryNameRel}` }],
+                exports: [{ from: `./${relPath}/${compilation._entryName}` }],
                 flatModuleIndexRedirect: true,
                 importAs: flatModuleId
             };
