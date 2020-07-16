@@ -34,7 +34,7 @@ export class StylesWebpackPlugin {
             return;
         }
 
-        const stylesModule = await import('./styles');
+        const stylesModule = await import('./process-styles');
         await stylesModule.processStyles(buildAction, this.logger);
     }
 }
