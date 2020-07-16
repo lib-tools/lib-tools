@@ -63,6 +63,7 @@ export interface ScriptCompilationOptionsInternal extends ScriptCompilationOptio
 
 export interface ScriptOptionsInternal extends ScriptOptions {
     _tsConfigInfo: TsConfigInfo | null;
+    _projectTypescriptModulePath: string | null;
     _entryName: string | null;
     _compilations: ScriptCompilationOptionsInternal[];
     _bundles: ScriptBundleOptionsInternal[];
