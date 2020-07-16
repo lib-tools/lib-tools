@@ -2,6 +2,7 @@ import * as rollup from 'rollup';
 
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 
 import { BuildActionInternal, ScriptBundleOptionsInternal } from '../models/internals';
 import { LoggerBase } from '../utils';
@@ -14,9 +15,10 @@ export function getRollupConfig(
     inputOptions: rollup.InputOptions;
     outputOptions: rollup.OutputOptions;
 } {
-    const scriptOptions = buildAction.script || {};
-    let moduleName = scriptOptions.moduleName;
-    if (!moduleName && buildAction._packageName) {
+    let moduleName: string | undefined;
+    if (buildAction._script && buildAction._script.moduleName) {
+        moduleName = buildAction._script.moduleName;
+    } else {
         if (buildAction._packageName.startsWith('@')) {
             moduleName = buildAction._packageName.substring(1).split('/').join('.');
         } else {
@@ -32,6 +34,22 @@ export function getRollupConfig(
     const plugins: rollup.Plugin[] = [];
     if (bundleOptions.moduleFormat === 'umd' || bundleOptions.moduleFormat === 'cjs' || bundleOptions.commonjs) {
         plugins.push(resolve());
+    }
+
+    if (/\.ts$/i.test(bundleOptions._entryFilePath) && buildAction._script && buildAction._script._tsConfigInfo) {
+        const tsConfigInfo = buildAction._script._tsConfigInfo;
+
+        const typescriptModulePath = buildAction._script._projectTypescriptModulePath
+            ? buildAction._script._projectTypescriptModulePath
+            : 'typescript';
+
+        plugins.push(
+            typescript({
+                tsconfig: tsConfigInfo.tsConfigPath,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                typescript: require(typescriptModulePath)
+            })
+        );
     }
 
     if (bundleOptions.commonjs) {
