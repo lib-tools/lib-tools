@@ -1,7 +1,7 @@
 {
   "$schema": "../../dist/schemas/schema.json",
   "projects": {
-    "typescript-library-project-full-config-demo": {
+    "transpilations-and-bundles-full-config-demo": {
       "root": "./",
       "actions": {
         "build": {
@@ -35,6 +35,16 @@
             "externals": {
               "tslib": "tslib"
             }
+          }
+        }
+      }
+    },
+    "transpilations-and-bundles-minimal-config-demo": {
+      "root": "./",
+      "actions": {
+        "build": {
+          "script": {
+            "compilations": "auto"
           }
         }
       }
