@@ -54,6 +54,7 @@
   "dependencies": {
     "@rollup/plugin-commonjs": "^14.0.0",
     "@rollup/plugin-node-resolve": "^8.4.0",
+    "@rollup/plugin-typescript": "^5.0.2",
     "ajv": "^6.12.3",
     "autoprefixer": "^9.8.5",
     "builtins": "^3.0.1",
