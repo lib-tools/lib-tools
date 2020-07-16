@@ -16,7 +16,6 @@ export interface PackageJsonFileWebpackPluginOptions {
 
 export class PackageJsonFileWebpackPlugin {
     private readonly logger: Logger;
-    // private packageJsonHasAnyChanges = false;
 
     get name(): string {
         return 'package-json-webpack-plugin';
@@ -29,10 +28,10 @@ export class PackageJsonFileWebpackPlugin {
     }
 
     apply(compiler: webpack.Compiler): void {
-        compiler.hooks.emit.tapPromise(this.name, async () => this.preparePackageJsonFile());
+        compiler.hooks.emit.tapPromise(this.name, async () => this.processPackageJsonFile());
     }
 
-    private async preparePackageJsonFile(): Promise<void> {
+    private async processPackageJsonFile(): Promise<void> {
         const buildAction = this.options.buildAction;
         const packageJson = JSON.parse(JSON.stringify(buildAction._packageJson)) as PackageJsonLike;
         let packageJsonChanged = false;
@@ -42,7 +41,7 @@ export class PackageJsonFileWebpackPlugin {
         // Update entry points
         Object.keys(buildAction._packageJsonEntryPoint).forEach((key) => {
             packageJsonChanged = true;
-            this.logger.debug(`Updating package entry point '${key}'`);
+            this.logger.debug(`Adding entry point '${key}' to package.json`);
             packageJson[key] = buildAction._packageJsonEntryPoint[key];
         });
 
