@@ -141,14 +141,8 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
     }
 
     if (buildAction.script && buildAction.script.bundles) {
-        const scriptOptions = buildAction.script;
         for (const bundleOptions of buildAction.script.bundles) {
-            const bundleOptionsInternal = toScriptBundleOptionsInternal(
-                bundleOptions,
-                scriptOptions,
-                tsConfigInfo,
-                buildAction
-            );
+            const bundleOptionsInternal = toScriptBundleOptionsInternal(bundleOptions, tsConfigInfo, buildAction);
             bundles.push(bundleOptionsInternal);
         }
     }
@@ -414,10 +408,10 @@ function toScriptCompilationOptionsInternal(
 
 function toScriptBundleOptionsInternal(
     bundleOptions: ScriptBundleOptions,
-    scriptOptions: ScriptOptions,
     tsConfigInfo: TsConfigInfo | null,
     buildAction: BuildActionInternal
 ): ScriptBundleOptionsInternal {
+    const scriptOptions = buildAction.script || {};
     if (!scriptOptions.entry) {
         throw new Error(
             `The entry file could not be detected automatically. Please set value manually in 'projects[${buildAction._projectName}].actions.build.script.entry'.`
@@ -426,17 +420,16 @@ function toScriptBundleOptionsInternal(
 
     const projectRoot = buildAction._projectRoot;
     const entryFilePath = path.resolve(projectRoot, scriptOptions.entry);
-
-    // outputFilePath
-    let bundleOutFilePath = '';
+    let bundleOutFilePath: string;
+    const defaultOuputFileName = `${path.basename(entryFilePath)}.js`;
     if (bundleOptions.outputFile) {
         if (!/\.js$/i.test(bundleOptions.outputFile)) {
-            bundleOutFilePath = path.resolve(buildAction._outputPath, `${path.parse(entryFilePath).name}.js`);
+            bundleOutFilePath = path.resolve(buildAction._outputPath, bundleOptions.outputFile, defaultOuputFileName);
         } else {
             bundleOutFilePath = path.resolve(buildAction._outputPath, bundleOptions.outputFile);
         }
     } else {
-        bundleOutFilePath = path.resolve(buildAction._outputPath, `${path.parse(entryFilePath).name}.js`);
+        bundleOutFilePath = path.resolve(buildAction._outputPath, defaultOuputFileName);
     }
 
     // Add  entry points to package.json
