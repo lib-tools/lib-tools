@@ -463,6 +463,11 @@ export interface ScriptOptions {
     entry?: string;
 
     /**
+     * If true, search version placeholders in compiled files and replace with package version.
+     */
+    replaceVersionPlaceholder?: boolean;
+
+    /**
      * Define module id for umd bundle.
      */
     moduleName?: string;
