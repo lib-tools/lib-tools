@@ -37,7 +37,7 @@ export function getRollupConfig(
     if (bundleOptions.commonjs) {
         const commonjsOption = {
             ...bundleOptions.commonjs,
-            extensions: ['.js'],
+            extensions: ['.js', '.ts'],
             sourceMap: bundleOptions.sourceMap
         };
 
