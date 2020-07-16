@@ -71,15 +71,12 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
             );
         }
 
-        const addToPackageJson = buildAction.script.addToPackageJson !== false ? true : false;
-
         if (Array.isArray(buildAction.script.compilations)) {
             for (const compilation of buildAction.script.compilations) {
                 const compilationInternal = toScriptCompilationOptionsInternal(
                     compilation,
                     entryName,
                     tsConfigInfo,
-                    addToPackageJson,
                     buildAction
                 );
                 compilations.push(compilationInternal);
@@ -103,7 +100,6 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                     },
                     entryName,
                     tsConfigInfo,
-                    addToPackageJson,
                     buildAction
                 );
                 compilations.push(esmScriptCompilation);
@@ -117,7 +113,6 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                     },
                     entryName,
                     tsConfigInfo,
-                    addToPackageJson,
                     buildAction
                 );
                 compilations.push(esmScriptCompilation);
@@ -133,7 +128,6 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                 },
                 entryName,
                 tsConfigInfo,
-                addToPackageJson,
                 buildAction
             );
             compilations.push(esm5ScriptCompilation);
@@ -160,7 +154,6 @@ function toScriptCompilationOptionsInternal(
     compilationOptions: ScriptCompilationOptions,
     entryName: string,
     tsConfigInfo: TsConfigInfo,
-    addToPackageJson: boolean,
     buildAction: BuildActionInternal
 ): ScriptCompilationOptionsInternal {
     const tsConfigPath = tsConfigInfo.tsConfigPath;
@@ -311,6 +304,9 @@ function toScriptCompilationOptionsInternal(
             bundles.push(bundleOptionsInternal);
         }
     }
+
+    const scriptOptions = buildAction.script || {};
+    const addToPackageJson = scriptOptions.addToPackageJson !== false ? true : false;
 
     // Add  entry points to package.json
     if (addToPackageJson) {
