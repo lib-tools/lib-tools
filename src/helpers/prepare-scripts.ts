@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
-import { CompilerOptions, ModuleKind, ScriptTarget } from 'typescript';
+import { ModuleKind, ScriptTarget } from 'typescript';
 
 import {
     ScriptBundleModuleKind,
@@ -394,7 +394,8 @@ function toScriptCompilationOptionsInternal(
                 buildAction,
                 bundleOptions.moduleFormat,
                 entryFileForBundle,
-                compilerOptions
+                scriptTarget,
+                compilerOptions.module
             );
         }
     }
@@ -441,7 +442,13 @@ function toScriptBundleOptionsInternal(
     if (scriptOptions.addToPackageJson !== false) {
         const entryFileForBundle = normalizePath(path.relative(buildAction._packageJsonOutDir, bundleOutFilePath));
         const compilerOptions = tsConfigInfo?.tsCompilerConfig.options;
-        addBundleEntryPointsToPackageJson(buildAction, bundleOptions.moduleFormat, entryFileForBundle, compilerOptions);
+        addBundleEntryPointsToPackageJson(
+            buildAction,
+            bundleOptions.moduleFormat,
+            entryFileForBundle,
+            compilerOptions?.target,
+            compilerOptions?.module
+        );
     }
 
     const globalsAndExternals = getExternalsAndGlobals(scriptOptions, bundleOptions, buildAction._packageJson);
@@ -628,13 +635,11 @@ function addBundleEntryPointsToPackageJson(
     buildAction: BuildActionInternal,
     moduleFormat: ScriptBundleModuleKind,
     entryFileForBundle: string,
-    compilerOptions?: CompilerOptions
+    scriptTarget?: ScriptTarget,
+    moduleKind?: ModuleKind
 ): void {
-    const scriptTarget = compilerOptions?.target;
-    const moduleKind = compilerOptions?.module;
-
     if (moduleFormat === 'es') {
-        if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget > ScriptTarget.ES2015) {
+        if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget >= ScriptTarget.ES2015) {
             let esYear: string;
             if (scriptTarget === ScriptTarget.ESNext) {
                 if (moduleKind === ModuleKind.ES2020 || moduleKind === ModuleKind.ESNext) {
@@ -648,24 +653,9 @@ function addBundleEntryPointsToPackageJson(
 
             buildAction._packageJsonEntryPoint[`fesm${esYear}`] = entryFileForBundle;
             buildAction._packageJsonEntryPoint[`es${esYear}`] = entryFileForBundle;
-            if (!buildAction._packageJsonEntryPoint.module) {
-                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
-            }
-        } else if (
-            moduleKind &&
-            moduleKind >= ModuleKind.ES2015 &&
-            scriptTarget &&
-            scriptTarget === ScriptTarget.ES2015
-        ) {
-            buildAction._packageJsonEntryPoint.fesm2015 = entryFileForBundle;
-            buildAction._packageJsonEntryPoint.es2015 = entryFileForBundle;
-            if (!buildAction._packageJsonEntryPoint.module) {
-                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
-            }
+            buildAction._packageJsonEntryPoint.module = entryFileForBundle;
         } else if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget === ScriptTarget.ES5) {
             buildAction._packageJsonEntryPoint.fesm5 = entryFileForBundle;
-            buildAction._packageJsonEntryPoint.module = entryFileForBundle;
-        } else {
             buildAction._packageJsonEntryPoint.module = entryFileForBundle;
         }
     } else {
