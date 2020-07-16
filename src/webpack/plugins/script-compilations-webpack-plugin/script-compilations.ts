@@ -18,19 +18,20 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
         return;
     }
 
-    const compilations = buildAction._script._compilations;
-
     let tscCommand = 'tsc';
     const nodeModulesPath = buildAction._nodeModulesPath;
     if (nodeModulesPath) {
-        if (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) {
+        if (
+            (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) &&
+            (await pathExists(path.join(nodeModulesPath, '@angular/compiler-cli/package.json')))
+        ) {
             tscCommand = path.join(nodeModulesPath, '.bin/ngc');
         } else if (await pathExists(path.join(nodeModulesPath, '.bin/tsc'))) {
             tscCommand = path.join(nodeModulesPath, '.bin/tsc');
         }
     }
 
-    for (const compilation of compilations) {
+    for (const compilation of buildAction._script._compilations) {
         const tsConfigPath = compilation._tsConfigInfo.tsConfigPath;
         const compilerOptions = compilation._tsConfigInfo.tsCompilerConfig.options;
 
@@ -96,18 +97,20 @@ async function afterTsTranspileTask(
 ): Promise<void> {
     const outputRootDir = buildAction._outputPath;
     const tsConfigInfo = compilation._tsConfigInfo;
+    const scriptOptions = buildAction.script || {};
 
     // Replace version
-    // TODO: To review
-    logger.debug('Checking version placeholder');
-    const hasVersionReplaced = await replaceVersion(
-        compilation._tsOutDirRootResolved,
-        buildAction._packageVersion,
-        `${path.join(compilation._tsOutDirRootResolved, '**/version.js')}`,
-        logger
-    );
-    if (hasVersionReplaced && !prevTsTranspilationVersionReplaced) {
-        prevTsTranspilationVersionReplaced = true;
+    if (scriptOptions.replaceVersionPlaceholder) {
+        logger.debug('Checking version placeholder');
+        const hasVersionReplaced = await replaceVersion(
+            compilation._tsOutDirRootResolved,
+            buildAction._packageVersion,
+            `${path.join(compilation._tsOutDirRootResolved, '**/version.js')}`,
+            logger
+        );
+        if (hasVersionReplaced && !prevTsTranspilationVersionReplaced) {
+            prevTsTranspilationVersionReplaced = true;
+        }
     }
 
     // Angular inline assets
