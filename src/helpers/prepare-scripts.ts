@@ -141,12 +141,21 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
         }
     }
 
+    let typescriptModulePath: string | null = null;
+    if (
+        buildAction._nodeModulesPath &&
+        pathExists(path.resolve(buildAction._nodeModulesPath, 'typescript', 'package.json'))
+    ) {
+        typescriptModulePath = path.resolve(buildAction._nodeModulesPath, 'typescript');
+    }
+
     buildAction._script = {
         ...buildAction.script,
         _tsConfigInfo: tsConfigInfo,
         _entryName: entryName,
         _compilations: compilations,
-        _bundles: bundles
+        _bundles: bundles,
+        _projectTypescriptModulePath: typescriptModulePath
     };
 }
 
@@ -593,6 +602,18 @@ function getExternalsAndGlobals(
 function getGlobalVariable(externalKey: string): string | null {
     if (externalKey === 'tslib') {
         return externalKey;
+    }
+
+    if (externalKey === 'rxjs') {
+        return externalKey;
+    }
+
+    if (externalKey === 'moment') {
+        return externalKey;
+    }
+
+    if (externalKey === 'rxjs/operators') {
+        return 'rxjs.operators';
     }
 
     if (/@angular\//.test(externalKey)) {
