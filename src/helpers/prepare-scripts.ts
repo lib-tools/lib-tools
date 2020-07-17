@@ -135,6 +135,17 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
     }
 
     if (buildAction.script && buildAction.script.bundles) {
+        if (
+            !buildAction._packageJsonEntryPoint.typings &&
+            entryName &&
+            tsConfigInfo &&
+            tsConfigInfo.tsCompilerConfig.options.declaration &&
+            buildAction.script.entry &&
+            /\.tsx?$/i.test(buildAction.script.entry)
+        ) {
+            AddTypingsEntryPointToPackageJson(buildAction, entryName);
+        }
+
         for (const bundleOptions of buildAction.script.bundles) {
             const bundleOptionsInternal = toScriptBundleOptionsInternal(bundleOptions, tsConfigInfo, buildAction);
             bundles.push(bundleOptionsInternal);
@@ -320,17 +331,7 @@ function toScriptCompilationOptionsInternal(
     // Add  entry points to package.json
     if (addToPackageJson) {
         if (declaration) {
-            if (buildAction._nestedPackage) {
-                // TODO: To check
-                buildAction._packageJsonEntryPoint.typings = normalizePath(
-                    path.relative(
-                        buildAction._packageJsonOutDir,
-                        path.join(buildAction._outputPath, `${entryName}.d.ts`)
-                    )
-                );
-            } else {
-                buildAction._packageJsonEntryPoint.typings = `${entryName}.d.ts`;
-            }
+            AddTypingsEntryPointToPackageJson(buildAction, entryName);
         }
 
         const jsEntryFile = normalizePath(
@@ -660,5 +661,16 @@ function addBundleEntryPointsToPackageJson(
         }
     } else {
         buildAction._packageJsonEntryPoint.main = entryFileForBundle;
+    }
+}
+
+function AddTypingsEntryPointToPackageJson(buildAction: BuildActionInternal, entryName: string): void {
+    if (buildAction._nestedPackage) {
+        // TODO: To check
+        buildAction._packageJsonEntryPoint.typings = normalizePath(
+            path.relative(buildAction._packageJsonOutDir, path.join(buildAction._outputPath, `${entryName}.d.ts`))
+        );
+    } else {
+        buildAction._packageJsonEntryPoint.typings = `${entryName}.d.ts`;
     }
 }
