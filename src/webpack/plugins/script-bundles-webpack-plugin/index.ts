@@ -24,10 +24,10 @@ export class ScriptBundlesWebpackPlugin {
     }
 
     apply(compiler: webpack.Compiler): void {
-        compiler.hooks.emit.tapPromise(this.name, async () => this.performScriptBundles());
+        compiler.hooks.emit.tapPromise(this.name, async () => this.performBundles());
     }
 
-    async performScriptBundles(): Promise<void> {
+    private async performBundles(): Promise<void> {
         const buildAction = this.options.buildAction;
 
         if (!buildAction._script || !buildAction._script._bundles.length) {
