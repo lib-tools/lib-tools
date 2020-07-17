@@ -1,14 +1,16 @@
 import * as rollup from 'rollup';
+import { ScriptTarget } from 'typescript';
 
-import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
-import typescript from '@rollup/plugin-typescript';
-
-import { BuildActionInternal, ScriptBundleOptionsInternal } from '../models/internals';
+import { BuildActionInternal, ScriptBundleOptionsInternal, ScriptOptionsInternal } from '../models/internals';
 import { LoggerBase } from '../utils';
+
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { RollupCommonJSOptions } from '@rollup/plugin-commonjs';
+import { RPT2Options } from 'rollup-plugin-typescript2';
 
 export function getRollupConfig(
     bundleOptions: ScriptBundleOptionsInternal,
+    scriptOptions: ScriptOptionsInternal,
     buildAction: BuildActionInternal,
     logger: LoggerBase
 ): {
@@ -16,8 +18,8 @@ export function getRollupConfig(
     outputOptions: rollup.OutputOptions;
 } {
     let moduleName: string | undefined;
-    if (buildAction._script && buildAction._script.moduleName) {
-        moduleName = buildAction._script.moduleName;
+    if (scriptOptions.moduleName) {
+        moduleName = scriptOptions.moduleName;
     } else {
         if (buildAction._packageName.startsWith('@')) {
             moduleName = buildAction._packageName.substring(1).split('/').join('.');
@@ -32,34 +34,57 @@ export function getRollupConfig(
 
     // plugins
     const plugins: rollup.Plugin[] = [];
+
     if (bundleOptions.moduleFormat === 'umd' || bundleOptions.moduleFormat === 'cjs' || bundleOptions.commonjs) {
-        plugins.push(resolve());
+        // Must be before rollup-plugin-typescript2 in the plugin list, especially when browser: true option is used,
+        // see https://github.com/ezolenko/rollup-plugin-typescript2/issues/66
+        plugins.push(nodeResolve());
     }
 
-    if (/\.ts$/i.test(bundleOptions._entryFilePath) && buildAction._script && buildAction._script._tsConfigInfo) {
-        const tsConfigInfo = buildAction._script._tsConfigInfo;
+    if (/\.ts$/i.test(bundleOptions._entryFilePath) && scriptOptions._tsConfigInfo) {
+        const tsConfigInfo = scriptOptions._tsConfigInfo;
+        const tsConfigPath = tsConfigInfo.tsConfigPath;
+        const scriptTarget = tsConfigInfo.tsCompilerConfig.options.target;
 
-        const typescriptModulePath = buildAction._script._projectTypescriptModulePath
-            ? buildAction._script._projectTypescriptModulePath
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const typescriptPlugin = require('rollup-plugin-typescript2') as (options: RPT2Options) => rollup.Plugin;
+
+        const typescriptModulePath = scriptOptions._projectTypescriptModulePath
+            ? scriptOptions._projectTypescriptModulePath
             : 'typescript';
 
-        plugins.push(
-            typescript({
-                tsconfig: tsConfigInfo.tsConfigPath,
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                typescript: require(typescriptModulePath)
-            })
-        );
+        const rptOptions: RPT2Options = {
+            tsconfig: tsConfigPath,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            typescript: require(typescriptModulePath)
+        };
+
+        if (
+            (bundleOptions.moduleFormat === 'umd' || bundleOptions.moduleFormat === 'cjs') &&
+            (!scriptTarget || scriptTarget > ScriptTarget.ES5)
+        ) {
+            rptOptions.tsconfigOverride = {
+                compilerOptions: {
+                    target: 'ES5'
+                }
+            };
+        }
+
+        plugins.push(typescriptPlugin(rptOptions));
     }
 
     if (bundleOptions.commonjs) {
-        const commonjsOption = {
-            ...bundleOptions.commonjs,
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const commonjsPlugin = require('@rollup/plugin-commonjs') as (options: RollupCommonJSOptions) => rollup.Plugin;
+
+        const customOptions = typeof bundleOptions.commonjs === 'object' ? bundleOptions.commonjs : {};
+        const commonjsOption: RollupCommonJSOptions = {
             extensions: ['.js', '.ts'],
-            sourceMap: bundleOptions.sourceMap
+            sourceMap: bundleOptions.sourceMap,
+            ...customOptions
         };
 
-        plugins.push(commonjs(commonjsOption));
+        plugins.push(commonjsPlugin(commonjsOption));
     }
 
     const externals = bundleOptions._externals;
@@ -91,7 +116,7 @@ export function getRollupConfig(
 
     const outputOptions: rollup.OutputOptions = {
         file: bundleOptions._outputFilePath,
-        exports: 'named',
+        exports: scriptOptions.exports,
         name: moduleName,
         amd: { id: buildAction._packageName },
         format: bundleOptions.moduleFormat,
