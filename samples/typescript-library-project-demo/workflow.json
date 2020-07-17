@@ -5,7 +5,7 @@
       "root": "./",
       "actions": {
         "build": {
-          "outputPath": "dist/full-config-demo",
+          "outputPath": "dist/transpilations-and-bundles-demo",
           "script": {
             "compilations": [
               {
@@ -45,6 +45,40 @@
         "build": {
           "script": {
             "compilations": "auto"
+          }
+        }
+      }
+    },
+    "bundles-only-demo": {
+      "root": "./",
+      "actions": {
+        "build": {
+          "outputPath": "dist/bundles-only-demo",
+          "script": {
+            "bundles": [
+              {
+                "moduleFormat": "es",
+                "outputFile": "demo.es.js",
+                "sourceMap": true
+              },
+              {
+                "moduleFormat": "umd",
+                "outputFile": "demo.umd.js",
+                "sourceMap": true,
+                "minify": true,
+                "commonjs": {
+                  "extensions": [".ts", ".js"]
+                },
+                "dependenciesAsExternals": false,
+                "peerDependenciesAsExternals": false
+              }
+            ],
+            "tsConfig": "tsconfig.build.json",
+            "addToPackageJson": true,
+            "entry": "public_api.ts",
+            "moduleName": "demo",
+            "dependenciesAsExternals": true,
+            "peerDependenciesAsExternals": true
           }
         }
       }
