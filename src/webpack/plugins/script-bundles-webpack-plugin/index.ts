@@ -34,8 +34,6 @@ export class ScriptBundlesWebpackPlugin {
             return;
         }
 
-        // const scriptBundlesModule = await import('./script-bundles');
-        // const performScriptBundles = scriptBundlesModule.performScriptBundles;
         await performScriptBundles(buildAction, this.logger);
     }
 }
