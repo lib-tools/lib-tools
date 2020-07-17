@@ -4,14 +4,14 @@ import { pathExists } from 'fs-extra';
 
 import { isInFolder, isSamePaths } from './path-helpers';
 
-export async function findUp(fileName: string | string[], startDir: string, endDir: string): Promise<string | null> {
+export async function findUp(pathName: string | string[], startDir: string, endDir: string): Promise<string | null> {
     let currentDir = startDir;
-    const fileNames = Array.isArray(fileName) ? fileName : [fileName];
+    const pathNames = Array.isArray(pathName) ? pathName : [pathName];
     const rootPath = path.parse(currentDir).root;
 
     do {
-        for (const f of fileNames) {
-            const tempPath = path.isAbsolute(f) ? f : path.resolve(currentDir, f);
+        for (const p of pathNames) {
+            const tempPath = path.isAbsolute(p) ? p : path.resolve(currentDir, p);
             if (await pathExists(tempPath)) {
                 return tempPath;
             }
