@@ -3,6 +3,8 @@ import * as webpack from 'webpack';
 import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, LoggerBase } from '../../../utils';
 
+import { performScriptCompilations } from './script-compilations';
+
 export interface ScriptCompilationsWebpackPluginOptions {
     buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
@@ -23,16 +25,15 @@ export class ScriptCompilationsWebpackPlugin {
 
     apply(compiler: webpack.Compiler): void {
         compiler.hooks.emit.tapPromise(this.name, async () =>
-            this.performScriptCompilations(this.options.buildAction, this.logger)
+            this.performCompilations(this.options.buildAction, this.logger)
         );
     }
 
-    private async performScriptCompilations(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
+    private async performCompilations(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
         if (!buildAction._script || !buildAction._script._compilations.length) {
             return;
         }
 
-        const scriptCompilationsModule = await import('./script-compilations');
-        await scriptCompilationsModule.performScriptCompilations(buildAction, logger);
+        await performScriptCompilations(buildAction, logger);
     }
 }
