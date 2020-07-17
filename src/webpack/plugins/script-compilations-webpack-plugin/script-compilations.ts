@@ -6,7 +6,11 @@ import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
 import { getRollupConfig, minifyJsBundle } from '../../../helpers';
-import { BuildActionInternal, ScriptCompilationOptionsInternal } from '../../../models/internals';
+import {
+    BuildActionInternal,
+    ScriptCompilationOptionsInternal,
+    ScriptOptionsInternal
+} from '../../../models/internals';
 import { LoggerBase, globCopyFiles, normalizePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
@@ -17,6 +21,8 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
     if (!buildAction._script || !buildAction._script._compilations.length) {
         return;
     }
+
+    const scriptOptions = buildAction._script;
 
     let tscCommand = 'tsc';
     const nodeModulesPath = buildAction._nodeModulesPath;
@@ -31,7 +37,7 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
         }
     }
 
-    for (const compilation of buildAction._script._compilations) {
+    for (const compilation of scriptOptions._compilations) {
         const tsConfigPath = compilation._tsConfigInfo.tsConfigPath;
         const compilerOptions = compilation._tsConfigInfo.tsCompilerConfig.options;
 
@@ -74,7 +80,7 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
             child.on('error', rej);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
-                    afterTsTranspileTask(compilation, buildAction, tscCommand, logger)
+                    afterTsTranspileTask(compilation, scriptOptions, buildAction, tscCommand, logger)
                         .then(() => {
                             res();
                         })
@@ -91,13 +97,14 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
 
 async function afterTsTranspileTask(
     compilation: ScriptCompilationOptionsInternal,
+    scriptOptions: ScriptOptionsInternal,
     buildAction: BuildActionInternal,
+
     tscCommand: string,
     logger: LoggerBase
 ): Promise<void> {
     const outputRootDir = buildAction._outputPath;
     const tsConfigInfo = compilation._tsConfigInfo;
-    const scriptOptions = buildAction.script || {};
 
     // Replace version
     if (scriptOptions.replaceVersionPlaceholder) {
@@ -221,7 +228,7 @@ async function afterTsTranspileTask(
     if (compilation._bundles.length > 0) {
         for (const bundleOptions of compilation._bundles) {
             const scriptTargetText = ScriptTarget[compilation._scriptTarget];
-            const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
+            const rollupOptions = getRollupConfig(bundleOptions, scriptOptions, buildAction, logger);
 
             logger.info(
                 `Bundling with rollup, format: ${rollupOptions.outputOptions.format} and script target: ${scriptTargetText}`
