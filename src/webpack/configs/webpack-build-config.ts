@@ -177,7 +177,11 @@ async function getWorkflowConfig(buildOptions: BuildCommandOptionsInternal): Pro
             throw new Error(`Workflow configuration file could not be detected.`);
         }
 
-        const projects = getProjectConfigsForAuto();
+        const projects = await getProjectConfigsForAuto();
+
+        if (projects == null) {
+            throw new Error(`Workflow configuration could not be detected automatically.`);
+        }
 
         return {
             _workspaceRoot: process.cwd(),
@@ -306,7 +310,36 @@ function isFromWebpackCli(): boolean {
     return process.argv.length >= 2 && /(\\|\/)?webpack(\.js)?$/i.test(process.argv[1]);
 }
 
-function getProjectConfigsForAuto(): { [key: string]: ProjectConfigInternal } {
+async function getProjectConfigsForAuto(): Promise<{ [key: string]: ProjectConfigInternal } | null> {
+    const workspaceRoot = process.cwd();
+    const foundSubDirs: string[] = [];
+
+    if (await pathExists(path.resolve(workspaceRoot, 'modules'))) {
+        foundSubDirs.push(path.resolve(workspaceRoot, 'modules'));
+    }
+
+    if (await pathExists(path.resolve(workspaceRoot, 'packages'))) {
+        foundSubDirs.push(path.resolve(workspaceRoot, 'packages'));
+    }
+
+    if (await pathExists(path.resolve(workspaceRoot, 'projects'))) {
+        foundSubDirs.push(path.resolve(workspaceRoot, 'projects'));
+    }
+
+    if (await pathExists(path.resolve(workspaceRoot, 'libs'))) {
+        foundSubDirs.push(path.resolve(workspaceRoot, 'libs'));
+    }
+
+    if (await pathExists(path.resolve(workspaceRoot, 'src'))) {
+        foundSubDirs.push(path.resolve(workspaceRoot, 'src'));
+    }
+
+    if (!foundSubDirs.length) {
+        return null;
+    }
+
+    // public_api.ts, package.json, tsconfig-build.json
+
     const projects: { [key: string]: ProjectConfigInternal } = {};
 
     // TODO: To implement
