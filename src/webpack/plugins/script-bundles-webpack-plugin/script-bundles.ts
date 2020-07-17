@@ -12,7 +12,7 @@ export async function performScriptBundles(buildAction: BuildActionInternal, log
     }
 
     for (const bundleOptions of buildAction._script._bundles) {
-        const rollupOptions = getRollupConfig(bundleOptions, buildAction, logger);
+        const rollupOptions = getRollupConfig(bundleOptions, buildAction._script, buildAction, logger);
 
         logger.info(`Bundling with rollup, format: ${rollupOptions.outputOptions.format}`);
 

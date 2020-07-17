@@ -3,6 +3,8 @@ import * as webpack from 'webpack';
 import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger } from '../../../utils';
 
+import { performScriptBundles } from './script-bundles';
+
 export interface ScriptBundlesWebpackPluginOptions {
     buildAction: BuildActionInternal;
     logLevel?: LogLevelString;
@@ -32,7 +34,8 @@ export class ScriptBundlesWebpackPlugin {
             return;
         }
 
-        const scriptBundlesModule = await import('./script-bundles');
-        await scriptBundlesModule.performScriptBundles(buildAction, this.logger);
+        // const scriptBundlesModule = await import('./script-bundles');
+        // const performScriptBundles = scriptBundlesModule.performScriptBundles;
+        await performScriptBundles(buildAction, this.logger);
     }
 }
