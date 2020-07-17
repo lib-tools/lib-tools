@@ -311,21 +311,37 @@ export interface StyleOptions {
  */
 export interface CommonJsOptions {
     /**
-     * Some modules contain dynamic require calls, or require modules that contain circular dependencies, which are not handled well by static imports. Including those modules as dynamicRequireTargets will simulate a CommonJS (NodeJS-like) environment for them with support for dynamic and circular dependencies.
-     */
-    dynamicRequireTargets?: string[];
-    /**
-     * A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should ignore. By default non-CommonJS modules are ignored.
+     * Array of minimatch patterns which specifies the files in the build the plugin should ignore. By default non-CommonJS modules are ignored.
      */
     exclude?: string[];
     /**
-     * A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should operate on. By default CommonJS modules are targeted.
+     * Array of minimatch patterns, which specifies the files in the build the plugin should operate on. By default CommonJS modules are targeted.
      */
     include?: string[];
     /**
-     * If true, uses of global won't be dealt with by this plugin.
+     * Search for files other than .js files.
+     */
+    extensions?: string[];
+    /**
+     * If true, uses of global won't be deal.
      */
     ignoreGlobal?: boolean;
+    /**
+     * If false, skip sourceMap generation for CommonJS modules.
+     */
+    sourceMap?: boolean;
+    /**
+     * Instructs the plugin whether or not to enable mixed module transformations. This is useful in scenarios with mixed ES and CommonJS modules. Set to `true` if it's known that `require` calls should be transformed, or `false` if the code contains env detection and the `require` should survive a transformation.
+     */
+    transformMixedEsModules?: boolean;
+    /**
+     * Sometimes you have to leave require statements unconverted. Pass an array containing the IDs.
+     */
+    ignore?: string[];
+    /**
+     * Some modules contain dynamic require calls, or require modules that contain circular dependencies, which are not handled well by static imports. Including those modules as dynamicRequireTargets will simulate a CommonJS (NodeJS-like) environment for them with support for dynamic and circular dependencies.
+     */
+    dynamicRequireTargets?: string[];
 }
 
 /**
@@ -356,7 +372,7 @@ export type ScriptBundleModuleKind = 'cjs' | 'umd' | 'es';
 /**
  * @additionalProperties false
  */
-export interface TsCompilationBundleOptions {
+export interface ScriptBundleSharedOptions {
     /**
      * Custom bundle output file.
      */
@@ -373,9 +389,9 @@ export interface TsCompilationBundleOptions {
     sourceMap?: boolean;
 
     /**
-     * Options object to convert CommonJS modules to ES6, so they can be included in bundle.
+     * CommonJS options or boolean value to convert commonjs modules to es module and include in bundle.
      */
-    commonjs?: CommonJsOptions;
+    commonjs?: CommonJsOptions | boolean;
 
     /**
      * External id and global variable name mapping for bundling options.
@@ -396,7 +412,7 @@ export interface TsCompilationBundleOptions {
 /**
  * @additionalProperties false
  */
-export interface ScriptBundleOptions extends TsCompilationBundleOptions {
+export interface ScriptBundleOptions extends ScriptBundleSharedOptions {
     /**
      * Specify the format of the generated bundle.
      */
@@ -422,15 +438,15 @@ export interface ScriptCompilationOptions {
     /**
      * Set true to bundle compilation output to esm module format.
      */
-    esBundle?: boolean | TsCompilationBundleOptions;
+    esBundle?: boolean | ScriptBundleSharedOptions;
     /**
      * Set true to bundle compilation output to umd module format.
      */
-    umdBundle?: boolean | TsCompilationBundleOptions;
+    umdBundle?: boolean | ScriptBundleSharedOptions;
     /**
      * Set true to bundle compilation output to commonjs module format.
      */
-    cjsBundle?: boolean | TsCompilationBundleOptions;
+    cjsBundle?: boolean | ScriptBundleSharedOptions;
 }
 
 /**
@@ -486,6 +502,11 @@ export interface ScriptOptions {
      * If true, 'peerDependenciesAsExternals' keys in package.json are marked as externals and not included in bundle. Default to 'true'.
      */
     peerDependenciesAsExternals?: boolean;
+
+    /**
+     * What export mode to use.
+     */
+    exports?: 'default' | 'named' | 'none' | 'auto';
 }
 
 /**
