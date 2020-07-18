@@ -166,7 +166,10 @@ async function getWorkflowConfig(buildOptions: BuildCommandOptionsInternal): Pro
     if (foundConfigPath) {
         const workflowConfig = (await readJsonWithComments(foundConfigPath)) as WorkflowConfig;
         const schema = await getCachedWorkflowConfigSchema();
-        const valid = ajv.addSchema(schema, 'workflowSchema').validate('workflowSchema', workflowConfig);
+        if (!ajv.getSchema('workflowSchema')) {
+            ajv.addSchema(schema, 'workflowSchema');
+        }
+        const valid = ajv.validate('workflowSchema', workflowConfig);
         if (!valid) {
             throw new Error(`Invalid configuration. ${ajv.errorsText()}`);
         }
