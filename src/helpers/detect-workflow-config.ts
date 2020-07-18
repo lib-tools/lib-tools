@@ -29,11 +29,15 @@ const ajv = new Ajv();
 export async function detectWorkflowConfig(
     buildOptions: BuildCommandOptionsInternal
 ): Promise<WorkflowConfigInternal | null> {
-    const foundPackageJsonPaths = await globAsync('**/package.json', {
-        cwd: process.cwd(),
-        dot: false,
-        absolute: true
-    });
+    const foundPackageJsonPaths = await globAsync(
+        '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
+        {
+            cwd: process.cwd(),
+            dot: false,
+            absolute: true,
+            ignore: ['**/lib-tools/package.json', '**/node_modules/**/package.json', '**/dist/**/package.json']
+        }
+    );
 
     if (!foundPackageJsonPaths.length) {
         return null;
@@ -50,7 +54,11 @@ export async function detectWorkflowConfig(
         if (await pathExists(workflowConfigPath)) {
             const workflowConfig = (await readJsonWithComments(workflowConfigPath)) as WorkflowConfig;
             const schema = await getCachedWorkflowConfigSchema();
-            const valid = ajv.addSchema(schema, 'workflowSchema').validate('workflowSchema', workflowConfig);
+            if (!ajv.getSchema('workflowSchema')) {
+                ajv.addSchema(schema, 'workflowSchema');
+            }
+
+            const valid = ajv.validate('workflowSchema', workflowConfig);
             if (!valid) {
                 logger.warn(`Workflow config file is found at ${workflowConfigPath} but configuration is invalid.`);
                 continue;
@@ -77,6 +85,12 @@ export async function detectWorkflowConfig(
                 projects.push(projectInternal);
             }
         } else {
+            const packageJson = await getCachedPackageJson(packageJsonPath);
+            const packageName = packageJson.name;
+            if (!packageName) {
+                continue;
+            }
+
             const tsConfigPath = await detectTsconfigPath(process.cwd(), path.dirname(packageJsonPath));
             if (!tsConfigPath) {
                 continue;
@@ -90,8 +104,6 @@ export async function detectWorkflowConfig(
                 tsCompilerConfig
             };
 
-            const packageJson = await getCachedPackageJson(packageJsonPath);
-            const packageName = packageJson.name;
             let packageNameWithoutScope = packageName;
             const slashIndex = packageName.indexOf('/');
             if (slashIndex > -1 && packageName.startsWith('@')) {
