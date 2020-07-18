@@ -14,7 +14,7 @@ import { inlineStyleUrls } from './inline-style-urls';
 import { inlineTemplateUrls } from './inline-template-urls';
 import { MagicStringInstance, MetaDataByKey, MetaDataJson, StyleUrlsInfo, TemplateUrlInfo } from './shared';
 
-const globPromise = promisify(glob) as (pattern: string, options?: glob.IOptions) => Promise<string[]>;
+const globAsync = promisify(glob) as (pattern: string, options?: glob.IOptions) => Promise<string[]>;
 
 const moduleIdRegex = /moduleId:\s*module\.id\s*,?\s*/g;
 const templateUrlRegex = /templateUrl:\s*['"`]([^'"`]+?\.[a-zA-Z]+)['"`]/g;
@@ -36,7 +36,7 @@ export async function inlineResources(
         searchPattern = path.join(searchPattern, '**', '*');
     }
 
-    let files = await globPromise(searchPattern, { cwd: searchRootDir, nodir: true, dot: true });
+    let files = await globAsync(searchPattern, { cwd: searchRootDir, nodir: true, dot: true });
     files = files.filter((name) => /\.js$/i.test(name));
 
     for (const resourceId of files) {

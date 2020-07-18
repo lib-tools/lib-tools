@@ -7,7 +7,7 @@ import * as glob from 'glob';
 
 import { LoggerBase } from '../../../utils';
 
-const globPromise = promisify(glob) as (pattern: string, options?: glob.IOptions) => Promise<string[]>;
+const globAsync = promisify(glob) as (pattern: string, options?: glob.IOptions) => Promise<string[]>;
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER', 'gi');
 
 export async function replaceVersion(
@@ -22,7 +22,7 @@ export async function replaceVersion(
         searchPattern = path.join(searchPattern, '**', '*');
     }
 
-    let files = await globPromise(searchPattern, { cwd: searchRootDir, nodir: true, dot: true });
+    let files = await globAsync(searchPattern, { cwd: searchRootDir, nodir: true, dot: true });
     files = files.filter((name) => /\.js$/i.test(name));
 
     for (const filePath of files) {
