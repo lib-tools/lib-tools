@@ -22,8 +22,10 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
         delete argv.env;
     }
 
+    const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
+    const logLevel = verbose ? 'debug' : argv.logLevel ? (argv.logLevel as LogLevelString) : 'info';
     const logger = new Logger({
-        logLevel: argv.logLevel ? (argv.logLevel as LogLevelString) : 'info'
+        logLevel
     });
 
     const watch = argv.watch ? true : false;
@@ -32,6 +34,10 @@ export async function cliBuild(argv: { [key: string]: unknown }): Promise<number
     try {
         webpackConfigs = await getWebpackBuildConfig(env, argv);
     } catch (err) {
+        if (logLevel === 'debug') {
+            throw err;
+        }
+
         logger.error(`${(err as Error).message || err}\n`);
 
         return -1;
