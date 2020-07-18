@@ -70,8 +70,8 @@ export async function detectWorkflowConfig(
                     ...project,
                     _workspaceRoot: workspaceRoot,
                     _config: workflowConfigPath,
-                    _projectName: key,
-                    _projectRoot: projectRoot
+                    _projectRoot: projectRoot,
+                    _projectName: key
                 };
 
                 projects.push(projectInternal);
@@ -115,13 +115,14 @@ export async function detectWorkflowConfig(
             };
 
             const projectInternal: ProjectConfigInternal = {
+                root: path.relative(workspaceRoot, projectRoot),
+                actions: {
+                    build: buildAction
+                },
                 _config: 'auto',
                 _workspaceRoot: workspaceRoot,
                 _projectRoot: projectRoot,
-                _projectName: projectName,
-                actions: {
-                    build: buildAction
-                }
+                _projectName: projectName
             };
             projects.push(projectInternal);
         }
