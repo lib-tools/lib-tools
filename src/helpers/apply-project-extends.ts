@@ -155,7 +155,10 @@ async function getBaseProjectConfigFromFile(
                 }
 
                 const schema = await getCachedWorkflowConfigSchema();
-                const valid = ajv.addSchema(schema, 'workflowSchema').validate('workflowSchema', workflowConfig);
+                if (!ajv.getSchema('workflowSchema')) {
+                    ajv.addSchema(schema, 'workflowSchema');
+                }
+                const valid = ajv.validate('workflowSchema', workflowConfig);
                 if (!valid) {
                     throw new Error(`Error in extending project config. Invalid configuration:\n\n${ajv.errorsText()}`);
                 }
@@ -189,7 +192,10 @@ async function getBaseProjectConfigFromFile(
             }
 
             const schema = await getCachedProjectConfigSchema();
-            const valid = ajv.addSchema(schema, 'projectSchema').validate('projectSchema', foundBaseProject);
+            if (!ajv.getSchema('projectSchema')) {
+                ajv.addSchema(schema, 'projectSchema');
+            }
+            const valid = ajv.validate('projectSchema', foundBaseProject);
             if (!valid) {
                 throw new Error(`Error in extending project config. Invalid configuration:\n\n${ajv.errorsText()}`);
             }
