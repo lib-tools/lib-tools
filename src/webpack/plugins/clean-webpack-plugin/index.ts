@@ -10,7 +10,7 @@ import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '..
 import { BuildActionInternal } from '../../../models/internals';
 import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
-const globPromise = promisify(glob);
+const globAsync = promisify(glob);
 
 export interface CleanWebpackPluginOptions {
     buildAction: BuildActionInternal;
@@ -173,7 +173,7 @@ export class CleanWebpackPlugin {
         if (patternsToExclude.length > 0) {
             await Promise.all(
                 patternsToExclude.map(async (excludePattern: string) => {
-                    const foundExcludePaths = await globPromise(excludePattern, {
+                    const foundExcludePaths = await globAsync(excludePattern, {
                         cwd: outputPath,
                         dot: true,
                         absolute: true
@@ -208,7 +208,7 @@ export class CleanWebpackPlugin {
                         pathsToClean.push(absolutePath);
                     }
                 } else {
-                    const foundPaths = await globPromise(cleanPattern, { cwd: outputPath, dot: true });
+                    const foundPaths = await globAsync(cleanPattern, { cwd: outputPath, dot: true });
                     foundPaths.forEach((p) => {
                         const absolutePath = path.isAbsolute(p) ? path.resolve(p) : path.resolve(outputPath, p);
                         if (!pathsToClean.includes(absolutePath)) {
