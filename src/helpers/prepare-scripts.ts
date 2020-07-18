@@ -17,9 +17,11 @@ import {
     ScriptCompilationOptionsInternal,
     TsConfigInfo
 } from '../models/internals';
-import { findUp, isInFolder, isSamePaths, normalizePath } from '../utils';
+import { isInFolder, isSamePaths, normalizePath } from '../utils';
 
-import { getCachedTsConfigFile } from './get-cached-ts-config-file';
+import { detectTsconfigPath } from './detect-tsconfig-path';
+import { detectTsEntryName } from './detect-ts-entry-name';
+import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
 
@@ -43,11 +45,11 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
             );
         }
     } else if (buildAction.script) {
-        tsConfigPath = await detectTsConfigPath(workspaceRoot, projectRoot);
+        tsConfigPath = await detectTsconfigPath(workspaceRoot, projectRoot);
     }
 
     if (tsConfigPath) {
-        const tsConfigJson = getCachedTsConfigFile(tsConfigPath);
+        const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
         const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
         tsConfigInfo = {
             tsConfigPath,
@@ -56,7 +58,12 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
         };
     }
 
-    const entryName = await detectEntryName(buildAction, tsConfigInfo);
+    let entryName: string | null = null;
+    if (buildAction.script && buildAction.script.entry) {
+        entryName = normalizePath(buildAction.script.entry).replace(/\.(ts|js)$/i, '');
+    } else if (tsConfigInfo) {
+        entryName = await detectTsEntryName(tsConfigInfo, buildAction._packageNameWithoutScope);
+    }
 
     if (buildAction.script && buildAction.script.compilations) {
         if (!tsConfigPath || !tsConfigInfo) {
@@ -461,68 +468,6 @@ function toScriptBundleOptionsInternal(
         _externals: globalsAndExternals.externals,
         _globals: globalsAndExternals.globals
     };
-}
-
-async function detectTsConfigPath(workspaceRoot: string, projectRoot: string): Promise<string | null> {
-    return findUp(
-        ['tsconfig.build.json', 'tsconfig-build.json', 'tsconfig.lib.json', 'tsconfig-lib.json', 'tsconfig.json'],
-        projectRoot,
-        workspaceRoot
-    );
-}
-
-async function detectEntryName(
-    buildAction: BuildActionInternal,
-    tsConfigInfo: TsConfigInfo | null
-): Promise<string | null> {
-    if (buildAction.script && buildAction.script.entry) {
-        return normalizePath(buildAction.script.entry).replace(/\.(ts|js)$/i, '');
-    }
-
-    const flatModuleOutFile =
-        tsConfigInfo &&
-        tsConfigInfo.tsConfigJson.angularCompilerOptions &&
-        tsConfigInfo.tsConfigJson.angularCompilerOptions.flatModuleOutFile
-            ? tsConfigInfo.tsConfigJson.angularCompilerOptions.flatModuleOutFile
-            : null;
-    if (flatModuleOutFile) {
-        return flatModuleOutFile.replace(/\.js$/i, '');
-    }
-
-    if (tsConfigInfo) {
-        if (tsConfigInfo.tsCompilerConfig.fileNames.length > 0) {
-            // TODO: To review
-            return path.basename(tsConfigInfo.tsCompilerConfig.fileNames[0]).replace(/\.ts$/i, '');
-        }
-
-        const tsSrcRootDir = path.dirname(tsConfigInfo.tsConfigPath);
-
-        if (await pathExists(path.resolve(tsSrcRootDir, 'index.ts'))) {
-            return 'index';
-        }
-
-        const packageName =
-            buildAction._packageNameWithoutScope.lastIndexOf('/') > -1
-                ? buildAction._packageNameWithoutScope.substr(buildAction._packageNameWithoutScope.lastIndexOf('/') + 1)
-                : buildAction._packageNameWithoutScope;
-        if (await pathExists(path.resolve(tsSrcRootDir, packageName + '.ts'))) {
-            return packageName;
-        }
-
-        if (await pathExists(path.resolve(tsSrcRootDir, 'main.ts'))) {
-            return 'main';
-        }
-
-        if (await pathExists(path.resolve(tsSrcRootDir, 'public_api.ts'))) {
-            return 'public_api';
-        }
-
-        if (await pathExists(path.resolve(tsSrcRootDir, 'public-api.ts'))) {
-            return 'public-api';
-        }
-    }
-
-    return null;
 }
 
 function getExternalsAndGlobals(
