@@ -345,50 +345,81 @@ function toScriptCompilationOptionsInternal(
             `${path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, entryName))}.js`
         );
 
+        // if (
+        //     compilerOptions.module &&
+        //     compilerOptions.module >= ModuleKind.ES2015 &&
+        //     scriptTarget > ScriptTarget.ES2015
+        // ) {
+        //     let esYear: string;
+        //     if (scriptTarget === ScriptTarget.ESNext) {
+        //         if (compilerOptions.module === ModuleKind.ES2020 || compilerOptions.module === ModuleKind.ESNext) {
+        //             esYear = '2020';
+        //         } else {
+        //             esYear = '2015';
+        //         }
+        //     } else {
+        //         esYear = `${2013 + scriptTarget}`;
+        //     }
+
+        //     buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFile;
+        //     if (
+        //         buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+        //         scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+        //     ) {
+        //         buildAction._packageJsonEntryPoint.module = jsEntryFile;
+        //         buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+        //     }
+
+        //     if (esYear === '2015') {
+        //         // (Angular) It is deprecated as of v9, might be removed in the future.
+        //         buildAction._packageJsonEntryPoint[`esm${esYear}`] = jsEntryFile;
+        //     }
+        // }
+
         if (
             compilerOptions.module &&
-            compilerOptions.module >= ModuleKind.ES2015 &&
-            scriptTarget > ScriptTarget.ES2015
+            compilerOptions.module >= ModuleKind.ES2020 &&
+            scriptTarget >= ScriptTarget.ES2020
         ) {
-            let esYear: string;
-            if (scriptTarget === ScriptTarget.ESNext) {
-                if (compilerOptions.module === ModuleKind.ES2020 || compilerOptions.module === ModuleKind.ESNext) {
-                    esYear = '2020';
-                } else {
-                    esYear = '2015';
-                }
-            } else {
-                esYear = `${2013 + scriptTarget}`;
-            }
+            buildAction._packageJsonEntryPoint.es2020 = jsEntryFile;
 
-            buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFile;
-            if (!buildAction._packageJsonEntryPoint.module) {
+            if (
+                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+            ) {
                 buildAction._packageJsonEntryPoint.module = jsEntryFile;
-            }
-
-            if (esYear === '2015') {
-                // (Angular) It is deprecated as of v9, might be removed in the future.
-                buildAction._packageJsonEntryPoint[`esm${esYear}`] = jsEntryFile;
+                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
             }
         } else if (
             compilerOptions.module &&
             compilerOptions.module >= ModuleKind.ES2015 &&
-            scriptTarget === ScriptTarget.ES2015
+            scriptTarget >= ScriptTarget.ES2015
         ) {
             buildAction._packageJsonEntryPoint.es2015 = jsEntryFile;
-            if (!buildAction._packageJsonEntryPoint.module) {
-                buildAction._packageJsonEntryPoint.module = jsEntryFile;
-            }
-
             // (Angular) It is deprecated as of v9, might be removed in the future.
             buildAction._packageJsonEntryPoint.esm2015 = jsEntryFile;
+
+            if (
+                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+            ) {
+                buildAction._packageJsonEntryPoint.module = jsEntryFile;
+                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+            }
         } else if (
             compilerOptions.module &&
             compilerOptions.module >= ModuleKind.ES2015 &&
             scriptTarget === ScriptTarget.ES5
         ) {
             buildAction._packageJsonEntryPoint.esm5 = jsEntryFile;
-            buildAction._packageJsonEntryPoint.module = jsEntryFile;
+
+            if (
+                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+            ) {
+                buildAction._packageJsonEntryPoint.module = jsEntryFile;
+                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+            }
         } else if (compilerOptions.module === ModuleKind.UMD || compilerOptions.module === ModuleKind.CommonJS) {
             buildAction._packageJsonEntryPoint.main = jsEntryFile;
         }
@@ -586,24 +617,57 @@ function addBundleEntryPointsToPackageJson(
     moduleKind?: ModuleKind
 ): void {
     if (moduleFormat === 'es') {
-        if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget >= ScriptTarget.ES2015) {
-            let esYear: string;
-            if (scriptTarget === ScriptTarget.ESNext) {
-                if (moduleKind === ModuleKind.ES2020 || moduleKind === ModuleKind.ESNext) {
-                    esYear = '2020';
-                } else {
-                    esYear = '2015';
-                }
-            } else {
-                esYear = `${2013 + scriptTarget}`;
-            }
+        if (moduleKind && moduleKind >= ModuleKind.ES2020 && scriptTarget && scriptTarget >= ScriptTarget.ES2020) {
+            // let esYear: string;
+            // if (scriptTarget === ScriptTarget.ESNext) {
+            //     if (moduleKind === ModuleKind.ES2020 || moduleKind === ModuleKind.ESNext) {
+            //         esYear = '2020';
+            //     } else {
+            //         esYear = '2015';
+            //     }
+            // } else {
+            //     esYear = `${2013 + scriptTarget}`;
+            // }
 
-            buildAction._packageJsonEntryPoint[`fesm${esYear}`] = entryFileForBundle;
-            buildAction._packageJsonEntryPoint[`es${esYear}`] = entryFileForBundle;
-            buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+            // buildAction._packageJsonEntryPoint[`fesm${esYear}`] = entryFileForBundle;
+            // buildAction._packageJsonEntryPoint[`es${esYear}`] = entryFileForBundle;
+
+            buildAction._packageJsonEntryPoint.fesm2020 = entryFileForBundle;
+            buildAction._packageJsonEntryPoint.es2020 = entryFileForBundle;
+
+            if (
+                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+            ) {
+                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+            }
+        } else if (
+            moduleKind &&
+            moduleKind >= ModuleKind.ES2015 &&
+            scriptTarget &&
+            scriptTarget >= ScriptTarget.ES2015
+        ) {
+            buildAction._packageJsonEntryPoint.fesm2015 = entryFileForBundle;
+            buildAction._packageJsonEntryPoint.es2015 = entryFileForBundle;
+
+            if (
+                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+            ) {
+                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+            }
         } else if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget === ScriptTarget.ES5) {
             buildAction._packageJsonEntryPoint.fesm5 = entryFileForBundle;
-            buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+
+            if (
+                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+            ) {
+                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+            }
         }
     } else {
         buildAction._packageJsonEntryPoint.main = entryFileForBundle;
