@@ -4,7 +4,7 @@ One of the easiest ways to contribute is to participate in discussions and repor
 
 ## Report Issues
 
-We use [Github issues](https://github.com/dagonmetric/lib-tools/issues) to track public bugs. Please ensure your description is clear and has sufficient instructions to be able to reproduce the issue.
+We use [Github issues](https://github.com/lib-tools/lib-tools/issues) to track public bugs. Please ensure your description is clear and has sufficient instructions to be able to reproduce the issue.
 
 ## General Discussions
 
@@ -14,9 +14,9 @@ We use [Gitter Channel](https://gitter.im/lib-tools/general) for general lib-too
 
 This is a rough outline of what a contributor's workflow looks like:
 
-1. Search [GitHub](https://github.com/dagonmetric/lib-tools/pulls) for an open or closed PR that relates to your submission. You don't want to duplicate effort.
+1. Search [GitHub](https://github.com/lib-tools/lib-tools/pulls) for an open or closed PR that relates to your submission. You don't want to duplicate effort.
 
-2. Fork the [repo](https://github.com/dagonmetric/lib-tools) and create your branch `topic` from master.
+2. Fork the [repo](https://github.com/lib-tools/lib-tools) and create your branch `topic` from master.
 
 3. Make your changes in a new git branch.
 
@@ -28,7 +28,7 @@ This is a rough outline of what a contributor's workflow looks like:
 
 7. Push your branch to GitHub forked repo.
 
-8. In GitHub, submit a pull request to [dagonmetric/lib-tools](https://github.com/dagonmetric/lib-tools).
+8. In GitHub, submit a pull request to [lib-tools/lib-tools](https://github.com/lib-tools/lib-tools).
 
 9. If you haven’t signed the CLA, you will see a automatic comment in the pull request. Click on the Details link. You will see the CLA. Click on sign in with Github to agree. And authorize CLA assistant to use your Github account to sign the CLA.
 
