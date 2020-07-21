@@ -9,8 +9,10 @@ import {
 } from '../models/internals';
 import { isInFolder, isSamePaths } from '../utils';
 
+import { detectTsconfigPath } from './detect-tsconfig-path';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
+import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { prepareAssetEntries } from './prepare-asset-entries';
 import { prepareBannerText } from './prepare-banner-text';
 import { prepareScripts } from './prepare-scripts';
@@ -119,9 +121,28 @@ export async function toBuildActionInternal(
             );
         }
     } else {
-        const tempOutputPath = path.resolve(workspaceRoot, `dist/packages/${packageNameWithoutScope}`);
-        if (!isSamePaths(projectRoot, tempOutputPath) && !isInFolder(tempOutputPath, projectRoot)) {
-            outputPathAbs = tempOutputPath;
+        let tsConfigPath: string | null = null;
+        if (buildAction.script && buildAction.script.tsConfig) {
+            tsConfigPath = path.resolve(projectRoot, buildAction.script.tsConfig);
+        } else if (buildAction.script) {
+            tsConfigPath = await detectTsconfigPath(workspaceRoot, projectRoot);
+        }
+
+        let outputPath: string | null = null;
+        if (tsConfigPath) {
+            const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
+            const compilerOptions = tsCompilerConfig.options;
+            if (compilerOptions.outDir) {
+                outputPath = path.isAbsolute(compilerOptions.outDir)
+                    ? path.resolve(compilerOptions.outDir)
+                    : path.resolve(path.dirname(tsConfigPath), compilerOptions.outDir);
+            }
+        } else {
+            outputPath = path.resolve(workspaceRoot, `dist/packages/${packageNameWithoutScope}`);
+        }
+
+        if (outputPath && !isSamePaths(projectRoot, outputPath) && !isInFolder(outputPath, projectRoot)) {
+            outputPathAbs = outputPath;
         }
     }
 
