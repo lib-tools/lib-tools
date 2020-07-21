@@ -100,4 +100,5 @@ export interface BuildActionInternal extends BuildAction {
     // package.json
     _packageJsonOutDir: string;
     _packageJsonEntryPoint: { [key: string]: string };
+    _packageJsonLastModuleEntryScriptTarget?: ScriptTarget;
 }
