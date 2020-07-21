@@ -1,0 +1,15 @@
+{
+  "$schema": "../../dist/schemas/schema.json",
+  "projects": {
+    "ng-config": {
+      "root": "./modules/ng-config",
+      "actions": {
+        "build": {
+          "script": {
+            "compilations": "auto"
+          }
+        }
+      }
+    }
+  }
+}

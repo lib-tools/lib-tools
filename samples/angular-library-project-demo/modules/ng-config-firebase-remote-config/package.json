@@ -1,0 +1,26 @@
+{
+  "name": "@lib-tools-demo/ng-config-firebase-remote-config",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Google Firebase Remote Config integration for ng-config.",
+  "author": "Lib Tools team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lib-tools/lib-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lib-tools/lib-tools/issues"
+  },
+  "homepage": "https://github.com/lib-tools/lib-tools",
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@lib-tools-demo/ng-config": "^4.2.0",
+    "@angular/common": "^8.0.0-beta.0 || ^9.0.0-rc.0 || ^10.0.0-rc.0",
+    "@angular/core": "^8.0.0-beta.0 || ^9.0.0-rc.0 || ^10.0.0-rc.0",
+    "firebase": "^7.15.0",
+    "rxjs": "^6.5.0"
+  },
+  "sideEffects": false
+}

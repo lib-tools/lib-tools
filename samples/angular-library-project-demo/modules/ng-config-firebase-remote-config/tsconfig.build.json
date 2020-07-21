@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+
+    "importHelpers": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+
+    "types": [],
+
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "../../dist/packages/ng-config-firebase-remote-config"
+  },
+  "files": [
+    "public_api.ts"
+  ],
+  "angularCompilerOptions": {
+    "enableIvy": false,
+    "annotateForClosureCompiler": true,
+    "strictMetadataEmit": true,
+    "skipTemplateCodegen": true,
+    "fullTemplateTypeCheck": true,
+    "strictInjectionParameters": true,
+    "flatModuleOutFile": "ng-config-firebase-remote-config.js",
+    "flatModuleId": "@lib-tools-demo/ng-config-firebase-remote-config"
+  }
+}
