@@ -491,6 +491,11 @@ function getExternalsAndGlobals(
 
     const externals = Object.keys(globals);
 
+    if (externals.includes('rxjs') && !externals.includes('rxjs/operators')) {
+        globals['rxjs/operators'] = 'rxjs.operators';
+        externals.push('rxjs/operators');
+    }
+
     if (bundleOptions.moduleFormat === 'cjs') {
         if (buildInExternals == null) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
@@ -557,16 +562,12 @@ function getGlobalVariable(externalKey: string): string | null {
         return externalKey;
     }
 
-    if (externalKey === 'rxjs') {
-        return externalKey;
-    }
-
     if (externalKey === 'moment') {
         return externalKey;
     }
 
-    if (externalKey === 'rxjs/operators') {
-        return 'rxjs.operators';
+    if (externalKey === 'rxjs') {
+        return externalKey;
     }
 
     if (/@angular\//.test(externalKey)) {
