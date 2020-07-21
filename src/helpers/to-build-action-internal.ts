@@ -119,13 +119,8 @@ export async function toBuildActionInternal(
             );
         }
     } else {
-        const tempOutputPath = path.resolve(projectRoot, `dist/packages/${packageNameWithoutScope}`);
-        if (
-            !isSamePaths(workspaceRoot, tempOutputPath) &&
-            !isSamePaths(projectRoot, tempOutputPath) &&
-            !isInFolder(tempOutputPath, workspaceRoot) &&
-            !isInFolder(tempOutputPath, projectRoot)
-        ) {
+        const tempOutputPath = path.resolve(workspaceRoot, `dist/packages/${packageNameWithoutScope}`);
+        if (!isSamePaths(projectRoot, tempOutputPath) && !isInFolder(tempOutputPath, projectRoot)) {
             outputPathAbs = tempOutputPath;
         }
     }
