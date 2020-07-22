@@ -44,11 +44,14 @@ export interface TsConfigJsonOptions {
     angularCompilerOptions?: AngularCompilerJsonOptions;
 }
 
+export type EcmaNumber = 5 | 6 | 7 | 8 | 9 | 10 | 11 | 2015 | 2016 | 2017 | 2018 | 2019 | 2020;
+
 export interface ScriptBundleOptionsInternal extends ScriptBundleOptions {
     _entryFilePath: string;
     _outputFilePath: string;
     _externals: string[];
     _globals: { [key: string]: string };
+    _ecma?: EcmaNumber;
 }
 
 export interface ScriptCompilationOptionsInternal extends ScriptCompilationOptions {
