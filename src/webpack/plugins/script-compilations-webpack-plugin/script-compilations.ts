@@ -5,7 +5,7 @@ import { pathExists, writeFile } from 'fs-extra';
 import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
-import { getRollupConfig, minifyJsBundle } from '../../../helpers';
+import { getRollupConfig, minifyESBundle } from '../../../helpers';
 import {
     BuildActionInternal,
     ScriptCompilationOptionsInternal,
@@ -242,7 +242,13 @@ async function afterTsTranspileTask(
 
                 logger.info(`Writing minify file ${path.basename(minFilePath)}`);
 
-                await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions.sourceMap, logger);
+                await minifyESBundle(
+                    bundleOptions._outputFilePath,
+                    minFilePath,
+                    bundleOptions.sourceMap,
+                    bundleOptions._ecma,
+                    logger
+                );
             }
         }
     }
