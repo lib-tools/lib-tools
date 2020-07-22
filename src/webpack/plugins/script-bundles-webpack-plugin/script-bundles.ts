@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import * as rollup from 'rollup';
 
-import { getRollupConfig, minifyJsBundle } from '../../../helpers';
+import { getRollupConfig, minifyESBundle } from '../../../helpers';
 import { BuildActionInternal } from '../../..//models/internals';
 import { LoggerBase } from '../../../utils';
 
@@ -24,7 +24,13 @@ export async function performScriptBundles(buildAction: BuildActionInternal, log
 
             logger.info(`Writing minify file ${path.basename(minFilePath)}`);
 
-            await minifyJsBundle(bundleOptions._outputFilePath, minFilePath, bundleOptions.sourceMap, logger);
+            await minifyESBundle(
+                bundleOptions._outputFilePath,
+                minFilePath,
+                bundleOptions.sourceMap,
+                bundleOptions._ecma,
+                logger
+            );
         }
     }
 }
