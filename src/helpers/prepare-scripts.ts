@@ -12,6 +12,7 @@ import {
 } from '../models';
 import {
     BuildActionInternal,
+    EcmaNumber,
     PackageJsonLike,
     ScriptBundleOptionsInternal,
     ScriptCompilationOptionsInternal,
@@ -24,6 +25,8 @@ import { detectTsEntryName } from './detect-ts-entry-name';
 import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
+
+const esmRegExp = /\/?f?esm?(5|20[1-2][0-9])\/?/i;
 
 const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 let buildInExternals: string[] | null = null;
@@ -90,20 +93,27 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
             }
         } else if (buildAction.script.compilations === 'auto') {
             if (
-                tsConfigInfo.tsCompilerConfig.options.target &&
-                tsConfigInfo.tsCompilerConfig.options.target > ScriptTarget.ES2015
+                tsConfigInfo.tsCompilerConfig.options.target == null ||
+                (tsConfigInfo.tsCompilerConfig.options.target &&
+                    tsConfigInfo.tsCompilerConfig.options.target >= ScriptTarget.ES2015)
             ) {
-                const esSuffix =
+                let scriptTargetStr: ScriptTargetString = 'ES2015';
+                if (
+                    tsConfigInfo.tsCompilerConfig.options.target &&
                     tsConfigInfo.tsCompilerConfig.options.target >= ScriptTarget.ESNext
-                        ? 'Next'
-                        : `${2013 + tsConfigInfo.tsCompilerConfig.options.target}`;
+                ) {
+                    scriptTargetStr = 'ESNext';
+                } else if (tsConfigInfo.tsCompilerConfig.options.target) {
+                    scriptTargetStr = `ES${2013 + tsConfigInfo.tsCompilerConfig.options.target}` as ScriptTargetString;
+                }
 
                 const esmScriptCompilation = toScriptCompilationOptionsInternal(
                     {
-                        target: `es${esSuffix}` as ScriptTargetString,
-                        outDir: `esm${esSuffix}`,
+                        target: scriptTargetStr,
+                        outDir: 'esm2015',
                         declaration: true,
-                        esBundle: true
+                        esBundle: true,
+                        umdBundle: true
                     },
                     entryName,
                     tsConfigInfo,
@@ -111,33 +121,20 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                 );
                 compilations.push(esmScriptCompilation);
             } else {
-                const esmScriptCompilation = toScriptCompilationOptionsInternal(
+                const esm5ScriptCompilation = toScriptCompilationOptionsInternal(
                     {
-                        target: 'es2015',
-                        outDir: 'esm2015',
-                        declaration: true,
-                        esBundle: true
+                        target: 'es5',
+                        outDir: 'esm5',
+                        declaration: false,
+                        esBundle: true,
+                        umdBundle: true
                     },
                     entryName,
                     tsConfigInfo,
                     buildAction
                 );
-                compilations.push(esmScriptCompilation);
+                compilations.push(esm5ScriptCompilation);
             }
-
-            const esm5ScriptCompilation = toScriptCompilationOptionsInternal(
-                {
-                    target: 'es5',
-                    outDir: 'esm5',
-                    declaration: false,
-                    esBundle: true,
-                    umdBundle: true
-                },
-                entryName,
-                tsConfigInfo,
-                buildAction
-            );
-            compilations.push(esm5ScriptCompilation);
         }
     }
 
@@ -247,13 +244,26 @@ function toScriptCompilationOptionsInternal(
                     bundleOutFilePath = path.resolve(buildAction._outputPath, bundleOptions.outputFile);
                 }
             } else {
-                const targetSuffix =
-                    scriptTarget >= ScriptTarget.ESNext ? '' : ScriptTarget[scriptTarget].replace(/^ES/i, '');
-                bundleOutFilePath = path.resolve(
-                    buildAction._outputPath,
-                    `fesm${targetSuffix}`,
-                    defaultOutputFileNameWithExt
-                );
+                let fesmFolderName: string;
+                const m = esmRegExp.exec(compilationOptions.outDir || '');
+                if (m != null && m.length === 2) {
+                    const esmVersion = m[1];
+                    fesmFolderName = `fesm${esmVersion}`;
+                } else {
+                    const targetSuffix = scriptTarget >= ScriptTarget.ES2015 ? '2015' : '5';
+                    fesmFolderName = `fesm${targetSuffix}`;
+                }
+
+                bundleOutFilePath = path.resolve(buildAction._outputPath, fesmFolderName, defaultOutputFileNameWithExt);
+            }
+
+            let ecma: EcmaNumber | undefined;
+            if (scriptTarget >= ScriptTarget.ESNext) {
+                ecma = 2020;
+            } else if (scriptTarget >= ScriptTarget.ES2015) {
+                ecma = (2013 + scriptTarget) as EcmaNumber;
+            } else if (scriptTarget >= ScriptTarget.ES5) {
+                ecma = 5;
             }
 
             const bundleOptionsInternal: ScriptBundleOptionsInternal = {
@@ -264,7 +274,8 @@ function toScriptCompilationOptionsInternal(
                 _entryFilePath: entryFilePath,
                 _outputFilePath: bundleOutFilePath,
                 _externals: globalsAndExternals.externals,
-                _globals: globalsAndExternals.globals
+                _globals: globalsAndExternals.globals,
+                _ecma: ecma
             };
             bundles.push(bundleOptionsInternal);
         }
@@ -345,58 +356,12 @@ function toScriptCompilationOptionsInternal(
             `${path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, entryName))}.js`
         );
 
-        // if (
-        //     compilerOptions.module &&
-        //     compilerOptions.module >= ModuleKind.ES2015 &&
-        //     scriptTarget > ScriptTarget.ES2015
-        // ) {
-        //     let esYear: string;
-        //     if (scriptTarget === ScriptTarget.ESNext) {
-        //         if (compilerOptions.module === ModuleKind.ES2020 || compilerOptions.module === ModuleKind.ESNext) {
-        //             esYear = '2020';
-        //         } else {
-        //             esYear = '2015';
-        //         }
-        //     } else {
-        //         esYear = `${2013 + scriptTarget}`;
-        //     }
-
-        //     buildAction._packageJsonEntryPoint[`es${esYear}`] = jsEntryFile;
-        //     if (
-        //         buildAction._packageJsonLastModuleEntryScriptTarget == null ||
-        //         scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
-        //     ) {
-        //         buildAction._packageJsonEntryPoint.module = jsEntryFile;
-        //         buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
-        //     }
-
-        //     if (esYear === '2015') {
-        //         // (Angular) It is deprecated as of v9, might be removed in the future.
-        //         buildAction._packageJsonEntryPoint[`esm${esYear}`] = jsEntryFile;
-        //     }
-        // }
-
         if (
-            compilerOptions.module &&
-            compilerOptions.module >= ModuleKind.ES2020 &&
-            scriptTarget >= ScriptTarget.ES2020
-        ) {
-            buildAction._packageJsonEntryPoint.es2020 = jsEntryFile;
-
-            if (
-                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
-                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
-            ) {
-                buildAction._packageJsonEntryPoint.module = jsEntryFile;
-                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
-            }
-        } else if (
             compilerOptions.module &&
             compilerOptions.module >= ModuleKind.ES2015 &&
             scriptTarget >= ScriptTarget.ES2015
         ) {
             buildAction._packageJsonEntryPoint.es2015 = jsEntryFile;
-            // (Angular) It is deprecated as of v9, might be removed in the future.
             buildAction._packageJsonEntryPoint.esm2015 = jsEntryFile;
 
             if (
@@ -492,12 +457,25 @@ function toScriptBundleOptionsInternal(
 
     const globalsAndExternals = getExternalsAndGlobals(scriptOptions, bundleOptions, buildAction._packageJson);
 
+    let ecma: EcmaNumber | undefined;
+    if (tsConfigInfo && tsConfigInfo.tsCompilerConfig.options.target) {
+        const scriptTarget = tsConfigInfo.tsCompilerConfig.options.target;
+        if (scriptTarget >= ScriptTarget.ESNext) {
+            ecma = 2020;
+        } else if (scriptTarget >= ScriptTarget.ES2015) {
+            ecma = (2013 + scriptTarget) as EcmaNumber;
+        } else if (scriptTarget >= ScriptTarget.ES5) {
+            ecma = 5;
+        }
+    }
+
     return {
         ...bundleOptions,
         _entryFilePath: entryFilePath,
         _outputFilePath: bundleOutFilePath,
         _externals: globalsAndExternals.externals,
-        _globals: globalsAndExternals.globals
+        _globals: globalsAndExternals.globals,
+        _ecma: ecma
     };
 }
 
@@ -612,65 +590,35 @@ function getGlobalVariable(externalKey: string): string | null {
 function addBundleEntryPointsToPackageJson(
     buildAction: BuildActionInternal,
     moduleFormat: ScriptBundleModuleKind,
-    entryFileForBundle: string,
+    jsEntryFile: string,
     scriptTarget?: ScriptTarget,
     moduleKind?: ModuleKind
 ): void {
     if (moduleFormat === 'es') {
-        if (moduleKind && moduleKind >= ModuleKind.ES2020 && scriptTarget && scriptTarget >= ScriptTarget.ES2020) {
-            // let esYear: string;
-            // if (scriptTarget === ScriptTarget.ESNext) {
-            //     if (moduleKind === ModuleKind.ES2020 || moduleKind === ModuleKind.ESNext) {
-            //         esYear = '2020';
-            //     } else {
-            //         esYear = '2015';
-            //     }
-            // } else {
-            //     esYear = `${2013 + scriptTarget}`;
-            // }
-
-            // buildAction._packageJsonEntryPoint[`fesm${esYear}`] = entryFileForBundle;
-            // buildAction._packageJsonEntryPoint[`es${esYear}`] = entryFileForBundle;
-
-            buildAction._packageJsonEntryPoint.fesm2020 = entryFileForBundle;
-            buildAction._packageJsonEntryPoint.es2020 = entryFileForBundle;
+        if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget >= ScriptTarget.ES2015) {
+            buildAction._packageJsonEntryPoint.fesm2015 = jsEntryFile;
+            buildAction._packageJsonEntryPoint.es2015 = jsEntryFile;
 
             if (
                 buildAction._packageJsonLastModuleEntryScriptTarget == null ||
                 scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
             ) {
-                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
-                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
-            }
-        } else if (
-            moduleKind &&
-            moduleKind >= ModuleKind.ES2015 &&
-            scriptTarget &&
-            scriptTarget >= ScriptTarget.ES2015
-        ) {
-            buildAction._packageJsonEntryPoint.fesm2015 = entryFileForBundle;
-            buildAction._packageJsonEntryPoint.es2015 = entryFileForBundle;
-
-            if (
-                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
-                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
-            ) {
-                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+                buildAction._packageJsonEntryPoint.module = jsEntryFile;
                 buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
             }
         } else if (moduleKind && moduleKind >= ModuleKind.ES2015 && scriptTarget && scriptTarget === ScriptTarget.ES5) {
-            buildAction._packageJsonEntryPoint.fesm5 = entryFileForBundle;
+            buildAction._packageJsonEntryPoint.fesm5 = jsEntryFile;
 
             if (
                 buildAction._packageJsonLastModuleEntryScriptTarget == null ||
                 scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
             ) {
-                buildAction._packageJsonEntryPoint.module = entryFileForBundle;
+                buildAction._packageJsonEntryPoint.module = jsEntryFile;
                 buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
             }
         }
     } else {
-        buildAction._packageJsonEntryPoint.main = entryFileForBundle;
+        buildAction._packageJsonEntryPoint.main = jsEntryFile;
     }
 }
 
