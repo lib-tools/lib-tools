@@ -51,6 +51,7 @@ export interface ScriptBundleOptionsInternal extends ScriptBundleOptions {
     _outputFilePath: string;
     _externals: string[];
     _globals: { [key: string]: string };
+    _umdId?: string;
     _ecma?: EcmaNumber;
 }
 
