@@ -20,15 +20,16 @@ import {
 } from '../models/internals';
 import { isInFolder, isSamePaths, normalizePath } from '../utils';
 
+import { dashCaseToCamelCase } from './dash-case-to-camel-case';
 import { detectTsconfigPath } from './detect-tsconfig-path';
 import { detectTsEntryName } from './detect-ts-entry-name';
 import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
+import { getUmdGlobalVariable } from './get-umd-global-Variable';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
 
 const esmRegExp = /\/?f?esm?(5|20[1-2][0-9])\/?/i;
 
-const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 let buildInExternals: string[] | null = null;
 
 export async function prepareScripts(buildAction: BuildActionInternal): Promise<void> {
@@ -68,6 +69,15 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
         entryName = await detectTsEntryName(tsConfigInfo, buildAction._packageNameWithoutScope);
     }
 
+    const umdIds: { [key: string]: string } = {};
+    if (buildAction.script?.umdId) {
+        umdIds[buildAction._packageName] = buildAction.script?.umdId;
+    } else {
+        const normalizedValue = buildAction._packageName.replace(/\//g, '.');
+        const umdId = dashCaseToCamelCase(normalizedValue);
+        umdIds[buildAction._packageName] = umdId;
+    }
+
     if (buildAction.script && buildAction.script.compilations) {
         if (!tsConfigPath || !tsConfigInfo) {
             throw new Error(
@@ -87,6 +97,7 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                     compilation,
                     entryName,
                     tsConfigInfo,
+                    umdIds,
                     buildAction
                 );
                 compilations.push(compilationInternal);
@@ -117,6 +128,7 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                     },
                     entryName,
                     tsConfigInfo,
+                    umdIds,
                     buildAction
                 );
                 compilations.push(esmScriptCompilation);
@@ -131,6 +143,7 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                     },
                     entryName,
                     tsConfigInfo,
+                    umdIds,
                     buildAction
                 );
                 compilations.push(esm5ScriptCompilation);
@@ -151,7 +164,12 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
         }
 
         for (const bundleOptions of buildAction.script.bundles) {
-            const bundleOptionsInternal = toScriptBundleOptionsInternal(bundleOptions, tsConfigInfo, buildAction);
+            const bundleOptionsInternal = toScriptBundleOptionsInternal(
+                bundleOptions,
+                tsConfigInfo,
+                umdIds,
+                buildAction
+            );
             bundles.push(bundleOptionsInternal);
         }
     }
@@ -178,6 +196,7 @@ function toScriptCompilationOptionsInternal(
     compilationOptions: ScriptCompilationOptions,
     entryName: string,
     tsConfigInfo: TsConfigInfo,
+    umdIds: { [key: string]: string },
     buildAction: BuildActionInternal
 ): ScriptCompilationOptionsInternal {
     const tsConfigPath = tsConfigInfo.tsConfigPath;
@@ -227,7 +246,12 @@ function toScriptCompilationOptionsInternal(
         const sourceMap = compilerOptions.sourceMap ? true : false;
         const entryFilePath = path.resolve(tsOutDir, `${entryName}.js`);
         const defaultOutputFileName = buildAction._packageNameWithoutScope.replace(/\//gm, '-');
-        const globalsAndExternals = getExternalsAndGlobals(buildAction.script || {}, {}, buildAction._packageJson);
+        const globalsAndExternals = getExternalsAndGlobals(
+            buildAction.script || {},
+            {},
+            buildAction._packageJson,
+            umdIds
+        );
 
         if (compilationOptions.esBundle) {
             const bundleOptions = typeof compilationOptions.esBundle === 'object' ? compilationOptions.esBundle : {};
@@ -275,7 +299,8 @@ function toScriptCompilationOptionsInternal(
                 _outputFilePath: bundleOutFilePath,
                 _externals: globalsAndExternals.externals,
                 _globals: globalsAndExternals.globals,
-                _ecma: ecma
+                _ecma: ecma,
+                _umdId: umdIds[buildAction._packageName]
             };
             bundles.push(bundleOptionsInternal);
         }
@@ -306,7 +331,8 @@ function toScriptCompilationOptionsInternal(
                 _entryFilePath: entryFilePath,
                 _outputFilePath: bundleOutFilePath,
                 _externals: globalsAndExternals.externals,
-                _globals: globalsAndExternals.globals
+                _globals: globalsAndExternals.globals,
+                _umdId: umdIds[buildAction._packageName]
             };
             bundles.push(bundleOptionsInternal);
         }
@@ -337,7 +363,8 @@ function toScriptCompilationOptionsInternal(
                 _entryFilePath: entryFilePath,
                 _outputFilePath: bundleOutFilePath,
                 _externals: globalsAndExternals.externals,
-                _globals: globalsAndExternals.globals
+                _globals: globalsAndExternals.globals,
+                _umdId: umdIds[buildAction._packageName]
             };
             bundles.push(bundleOptionsInternal);
         }
@@ -419,6 +446,7 @@ function toScriptCompilationOptionsInternal(
 function toScriptBundleOptionsInternal(
     bundleOptions: ScriptBundleOptions,
     tsConfigInfo: TsConfigInfo | null,
+    umdIds: { [key: string]: string },
     buildAction: BuildActionInternal
 ): ScriptBundleOptionsInternal {
     const scriptOptions = buildAction.script || {};
@@ -455,7 +483,7 @@ function toScriptBundleOptionsInternal(
         );
     }
 
-    const globalsAndExternals = getExternalsAndGlobals(scriptOptions, bundleOptions, buildAction._packageJson);
+    const globalsAndExternals = getExternalsAndGlobals(scriptOptions, bundleOptions, buildAction._packageJson, umdIds);
 
     let ecma: EcmaNumber | undefined;
     if (tsConfigInfo && tsConfigInfo.tsCompilerConfig.options.target) {
@@ -475,14 +503,16 @@ function toScriptBundleOptionsInternal(
         _outputFilePath: bundleOutFilePath,
         _externals: globalsAndExternals.externals,
         _globals: globalsAndExternals.globals,
-        _ecma: ecma
+        _ecma: ecma,
+        _umdId: umdIds[buildAction._packageName]
     };
 }
 
 function getExternalsAndGlobals(
     scriptOptions: ScriptOptions,
     bundleOptions: Partial<ScriptBundleOptions>,
-    packageJson: PackageJsonLike
+    packageJson: PackageJsonLike,
+    umdIds: { [key: string]: string }
 ): { externals: string[]; globals: { [key: string]: string } } {
     let globals: { [key: string]: string } = {};
     if (scriptOptions.externals) {
@@ -526,7 +556,7 @@ function getExternalsAndGlobals(
             .forEach((e) => {
                 externals.push(e);
                 if (!globals[e]) {
-                    const globalVar = getGlobalVariable(e);
+                    const globalVar = getUmdGlobalVariable(e, umdIds);
                     if (globalVar) {
                         globals[e] = globalVar;
                     }
@@ -547,7 +577,7 @@ function getExternalsAndGlobals(
             .forEach((e) => {
                 externals.push(e);
                 if (!globals[e]) {
-                    const globalVar = getGlobalVariable(e);
+                    const globalVar = getUmdGlobalVariable(e, umdIds);
                     if (globalVar) {
                         globals[e] = globalVar;
                     }
@@ -564,27 +594,6 @@ function getExternalsAndGlobals(
         externals,
         globals
     };
-}
-
-function getGlobalVariable(externalKey: string): string | null {
-    if (externalKey === 'tslib') {
-        return externalKey;
-    }
-
-    if (externalKey === 'moment') {
-        return externalKey;
-    }
-
-    if (externalKey === 'rxjs') {
-        return externalKey;
-    }
-
-    if (/@angular\//.test(externalKey)) {
-        const normalizedValue = externalKey.replace(/@angular\//, 'ng.').replace(/\//g, '.');
-        return dashCaseToCamelCase(normalizedValue);
-    }
-
-    return null;
 }
 
 function addBundleEntryPointsToPackageJson(
