@@ -39,11 +39,17 @@ export class PackageJsonFileWebpackPlugin {
         this.logger.debug('Checking package.json file');
 
         // Update entry points
-        Object.keys(buildAction._packageJsonEntryPoint).forEach((key) => {
+        const entryPointKeys = Object.keys(buildAction._packageJsonEntryPoint);
+        for (const entryPointKey of entryPointKeys) {
+            const entryPointValue = buildAction._packageJsonEntryPoint[entryPointKey];
+            if (!(await pathExists(path.resolve(buildAction._packageJsonOutDir, entryPointValue)))) {
+                throw new Error(`Internal error, entry point: ${entryPointValue} doesn't exists.`);
+            }
+
             packageJsonChanged = true;
-            this.logger.debug(`Adding entry point '${key}' to package.json`);
-            packageJson[key] = buildAction._packageJsonEntryPoint[key];
-        });
+            this.logger.debug(`Adding entry point '${entryPointKey}' to package.json`);
+            packageJson[entryPointKey] = entryPointValue;
+        }
 
         const rootPackageJson = buildAction._rootPackageJson;
         const packageJsonPathAreEqual = buildAction._rootPackageJsonPath === buildAction._packageJsonPath;
