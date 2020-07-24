@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import * as spawn from 'cross-spawn';
-import { pathExists, writeFile } from 'fs-extra';
+import { pathExists, remove, writeFile } from 'fs-extra';
 import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
@@ -11,7 +11,7 @@ import {
     ScriptCompilationOptionsInternal,
     ScriptOptionsInternal
 } from '../../../models/internals';
-import { LoggerBase, globCopyFiles, normalizePath } from '../../../utils';
+import { LoggerBase, globCopyFiles, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
 
@@ -250,6 +250,15 @@ async function afterTsTranspileTask(
                     logger
                 );
             }
+        }
+
+        if (
+            compilation.deleteCompilationOutDirAfterBundle &&
+            !isSamePaths(outputRootDir, compilation._tsOutDirRootResolved) &&
+            isInFolder(outputRootDir, compilation._tsOutDirRootResolved)
+        ) {
+            logger.info('Cleaning transpilation output directory');
+            await remove(compilation._tsOutDirRootResolved);
         }
     }
 }
