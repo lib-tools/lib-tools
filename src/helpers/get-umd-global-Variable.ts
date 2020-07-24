@@ -2,7 +2,9 @@ import { dashCaseToCamelCase } from './dash-case-to-camel-case';
 
 const predefinedGlobals: { [key: string]: string } = {
     moment: 'moment',
-    tslib: 'tslib'
+    tslib: 'tslib',
+    rxjs: 'rxjs',
+    firebase: 'firebase'
 };
 
 export function getUmdGlobalVariable(moduleId: string, globals: { [key: string]: string } = {}): string | undefined {
