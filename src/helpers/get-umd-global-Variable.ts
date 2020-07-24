@@ -1,4 +1,4 @@
-const dashCaseToCamelCase = (str: string) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+import { dashCaseToCamelCase } from './dash-case-to-camel-case';
 
 const predefinedGlobals: { [key: string]: string } = {
     moment: 'moment',
