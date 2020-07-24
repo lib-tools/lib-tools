@@ -486,7 +486,7 @@ export interface ScriptOptions {
     /**
      * Define module id for umd bundle.
      */
-    moduleName?: string;
+    umdId?: string;
 
     /**
      * External id and global variable name mapping for bundling options.
