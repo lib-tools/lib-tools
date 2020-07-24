@@ -17,21 +17,6 @@ export function getRollupConfig(
     inputOptions: rollup.InputOptions;
     outputOptions: rollup.OutputOptions;
 } {
-    let moduleName: string | undefined;
-    if (scriptOptions.moduleName) {
-        moduleName = scriptOptions.moduleName;
-    } else {
-        if (buildAction._packageName.startsWith('@')) {
-            moduleName = buildAction._packageName.substring(1).split('/').join('.');
-        } else {
-            moduleName = buildAction._packageName.split('/').join('.');
-        }
-        moduleName = moduleName.replace(/-([a-z])/g, (_, g1) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            return g1 ? g1.toUpperCase() : '';
-        });
-    }
-
     // plugins
     const plugins: rollup.Plugin[] = [];
 
@@ -117,7 +102,7 @@ export function getRollupConfig(
     const outputOptions: rollup.OutputOptions = {
         file: bundleOptions._outputFilePath,
         exports: scriptOptions.exports,
-        name: moduleName,
+        name: bundleOptions._umdId,
         amd: { id: buildAction._packageName },
         format: bundleOptions.moduleFormat,
         globals,
