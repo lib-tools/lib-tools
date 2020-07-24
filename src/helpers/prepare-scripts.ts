@@ -124,7 +124,8 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                         outDir: 'esm2015',
                         declaration: true,
                         esBundle: true,
-                        umdBundle: true
+                        umdBundle: true,
+                        deleteCompilationOutDirAfterBundle: true
                     },
                     entryName,
                     tsConfigInfo,
@@ -139,7 +140,8 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
                         outDir: 'esm5',
                         declaration: false,
                         esBundle: true,
-                        umdBundle: true
+                        umdBundle: true,
+                        deleteCompilationOutDirAfterBundle: true
                     },
                     entryName,
                     tsConfigInfo,
@@ -211,12 +213,6 @@ function toScriptCompilationOptionsInternal(
         scriptTarget = compilerOptions.target;
     }
 
-    // declaration
-    let declaration = true;
-    if (compilationOptions.declaration != null) {
-        declaration = compilationOptions.declaration;
-    }
-
     // tsOutDir
     let tsOutDir: string;
     let customTsOutDir: string | null = null;
@@ -241,6 +237,7 @@ function toScriptCompilationOptionsInternal(
         tsOutDir = path.resolve(tsOutDir, relSubDir);
     }
 
+    // const deleteCompilationOutDirAfterBundle = false;
     const bundles: ScriptBundleOptionsInternal[] = [];
     if (compilationOptions.esBundle || compilationOptions.umdBundle || compilationOptions.cjsBundle) {
         const sourceMap = compilerOptions.sourceMap ? true : false;
@@ -373,47 +370,55 @@ function toScriptCompilationOptionsInternal(
     const scriptOptions = buildAction.script || {};
     const addToPackageJson = scriptOptions.addToPackageJson !== false ? true : false;
 
+    // declaration
+    let declaration = true;
+    if (compilationOptions.declaration != null) {
+        declaration = compilationOptions.declaration;
+    }
+
     // Add  entry points to package.json
     if (addToPackageJson) {
         if (declaration) {
             AddTypingsEntryPointToPackageJson(buildAction, entryName);
         }
 
-        const jsEntryFile = normalizePath(
-            `${path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, entryName))}.js`
-        );
-
-        if (
-            compilerOptions.module &&
-            compilerOptions.module >= ModuleKind.ES2015 &&
-            scriptTarget >= ScriptTarget.ES2015
-        ) {
-            buildAction._packageJsonEntryPoint.es2015 = jsEntryFile;
-            buildAction._packageJsonEntryPoint.esm2015 = jsEntryFile;
+        if (!compilationOptions.deleteCompilationOutDirAfterBundle) {
+            const jsEntryFile = normalizePath(
+                `${path.relative(buildAction._packageJsonOutDir, path.resolve(tsOutDir, entryName))}.js`
+            );
 
             if (
-                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
-                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+                compilerOptions.module &&
+                compilerOptions.module >= ModuleKind.ES2015 &&
+                scriptTarget >= ScriptTarget.ES2015
             ) {
-                buildAction._packageJsonEntryPoint.module = jsEntryFile;
-                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
-            }
-        } else if (
-            compilerOptions.module &&
-            compilerOptions.module >= ModuleKind.ES2015 &&
-            scriptTarget === ScriptTarget.ES5
-        ) {
-            buildAction._packageJsonEntryPoint.esm5 = jsEntryFile;
+                buildAction._packageJsonEntryPoint.es2015 = jsEntryFile;
+                buildAction._packageJsonEntryPoint.esm2015 = jsEntryFile;
 
-            if (
-                buildAction._packageJsonLastModuleEntryScriptTarget == null ||
-                scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+                if (
+                    buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                    scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+                ) {
+                    buildAction._packageJsonEntryPoint.module = jsEntryFile;
+                    buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+                }
+            } else if (
+                compilerOptions.module &&
+                compilerOptions.module >= ModuleKind.ES2015 &&
+                scriptTarget === ScriptTarget.ES5
             ) {
-                buildAction._packageJsonEntryPoint.module = jsEntryFile;
-                buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+                buildAction._packageJsonEntryPoint.esm5 = jsEntryFile;
+
+                if (
+                    buildAction._packageJsonLastModuleEntryScriptTarget == null ||
+                    scriptTarget >= buildAction._packageJsonLastModuleEntryScriptTarget
+                ) {
+                    buildAction._packageJsonEntryPoint.module = jsEntryFile;
+                    buildAction._packageJsonLastModuleEntryScriptTarget = scriptTarget;
+                }
+            } else if (compilerOptions.module === ModuleKind.UMD || compilerOptions.module === ModuleKind.CommonJS) {
+                buildAction._packageJsonEntryPoint.main = jsEntryFile;
             }
-        } else if (compilerOptions.module === ModuleKind.UMD || compilerOptions.module === ModuleKind.CommonJS) {
-            buildAction._packageJsonEntryPoint.main = jsEntryFile;
         }
 
         for (const bundleOptions of bundles) {
