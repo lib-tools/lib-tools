@@ -422,6 +422,16 @@ export interface ScriptBundleOptions extends ScriptBundleSharedOptions {
 /**
  * @additionalProperties false
  */
+export interface ScriptCompilationBundleOptions extends ScriptBundleSharedOptions {
+    /**
+     * If true, compilation output directory is deleted after flatten bundle file generated.
+     */
+    deleteCompilationOutDirAfterBundle?: boolean;
+}
+
+/**
+ * @additionalProperties false
+ */
 export interface ScriptCompilationOptions {
     /**
      * Override custom script target.
@@ -438,15 +448,15 @@ export interface ScriptCompilationOptions {
     /**
      * Set true to bundle compilation output to esm module format.
      */
-    esBundle?: boolean | ScriptBundleSharedOptions;
+    esBundle?: boolean | ScriptCompilationBundleOptions;
     /**
      * Set true to bundle compilation output to umd module format.
      */
-    umdBundle?: boolean | ScriptBundleSharedOptions;
+    umdBundle?: boolean | ScriptCompilationBundleOptions;
     /**
      * Set true to bundle compilation output to commonjs module format.
      */
-    cjsBundle?: boolean | ScriptBundleSharedOptions;
+    cjsBundle?: boolean | ScriptCompilationBundleOptions;
 }
 
 /**
