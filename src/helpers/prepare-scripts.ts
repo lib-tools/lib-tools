@@ -640,7 +640,6 @@ function addBundleEntryPointsToPackageJson(
 
 function AddTypingsEntryPointToPackageJson(buildAction: BuildActionInternal, entryName: string): void {
     if (buildAction._nestedPackage) {
-        // TODO: To check
         buildAction._packageJsonEntryPoint.typings = normalizePath(
             path.relative(buildAction._packageJsonOutDir, path.join(buildAction._outputPath, `${entryName}.d.ts`))
         );
