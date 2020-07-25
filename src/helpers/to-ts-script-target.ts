@@ -17,7 +17,6 @@ export function toTsScriptTarget(target: ScriptTargetString): ScriptTarget {
         return ScriptTarget.Latest;
     }
 
-    // TODO: To test
     const m = esDigitRegExp.exec(target);
     if (m != null && m[1] != null) {
         const digitPart = Number(m[1]);
