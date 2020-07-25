@@ -8,6 +8,8 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { RollupCommonJSOptions } from '@rollup/plugin-commonjs';
 import { RPT2Options } from 'rollup-plugin-typescript2';
 
+import { getUmdGlobalVariable } from './umd-ids';
+
 export function getRollupConfig(
     bundleOptions: ScriptBundleOptionsInternal,
     scriptOptions: ScriptOptionsInternal,
@@ -105,7 +107,7 @@ export function getRollupConfig(
         name: bundleOptions._umdId,
         amd: { id: buildAction._packageName },
         format: bundleOptions.moduleFormat,
-        globals,
+        globals: (moduleid) => getUmdGlobalVariable(moduleid, globals),
         sourcemap: bundleOptions.sourceMap
     };
 
