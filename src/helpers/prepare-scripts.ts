@@ -24,7 +24,7 @@ import { dashCaseToCamelCase } from './dash-case-to-camel-case';
 import { detectTsconfigPath } from './detect-tsconfig-path';
 import { detectTsEntryName } from './detect-ts-entry-name';
 import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
-import { getUmdGlobalVariable } from './get-umd-global-Variable';
+import { addPredefinedUmdIds, getUmdGlobalVariable } from './umd-ids';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
 
@@ -183,6 +183,8 @@ export async function prepareScripts(buildAction: BuildActionInternal): Promise<
     ) {
         typescriptModulePath = path.resolve(buildAction._nodeModulesPath, 'typescript');
     }
+
+    addPredefinedUmdIds(umdIds);
 
     buildAction._script = {
         ...buildAction.script,
