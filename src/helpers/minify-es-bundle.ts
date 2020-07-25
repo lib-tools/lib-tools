@@ -28,7 +28,6 @@ export async function minifyESBundle(
     const result = minify(content, {
         sourceMap: sourceMapOptions,
         parse: {
-            // TODO: To review
             ecma,
             bare_returns: true
         },
