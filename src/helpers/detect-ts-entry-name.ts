@@ -21,7 +21,6 @@ export async function detectTsEntryName(
     }
 
     if (tsCompilerConfig.fileNames.length > 0) {
-        // TODO: To review
         return path.basename(tsCompilerConfig.fileNames[0]).replace(/\.ts$/i, '');
     }
 
