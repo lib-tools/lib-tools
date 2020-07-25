@@ -10,6 +10,26 @@
           }
         }
       }
+    },
+    "ng-config-http-config": {
+      "root": "./modules/ng-config/http-config",
+      "actions": {
+        "build": {
+          "script": {
+            "compilations": "auto"
+          }
+        }
+      }
+    },
+    "ng-config-firebase-remote-config": {
+      "root": "./modules/ng-config-firebase-remote-config",
+      "actions": {
+        "build": {
+          "script": {
+            "compilations": "auto"
+          }
+        }
+      }
     }
   }
 }

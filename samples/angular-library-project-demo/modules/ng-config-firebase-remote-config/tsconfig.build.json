@@ -11,6 +11,10 @@
 
     "types": [],
 
+    "paths": {
+      "@lib-tools-demo/ng-config": [ "../../dist/packages/ng-config" ]
+    },
+
     "baseUrl": ".",
     "rootDir": ".",
     "outDir": "../../dist/packages/ng-config-firebase-remote-config"
