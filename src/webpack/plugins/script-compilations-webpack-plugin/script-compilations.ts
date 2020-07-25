@@ -181,7 +181,6 @@ async function afterTsTranspileTask(
     }
 
     // Re-export
-    // TODO: To review
     if (buildAction._nestedPackage && compilation._declaration) {
         let reExportName = compilation._entryName;
         if (buildAction._nestedPackage && buildAction._packageNameWithoutScope) {
@@ -252,13 +251,14 @@ async function afterTsTranspileTask(
             }
         }
 
-        if (
-            compilation.deleteCompilationOutDirAfterBundle &&
-            !isSamePaths(outputRootDir, compilation._tsOutDirRootResolved) &&
-            isInFolder(outputRootDir, compilation._tsOutDirRootResolved)
-        ) {
+        let dirToClean = compilation._tsOutDirRootResolved;
+        if (buildAction._nestedPackage && isInFolder(outputRootDir, path.dirname(dirToClean))) {
+            dirToClean = path.dirname(dirToClean);
+        }
+
+        if (compilation.deleteCompilationOutDirAfterBundle && !isSamePaths(outputRootDir, dirToClean)) {
             logger.info('Cleaning transpilation output directory');
-            await remove(compilation._tsOutDirRootResolved);
+            await remove(dirToClean);
         }
     }
 }
