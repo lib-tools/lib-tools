@@ -63,10 +63,10 @@ async function main() {
             defer: false
         });
 
-        if (await fs.pathExists(path.resolve(__dirname, '../src/cli/index.js'))) {
-            cliPath = '../src/cli';
+        if (await fs.pathExists(path.resolve(__dirname, '../cli/index.js'))) {
+            cliPath = '../cli';
         } else {
-            cliPath = '../dist/src/cli';
+            cliPath = '../dist/cli';
         }
     }
 
