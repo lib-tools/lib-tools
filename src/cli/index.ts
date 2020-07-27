@@ -61,6 +61,57 @@ function initYargs(): yargs.Argv {
                         describe: 'Beep when all build actions completed.',
                         type: 'boolean'
                     })
+                    .option('watch', {
+                        describe: 'Run in watch mode.',
+                        type: 'boolean'
+                    })
+                    .option('h', {
+                        alias: 'help',
+                        describe: 'Show help',
+                        type: 'boolean'
+                    });
+            },
+            () => {
+                // Do nothing
+            }
+        )
+        .command(
+            'test',
+            'Test the project(s)',
+            (childYargs) => {
+                return childYargs
+                    .usage(buildCommandUsage)
+                    .example('lib test', 'Test the project(s).')
+                    .option('workflow', {
+                        describe:
+                            'The workflow configuration file location or set `auto` to analyze project structure and test automatically.',
+                        type: 'string'
+                    })
+                    .option('env', {
+                        alias: 'environment',
+                        describe:
+                            'Environment name to override the test configuration with `envOverrides[environment]` options.'
+                    })
+                    .option('prod', {
+                        describe: 'Shortcut flag to set environment to `production`.',
+                        type: 'boolean'
+                    })
+                    .option('filter', {
+                        describe: 'Build the specific project(s) filtered by project name(s).',
+                        type: 'array'
+                    })
+                    .option('logLevel', {
+                        describe: 'Logging level for output information.',
+                        type: 'string'
+                    })
+                    .option('verbose', {
+                        describe: 'Shortcut flag to set logLevel to `debug`.',
+                        type: 'boolean'
+                    })
+                    .option('watch', {
+                        describe: 'Run in watch mode.',
+                        type: 'boolean'
+                    })
                     .option('h', {
                         alias: 'help',
                         describe: 'Show help',
@@ -121,6 +172,21 @@ export default async function (): Promise<number> {
         const cliBuild = cliBuildModule.cliBuild;
 
         return cliBuild(argv);
+    }
+
+    if (command === 'test') {
+        // eslint-disable-next-line no-console
+        console.log(
+            `${colorize(
+                `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
+                'white'
+            )}\n`
+        );
+
+        const cliTestModule = await import('./test/cli-test');
+        const cliTest = cliTestModule.cliTest;
+
+        return cliTest(argv);
     }
 
     if (argv.version) {
