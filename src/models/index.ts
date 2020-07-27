@@ -3,4 +3,7 @@ export * from './build-command-options';
 export * from './overridable-action';
 export * from './project-config';
 export * from './project-config-standalone';
+export * from './shared-command-options';
+export * from './test-action';
+export * from './test-command-options';
 export * from './workflow-config';

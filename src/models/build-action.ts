@@ -546,6 +546,11 @@ export interface BuildActionBase {
      * Banner text to add at the top of each generated files. It can be file path or raw text.
      */
     banner?: string;
+
+    /**
+     * Set true to skip the action for build.
+     */
+    skip?: boolean;
 }
 
 /**

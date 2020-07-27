@@ -1,4 +1,5 @@
 import { BuildAction } from './build-action';
+import { TestAction } from './test-action';
 
 /**
  * @additionalProperties false
@@ -15,14 +16,16 @@ export interface ProjectConfig {
     root?: string;
 
     /**
-     * Set true for skipping actions.
-     */
-    skip?: boolean;
-
-    /**
      * The action configurations.
      */
     actions?: {
+        /**
+         * Build action configuration.
+         */
         build?: BuildAction;
+        /**
+         * Test action configuration.
+         */
+        test?: TestAction;
     };
 }
