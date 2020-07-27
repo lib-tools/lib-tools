@@ -12,8 +12,8 @@ fs.ensureDirSync(destDir);
 
 // copy package.json
 const packageJson = require('../package.json');
-packageJson.main = 'src/index.js';
-packageJson.typings = 'src/index.d.ts';
+packageJson.main = 'index.js';
+packageJson.typings = 'index.d.ts';
 
 if (packageJson.devDependencies) {
     delete packageJson.devDependencies;
