@@ -1,11 +1,12 @@
 import * as webpack from 'webpack';
 
+import { BuildCommandOptions } from '../../models';
 import { runWebpack } from '../../helpers';
 import { LogLevelString, Logger } from '../../utils';
 
 import { getWebpackBuildConfig } from '../../webpack/configs';
 
-export async function cliBuild(argv: { [key: string]: unknown }): Promise<number> {
+export async function cliBuild(argv: BuildCommandOptions & { [key: string]: unknown }): Promise<number> {
     const startTime = global.libCli && global.libCli.startTime > 0 ? global.libCli.startTime : Date.now();
     let env: { [key: string]: boolean | string } | undefined;
 
