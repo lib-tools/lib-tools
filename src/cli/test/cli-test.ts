@@ -11,6 +11,7 @@ import { getWebpackTestConfig } from '../../webpack/configs';
 export interface KarmaConfigOptions extends karma.ConfigOptions {
     configFile?: string;
     webpackConfig?: WebpackConfiguration;
+    codeCoverage?: boolean;
     logger?: LoggerBase;
 }
 
@@ -114,6 +115,12 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             }
         } else if (testAction.reporters) {
             karmaOptions.reporters = testAction.reporters;
+        }
+
+        if (argv.codeCoverage != null) {
+            karmaOptions.codeCoverage = argv.codeCoverage;
+        } else if (testAction.codeCoverage != null) {
+            karmaOptions.codeCoverage = testAction.codeCoverage;
         }
 
         if (testAction.karmaConfig) {
