@@ -7,13 +7,8 @@ import * as glob from 'glob';
 
 const globAsync = promisify(glob);
 
-import { BuildAction, WorkflowConfig } from '../models';
-import {
-    BuildCommandOptionsInternal,
-    ProjectConfigInternal,
-    TsConfigInfo,
-    WorkflowConfigInternal
-} from '../models/internals';
+import { BuildAction, SharedCommandOptions, WorkflowConfig } from '../models';
+import { ProjectConfigInternal, TsConfigInfo, WorkflowConfigInternal } from '../models/internals';
 import { Logger, readJsonWithComments } from '../utils';
 
 import { detectTsconfigPath } from './detect-tsconfig-path';
@@ -27,7 +22,7 @@ import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-conten
 const ajv = new Ajv();
 
 export async function detectWorkflowConfig(
-    buildOptions: BuildCommandOptionsInternal
+    commandOptions: SharedCommandOptions
 ): Promise<WorkflowConfigInternal | null> {
     const foundPackageJsonPaths = await globAsync(
         '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
@@ -46,7 +41,7 @@ export async function detectWorkflowConfig(
     const projects: ProjectConfigInternal[] = [];
 
     const logger = new Logger({
-        logLevel: buildOptions.logLevel ? buildOptions.logLevel : 'info'
+        logLevel: commandOptions.logLevel ? commandOptions.logLevel : 'info'
     });
 
     for (const packageJsonPath of foundPackageJsonPaths) {
