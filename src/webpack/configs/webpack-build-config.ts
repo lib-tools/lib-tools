@@ -1,31 +1,17 @@
-import * as path from 'path';
-
-import * as Ajv from 'ajv';
-import { pathExists } from 'fs-extra';
 import { Configuration, Plugin } from 'webpack';
 
 import {
     applyEnvOverrides,
     applyProjectExtends,
-    detectWorkflowConfig,
-    getCachedWorkflowConfigSchema,
+    getWorkflowConfig,
     normalizeEnvironment,
-    toBuildActionInternal,
-    toWorkflowConfigInternal
+    toBuildActionInternal
 } from '../../helpers';
-import { BuildCommandOptions, WorkflowConfig } from '../../models';
-import {
-    BuildActionInternal,
-    BuildCommandOptionsInternal,
-    ProjectConfigInternal,
-    WorkflowConfigInternal
-} from '../../models/internals';
-import { findUp, readJsonWithComments } from '../../utils';
+import { BuildCommandOptions } from '../../models';
+import { BuildActionInternal, BuildCommandOptionsInternal, ProjectConfigInternal } from '../../models/internals';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
 import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
-
-const ajv = new Ajv();
 
 export async function getWebpackBuildConfig(
     env?: { [key: string]: boolean | string },
@@ -97,8 +83,21 @@ export async function getWebpackBuildConfig(
             buildOptions = { ...(argv as BuildCommandOptionsInternal), ...buildOptions };
         }
 
-        if (buildOptions.filter && Array.isArray(buildOptions.filter) && buildOptions.filter.length) {
-            filteredProjectNames.push(...prepareFilterNames(buildOptions.filter));
+        if (buildOptions.filter) {
+            if (Array.isArray(buildOptions.filter)) {
+                buildOptions.filter
+                    .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
+                    .forEach((projectName) => {
+                        filteredProjectNames.push(projectName);
+                    });
+            } else {
+                buildOptions.filter
+                    .split(',')
+                    .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
+                    .forEach((projectName) => {
+                        filteredProjectNames.push(projectName);
+                    });
+            }
         }
     }
 
@@ -128,7 +127,7 @@ export async function getWebpackBuildConfig(
             applyEnvOverrides(projectConfigInternal.actions.build, buildOptions.environment);
         }
 
-        if (projectConfigInternal.skip) {
+        if (projectConfigInternal.actions.build.skip) {
             continue;
         }
 
@@ -145,50 +144,6 @@ export async function getWebpackBuildConfig(
     }
 
     return webpackConfigs;
-}
-
-async function getWorkflowConfig(buildOptions: BuildCommandOptionsInternal): Promise<WorkflowConfigInternal> {
-    let foundConfigPath: string | null = null;
-    if (buildOptions.workflow && buildOptions.workflow !== 'auto') {
-        foundConfigPath = path.isAbsolute(buildOptions.workflow)
-            ? buildOptions.workflow
-            : path.resolve(process.cwd(), buildOptions.workflow);
-
-        if (!(await pathExists(foundConfigPath))) {
-            throw new Error(`Workflow configuration file ${foundConfigPath} doesn't exist.`);
-        }
-    }
-
-    if (!buildOptions.workflow || buildOptions.workflow === 'auto') {
-        foundConfigPath = await findUp(['workflow.json'], process.cwd(), path.parse(process.cwd()).root);
-    }
-
-    if (foundConfigPath) {
-        const workflowConfig = (await readJsonWithComments(foundConfigPath)) as WorkflowConfig;
-        const schema = await getCachedWorkflowConfigSchema();
-        if (!ajv.getSchema('workflowSchema')) {
-            ajv.addSchema(schema, 'workflowSchema');
-        }
-        const valid = ajv.validate('workflowSchema', workflowConfig);
-        if (!valid) {
-            throw new Error(`Invalid configuration. ${ajv.errorsText()}`);
-        }
-
-        const workspaceRoot = path.extname(foundConfigPath) ? path.dirname(foundConfigPath) : foundConfigPath;
-        return toWorkflowConfigInternal(workflowConfig, foundConfigPath, workspaceRoot);
-    } else {
-        if (buildOptions.workflow !== 'auto') {
-            throw new Error(`Workflow configuration file could not be detected.`);
-        }
-
-        const workflowConfig = await detectWorkflowConfig(buildOptions);
-
-        if (workflowConfig == null) {
-            throw new Error(`Workflow configuration could not be detected automatically.`);
-        }
-
-        return workflowConfig;
-    }
 }
 
 async function getWebpackBuildConfigInternal(
@@ -285,24 +240,6 @@ async function getWebpackBuildConfigInternal(
     };
 
     return Promise.resolve(webpackConfig);
-}
-
-function prepareFilterNames(filter: string | string[]): string[] {
-    const filterNames: string[] = [];
-
-    if (filter && (Array.isArray(filter) || typeof filter === 'string')) {
-        if (Array.isArray(filter)) {
-            filter.forEach((filterName) => {
-                if (filterName && filterName.trim() && !filterNames.includes(filterName.trim())) {
-                    filterNames.push(filterName.trim());
-                }
-            });
-        } else if (filter && filter.trim()) {
-            filterNames.push(filter);
-        }
-    }
-
-    return filterNames;
 }
 
 function isFromWebpackCli(): boolean {
