@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { readJson } from 'fs-extra';
 
-const schemaRootPath = path.resolve(__dirname, '../../schemas');
+const schemaRootPath = path.resolve(__dirname, '../schemas');
 
 const cache: { schema: { [key: string]: unknown } | null } = {
     schema: null
