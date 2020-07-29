@@ -1,7 +1,7 @@
 import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
-import { BuildActionInternal, ScriptBundleOptionsInternal, ScriptOptionsInternal } from '../models/internals';
+import { BuildConfigInternal, ScriptBundleOptionsInternal, ScriptOptionsInternal } from '../models';
 import { LoggerBase } from '../utils';
 
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -13,7 +13,7 @@ import { getUmdGlobalVariable } from './umd-ids';
 export function getRollupConfig(
     bundleOptions: ScriptBundleOptionsInternal,
     scriptOptions: ScriptOptionsInternal,
-    buildAction: BuildActionInternal,
+    buildConfig: BuildConfigInternal,
     logger: LoggerBase
 ): {
     inputOptions: rollup.InputOptions;
@@ -105,14 +105,14 @@ export function getRollupConfig(
         file: bundleOptions._outputFilePath,
         exports: scriptOptions.exports,
         name: bundleOptions._umdId,
-        amd: { id: buildAction._packageName },
+        amd: { id: buildConfig._packageName },
         format: bundleOptions.moduleFormat,
         globals: (moduleid) => getUmdGlobalVariable(moduleid, globals),
         sourcemap: bundleOptions.sourceMap
     };
 
-    if (buildAction._bannerText) {
-        outputOptions.banner = buildAction._bannerText;
+    if (buildConfig._bannerText) {
+        outputOptions.banner = buildConfig._bannerText;
     }
 
     return {
