@@ -3,8 +3,7 @@ import * as path from 'path';
 import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 
-import { SharedCommandOptions, WorkflowConfig } from '../models';
-import { WorkflowConfigInternal } from '../models/internals';
+import { SharedCommandOptions, WorkflowConfig, WorkflowConfigInternal } from '../models';
 import { findUp, readJsonWithComments } from '../utils';
 
 import { detectWorkflowConfig } from './detect-workflow-config';
