@@ -6,7 +6,7 @@ import * as glob from 'glob';
 import * as minimatch from 'minimatch';
 import * as webpack from 'webpack';
 
-import { BuildActionInternal } from '../../..//models/internals';
+import { BuildConfigInternal } from '../../..//models';
 import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils';
 
 const globAsync = promisify(glob);
@@ -24,7 +24,7 @@ function excludeMatch(filePathRel: string, excludes: string[]): boolean {
 }
 
 export interface CopyWebpackPluginOptions {
-    buildAction: BuildActionInternal;
+    buildConfig: BuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -46,17 +46,17 @@ export class CopyWebpackPlugin {
     }
 
     private async processCopy(): Promise<void> {
-        const buildAction = this.options.buildAction;
+        const buildConfig = this.options.buildConfig;
 
-        if (!buildAction._assetEntries.length) {
+        if (!buildConfig._assetEntries.length) {
             return;
         }
 
         this.logger.debug('Processing assets to be copied');
 
-        const assetEntries = buildAction._assetEntries;
-        const projectRoot = buildAction._projectRoot;
-        const outputPath = buildAction._outputPath;
+        const assetEntries = buildConfig._assetEntries;
+        const projectRoot = buildConfig._projectRoot;
+        const outputPath = buildConfig._outputPath;
         const infoLoggedFiles: string[] = [];
 
         for (const assetEntry of assetEntries) {
