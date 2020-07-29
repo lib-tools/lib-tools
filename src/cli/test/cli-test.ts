@@ -138,8 +138,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             karmaOptions.configFile = path.resolve(testConfigInternal._projectRoot, testConfigInternal.karmaConfig);
         }
 
-        const webpackConfig = await getWebpackTestConfig(testConfigInternal);
-        karmaOptions.webpackConfig = webpackConfig;
+        karmaOptions.webpackConfig = await getWebpackTestConfig(testConfigInternal);
 
         let karmaServerWithStop: { stop: () => Promise<void> } | undefined;
 
