@@ -31,6 +31,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
 
         delete argv.env;
     }
+
     const environment = env ? normalizeEnvironment(env, prod) : {};
 
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
@@ -39,17 +40,9 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         logLevel
     });
 
-    const karmaOptions: KarmaConfigOptions = {
-        logger
-    };
-
-    if (argv.watch != null) {
-        karmaOptions.singleRun = argv.watch;
-    }
-
     const workflowConfig = await getWorkflowConfig(argv);
-
     const filteredProjectNames: string[] = [];
+
     if (argv.filter) {
         if (Array.isArray(argv.filter)) {
             argv.filter
@@ -103,6 +96,14 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             _projectName: projectConfigInternal._projectName
         };
 
+        const karmaOptions: KarmaConfigOptions = {
+            logger
+        };
+
+        if (argv.watch != null) {
+            karmaOptions.singleRun = !argv.watch;
+        }
+
         if (argv.browsers) {
             if (Array.isArray(argv.browsers)) {
                 karmaOptions.browsers = argv.browsers.filter((b) => b.length);
@@ -129,31 +130,36 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             karmaOptions.codeCoverage = testConfigInternal.codeCoverage;
         }
 
-        if (testConfigInternal.karmaConfig) {
+        if (argv.karmaConfig) {
+            karmaOptions.configFile = path.isAbsolute(argv.karmaConfig)
+                ? path.resolve(argv.karmaConfig)
+                : path.resolve(process.cwd(), argv.karmaConfig);
+        } else if (testConfigInternal.karmaConfig) {
             karmaOptions.configFile = path.resolve(testConfigInternal._projectRoot, testConfigInternal.karmaConfig);
         }
 
         const webpackConfig = await getWebpackTestConfig(testConfigInternal);
         karmaOptions.webpackConfig = webpackConfig;
-    }
 
-    // const karmaServer = new karma.Server(karmaOptions);
+        let karmaServerWithStop: { stop: () => Promise<void> } | undefined;
 
-    // Karma typings incorrectly define start's return value as void
-    // const karmaStartPromise = (karmaServer.start() as unknown) as Promise<void>;
-    // const karmaServerWithStop = (karmaServer as unknown) as { stop: () => Promise<void> };
-    // if (typeof karmaServerWithStop.stop === 'function') {
-    //     await karmaStartPromise;
-    //     // await karmaServerWithStop.stop();
-    // }
+        const exitCode = await new Promise<number>((res) => {
+            const karmaServer = new karma.Server(karmaOptions, (serverCallback) => {
+                res(serverCallback);
+            });
+            karmaServerWithStop = (karmaServer as unknown) as { stop: () => Promise<void> };
 
-    const exitCode = await new Promise<number>((res) => {
-        const karmaServer = new karma.Server(karmaOptions, (serverCallback) => {
-            res(serverCallback);
+            karmaServer.start();
         });
 
-        karmaServer.start();
-    });
+        if (karmaServerWithStop && typeof karmaServerWithStop.stop === 'function') {
+            await karmaServerWithStop.stop();
+        }
 
-    return exitCode;
+        if (exitCode !== 0) {
+            return exitCode;
+        }
+    }
+
+    return 0;
 }
