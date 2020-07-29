@@ -7,8 +7,14 @@ import * as glob from 'glob';
 
 const globAsync = promisify(glob);
 
-import { BuildAction, SharedCommandOptions, WorkflowConfig } from '../models';
-import { ProjectConfigInternal, TsConfigInfo, WorkflowConfigInternal } from '../models/internals';
+import {
+    BuildConfig,
+    ProjectConfigInternal,
+    SharedCommandOptions,
+    TsConfigInfo,
+    WorkflowConfig,
+    WorkflowConfigInternal
+} from '../models';
 import { Logger, readJsonWithComments } from '../utils';
 
 import { detectTsconfigPath } from './detect-tsconfig-path';
@@ -115,7 +121,7 @@ export async function detectWorkflowConfig(
             const projectRoot = path.dirname(packageJsonPath);
             const projectName = packageNameWithoutScope.replace(/\//g, '-');
 
-            const buildAction: BuildAction = {
+            const buildConfig: BuildConfig = {
                 script: {
                     compilations: 'auto'
                 }
@@ -123,8 +129,8 @@ export async function detectWorkflowConfig(
 
             const projectInternal: ProjectConfigInternal = {
                 root: path.relative(workspaceRoot, projectRoot),
-                actions: {
-                    build: buildAction
+                tasks: {
+                    build: buildConfig
                 },
                 _config: 'auto',
                 _workspaceRoot: workspaceRoot,
