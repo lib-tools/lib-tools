@@ -3,14 +3,14 @@ import * as path from 'path';
 import { ensureDir, pathExists, writeFile } from 'fs-extra';
 import * as webpack from 'webpack';
 
-import { BuildActionInternal, PackageJsonLike } from '../../../models/internals';
+import { BuildConfigInternal, PackageJsonLike } from '../../../models';
 import { LogLevelString, Logger } from '../../../utils';
 
 const placeholderRegExp = /\[PLACEHOLDER\]/;
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER');
 
 export interface PackageJsonFileWebpackPluginOptions {
-    buildAction: BuildActionInternal;
+    buildConfig: BuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -32,17 +32,17 @@ export class PackageJsonFileWebpackPlugin {
     }
 
     private async processPackageJsonFile(): Promise<void> {
-        const buildAction = this.options.buildAction;
-        const packageJson = JSON.parse(JSON.stringify(buildAction._packageJson)) as PackageJsonLike;
+        const buildConfig = this.options.buildConfig;
+        const packageJson = JSON.parse(JSON.stringify(buildConfig._packageJson)) as PackageJsonLike;
         let packageJsonChanged = false;
 
         this.logger.debug('Checking package.json file');
 
         // Update entry points
-        const entryPointKeys = Object.keys(buildAction._packageJsonEntryPoint);
+        const entryPointKeys = Object.keys(buildConfig._packageJsonEntryPoint);
         for (const entryPointKey of entryPointKeys) {
-            const entryPointValue = buildAction._packageJsonEntryPoint[entryPointKey];
-            if (!(await pathExists(path.resolve(buildAction._packageJsonOutDir, entryPointValue)))) {
+            const entryPointValue = buildConfig._packageJsonEntryPoint[entryPointKey];
+            if (!(await pathExists(path.resolve(buildConfig._packageJsonOutDir, entryPointValue)))) {
                 throw new Error(`Internal error, entry point: ${entryPointValue} doesn't exists.`);
             }
 
@@ -51,9 +51,9 @@ export class PackageJsonFileWebpackPlugin {
             packageJson[entryPointKey] = entryPointValue;
         }
 
-        const rootPackageJson = buildAction._rootPackageJson;
-        const packageJsonPathAreEqual = buildAction._rootPackageJsonPath === buildAction._packageJsonPath;
-        const nestedPackage = buildAction._nestedPackage;
+        const rootPackageJson = buildConfig._rootPackageJson;
+        const packageJsonPathAreEqual = buildConfig._rootPackageJsonPath === buildConfig._packageJsonPath;
+        const nestedPackage = buildConfig._nestedPackage;
 
         if (packageJson.devDependencies) {
             packageJsonChanged = true;
@@ -146,7 +146,7 @@ export class PackageJsonFileWebpackPlugin {
 
         if (
             packageJson.sideEffects == null &&
-            ((buildAction._script && buildAction._script._compilations.length) || buildAction._script?._bundles.length)
+            ((buildConfig._script && buildConfig._script._compilations.length) || buildConfig._script?._bundles.length)
         ) {
             packageJsonChanged = true;
             this.logger.debug(`Updating 'sideEffects' field in package.json`);
@@ -155,13 +155,13 @@ export class PackageJsonFileWebpackPlugin {
 
         if (
             !packageJson.version ||
-            packageJson.version !== buildAction._packageVersion ||
+            packageJson.version !== buildConfig._packageVersion ||
             versionPlaceholderRegex.test(packageJson.version) ||
             placeholderRegExp.test(packageJson.version)
         ) {
             packageJsonChanged = true;
             this.logger.debug(`Updating 'version' field in package.json`);
-            packageJson.version = buildAction._packageVersion;
+            packageJson.version = buildConfig._packageVersion;
         }
 
         if (packageJson.peerDependencies) {
@@ -177,7 +177,7 @@ export class PackageJsonFileWebpackPlugin {
                         logged = true;
                     }
 
-                    peerDependencies[key] = peerPkgVer.replace(versionPlaceholderRegex, buildAction._packageVersion);
+                    peerDependencies[key] = peerPkgVer.replace(versionPlaceholderRegex, buildConfig._packageVersion);
                 } else if (placeholderRegExp.test(peerPkgVer)) {
                     packageJsonChanged = true;
                     if (!logged) {
@@ -185,7 +185,7 @@ export class PackageJsonFileWebpackPlugin {
                         logged = true;
                     }
 
-                    peerDependencies[key] = peerPkgVer.replace(placeholderRegExp, buildAction._packageVersion);
+                    peerDependencies[key] = peerPkgVer.replace(placeholderRegExp, buildConfig._packageVersion);
                 }
             }
 
@@ -193,7 +193,7 @@ export class PackageJsonFileWebpackPlugin {
         }
 
         // write package config
-        const packageJsonOutFilePath = path.resolve(buildAction._packageJsonOutDir, 'package.json');
+        const packageJsonOutFilePath = path.resolve(buildConfig._packageJsonOutDir, 'package.json');
         const packageJsonOutFileExists = await pathExists(packageJsonOutFilePath);
 
         if (!packageJsonOutFileExists || packageJsonChanged) {
@@ -203,7 +203,7 @@ export class PackageJsonFileWebpackPlugin {
                 this.logger.info(`Updating package.json file`);
             }
 
-            await ensureDir(buildAction._packageJsonOutDir);
+            await ensureDir(buildConfig._packageJsonOutDir);
             await writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
         }
     }
