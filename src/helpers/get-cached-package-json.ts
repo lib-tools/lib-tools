@@ -1,4 +1,4 @@
-import { PackageJsonLike } from '../models/internals';
+import { PackageJsonLike } from '../models';
 
 import { readJson } from 'fs-extra';
 
