@@ -7,6 +7,7 @@ export * from './get-cached-tsconfig-json';
 export * from './get-cached-workflow-config-schema';
 export * from './get-rollup-config';
 export * from './get-workflow-config';
+export * from './is-angular-project';
 export * from './minify-es-bundle';
 export * from './normalize-environment';
 export * from './run-webpack';
