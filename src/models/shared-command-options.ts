@@ -1,14 +1,11 @@
-/**
- * @additionalProperties true
- */
 export interface SharedCommandOptions {
     /**
-     * The workflow configuration file location or set `auto` to analyze project structure and build automatically.
+     * The workflow configuration file location or set `auto` to analyze project structure automatically.
      */
     workflow?: string | 'auto';
 
     /**
-     * Environment name to override the build configuration with `envOverrides[environment]` options.
+     * Environment name to override the task configuration with `envOverrides[environment]` options.
      */
     environment?: { [key: string]: boolean | string };
 
@@ -18,7 +15,7 @@ export interface SharedCommandOptions {
     prod?: boolean;
 
     /**
-     * Build the specific project(s) filtered by project name(s).
+     * Filter the project(s) by project name(s).
      */
     filter?: string | string[];
 
