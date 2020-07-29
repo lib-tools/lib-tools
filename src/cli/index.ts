@@ -82,6 +82,22 @@ function initYargs(): yargs.Argv {
                 return childYargs
                     .usage(buildCommandUsage)
                     .example('lib test', 'Test the project(s).')
+                    .option('browsers', {
+                        describe: 'A list of browsers to launch and capture.',
+                        type: 'array'
+                    })
+                    .option('reporters', {
+                        describe: 'A list of reporters to use.',
+                        type: 'array'
+                    })
+                    .option('codeCoverage', {
+                        describe: 'Output code coverage report.',
+                        type: 'boolean'
+                    })
+                    .option('karmaConfig', {
+                        describe: 'Custom karma.conf.js file path.',
+                        type: 'string'
+                    })
                     .option('workflow', {
                         describe:
                             'The workflow configuration file location or set `auto` to analyze project structure and test automatically.',
@@ -97,7 +113,7 @@ function initYargs(): yargs.Argv {
                         type: 'boolean'
                     })
                     .option('filter', {
-                        describe: 'Build the specific project(s) filtered by project name(s).',
+                        describe: 'Filter the project(s) by project name(s).',
                         type: 'array'
                     })
                     .option('logLevel', {
