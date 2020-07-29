@@ -29,7 +29,7 @@
             "tsConfig": "tsconfig.build.json",
             "addToPackageJson": true,
             "entry": "public_api.ts",
-            "moduleName": "demo",
+            "umdId": "demo",
             "peerDependenciesAsExternals": true,
             "dependenciesAsExternals": true,
             "externals": {
@@ -76,10 +76,21 @@
             "tsConfig": "tsconfig.build.json",
             "addToPackageJson": true,
             "entry": "public_api.ts",
-            "moduleName": "demo",
+            "umdId": "demo",
             "dependenciesAsExternals": true,
             "peerDependenciesAsExternals": true
           }
+        }
+      }
+    },
+    "test-demo": {
+      "root": "./",
+      "actions": {
+        "test": {
+          "karmaConfig": "karma.conf.js",
+          "entry": "test/test.ts",
+          "tsConfig": "tsconfig.test.json"
+
         }
       }
     }
