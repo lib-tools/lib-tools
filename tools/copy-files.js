@@ -31,3 +31,12 @@ fs.copySync(path.resolve(rootDir, 'LICENSE'), path.resolve(destDir, 'LICENSE'));
 
 fs.copySync(path.resolve(rootDir, 'bin/lib'), path.resolve(destDir, 'bin/lib'));
 fs.copySync(path.resolve(rootDir, 'bin/lib-cli.js'), path.resolve(destDir, 'bin/lib-cli.js'));
+
+fs.copySync(
+    path.resolve(rootDir, 'src/karma-plugin/karma-context.html'),
+    path.resolve(destDir, 'karma-plugin/karma-context.html')
+);
+fs.copySync(
+    path.resolve(rootDir, 'src/karma-plugin/karma-debug.html'),
+    path.resolve(destDir, 'karma-plugin/karma-debug.html')
+);
