@@ -11,7 +11,7 @@ export async function getCachedWorkflowConfigSchema(): Promise<{ [key: string]: 
         return cache.schema;
     }
 
-    const schemaRootPath = path.resolve(__dirname, '../../schemas');
+    const schemaRootPath = path.resolve(__dirname, '../schemas');
     const schema = (await readJson(path.resolve(schemaRootPath, 'schema.json'))) as { [key: string]: unknown };
 
     if (schema.$schema) {
