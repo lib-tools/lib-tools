@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-import { TsConfigInfo } from '../models/internals';
+import { TsConfigInfo } from '../models';
 
 export async function detectTsEntryName(
     tsConfigInfo: TsConfigInfo,
