@@ -2,39 +2,38 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-import { AutoPrefixerOptions, CleanCSSOptions } from '../models';
-import { BuildActionInternal } from '../models/internals';
+import { AutoPrefixerOptions, BuildConfigInternal, CleanCSSOptions } from '../models';
 import { normalizePath } from '../utils';
 
 const inputExtRegExp = /\.(sass|scss|css)$/i;
 const outputExtRegExp = /\.css$/i;
 
-export async function prepareStyles(buildAction: BuildActionInternal): Promise<void> {
-    if (!buildAction.style) {
+export async function prepareStyles(buildConfig: BuildConfigInternal): Promise<void> {
+    if (!buildConfig.style) {
         return;
     }
 
-    const styleOptions = buildAction.style;
+    const styleOptions = buildConfig.style;
 
     if (!styleOptions.compilations || !styleOptions.compilations.length) {
         return;
     }
 
-    const projectName = buildAction._projectName;
-    const projectRoot = buildAction._projectRoot;
+    const projectName = buildConfig._projectName;
+    const projectRoot = buildConfig._projectRoot;
     let packageJsonStyleEntry: string | undefined;
 
     for (let i = 0; i < styleOptions.compilations.length; i++) {
         const styleEntry = styleOptions.compilations[i];
         if (!styleEntry.input || !styleEntry.input.trim().length) {
             throw new Error(
-                `Style input file is required, please correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].input'.`
+                `Style input file is required, please correct value in 'projects[${projectName}].tasks.build.style.compilations[${i}].input'.`
             );
         }
 
         if (!inputExtRegExp.test(styleEntry.input)) {
             throw new Error(
-                `Unsupported style input file '${styleEntry.input}', please correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].input'.`
+                `Unsupported style input file '${styleEntry.input}', please correct value in 'projects[${projectName}].tasks.build.style.compilations[${i}].input'.`
             );
         }
 
@@ -42,7 +41,7 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
         const inputFileExists = await pathExists(inputFilePath);
         if (!inputFileExists) {
             throw new Error(
-                `Style input file '${inputFilePath}' doesn't exist, please correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].input'.`
+                `Style input file '${inputFilePath}' doesn't exist, please correct value in 'projects[${projectName}].tasks.build.style.compilations[${i}].input'.`
             );
         }
 
@@ -53,19 +52,19 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
 
             if (!extName || styleEntry.output.endsWith('/')) {
                 const outputFileName = path.basename(inputFilePath).replace(inputExtRegExp, '.css');
-                outputFilePath = path.resolve(buildAction._outputPath, styleEntry.output, outputFileName);
+                outputFilePath = path.resolve(buildConfig._outputPath, styleEntry.output, outputFileName);
             } else {
                 if (!outputExtRegExp.test(extName)) {
                     throw new Error(
-                        `Unsupported style output file '${styleEntry.input}', correct value in 'projects[${projectName}].actions.build.style.compilations[${i}].output'.`
+                        `Unsupported style output file '${styleEntry.input}', correct value in 'projects[${projectName}].tasks.build.style.compilations[${i}].output'.`
                     );
                 }
 
-                outputFilePath = path.resolve(buildAction._outputPath, styleEntry.output);
+                outputFilePath = path.resolve(buildConfig._outputPath, styleEntry.output);
             }
         } else {
             const outputFileName = path.basename(inputFilePath).replace(inputExtRegExp, '.css');
-            outputFilePath = path.resolve(buildAction._outputPath, outputFileName);
+            outputFilePath = path.resolve(buildConfig._outputPath, outputFileName);
         }
 
         let includePaths: string[] = [];
@@ -111,10 +110,10 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
         );
 
         if (!packageJsonStyleEntry && styleOptions.addToPackageJson !== false) {
-            packageJsonStyleEntry = normalizePath(path.relative(buildAction._packageJsonOutDir, outputFilePath));
+            packageJsonStyleEntry = normalizePath(path.relative(buildConfig._packageJsonOutDir, outputFilePath));
         }
 
-        buildAction._styleEntries.push({
+        buildConfig._styleEntries.push({
             ...styleEntry,
             _inputFilePath: inputFilePath,
             _outputFilePath: outputFilePath,
@@ -128,6 +127,6 @@ export async function prepareStyles(buildAction: BuildActionInternal): Promise<v
     }
 
     if (styleOptions.addToPackageJson !== false && packageJsonStyleEntry) {
-        buildAction._packageJsonEntryPoint.style = packageJsonStyleEntry;
+        buildConfig._packageJsonEntryPoint.style = packageJsonStyleEntry;
     }
 }
