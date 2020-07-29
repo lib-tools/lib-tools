@@ -6,11 +6,7 @@ import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
 import { getRollupConfig, minifyESBundle } from '../../../helpers';
-import {
-    BuildConfigInternal,
-    ScriptCompilationOptionsInternal,
-    ScriptOptionsInternal
-} from '../../../models/internals';
+import { BuildConfigInternal, ScriptCompilationOptionsInternal, ScriptOptionsInternal } from '../../../models';
 import { LoggerBase, globCopyFiles, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
 import { replaceVersion } from './replace-version';
