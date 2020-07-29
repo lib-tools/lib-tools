@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
+    "@ngtools/webpack": "^10.0.4",
     "@rollup/plugin-commonjs": "^14.0.0",
     "@rollup/plugin-node-resolve": "^8.4.0",
     "ajv": "^6.12.3",
