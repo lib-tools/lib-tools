@@ -548,13 +548,13 @@ export interface BuildConfigBase {
     banner?: string;
 
     /**
-     * Set true to skip the action for build.
+     * Set true to skip the task.
      */
     skip?: boolean;
 }
 
 /**
- * The build action.
+ * The build task.
  * @additionalProperties false
  */
 export interface BuildConfig extends BuildConfigBase, OverridableConfig<BuildConfigBase> {

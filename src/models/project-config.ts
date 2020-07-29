@@ -20,11 +20,11 @@ export interface ProjectConfig {
      */
     tasks?: {
         /**
-         * Build action configuration.
+         * Build task configuration.
          */
         build?: BuildConfig;
         /**
-         * Test action configuration.
+         * Test task configuration.
          */
         test?: TestConfig;
     };

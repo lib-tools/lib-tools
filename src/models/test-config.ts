@@ -19,13 +19,13 @@ export interface TestConfigBase {
     codeCoverageExclude?: string[];
 
     /**
-     * Set true to skip the action for test.
+     * Set true to skip the task.
      */
     skip?: boolean;
 }
 
 /**
- * The build action.
+ * The test task.
  * @additionalProperties false
  */
 export interface TestConfig extends TestConfigBase, OverridableConfig<TestConfigBase> {
