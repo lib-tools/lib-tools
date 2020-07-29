@@ -10,4 +10,5 @@ export * from './workflow-config';
 export * from './build-config-internal';
 export * from './project-config-internal';
 export * from './package-jon-like';
+export * from './test-config-internal';
 export * from './workflow-config-internal';
