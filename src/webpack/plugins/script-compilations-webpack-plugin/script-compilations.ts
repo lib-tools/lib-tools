@@ -7,7 +7,7 @@ import { ScriptTarget } from 'typescript';
 
 import { getRollupConfig, minifyESBundle } from '../../../helpers';
 import {
-    BuildActionInternal,
+    BuildConfigInternal,
     ScriptCompilationOptionsInternal,
     ScriptOptionsInternal
 } from '../../../models/internals';
@@ -17,15 +17,15 @@ import { replaceVersion } from './replace-version';
 
 let prevTsTranspilationVersionReplaced = false;
 
-export async function performScriptCompilations(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
-    if (!buildAction._script || !buildAction._script._compilations.length) {
+export async function performScriptCompilations(buildConfig: BuildConfigInternal, logger: LoggerBase): Promise<void> {
+    if (!buildConfig._script || !buildConfig._script._compilations.length) {
         return;
     }
 
-    const scriptOptions = buildAction._script;
+    const scriptOptions = buildConfig._script;
 
     let tscCommand = 'tsc';
-    const nodeModulesPath = buildAction._nodeModulesPath;
+    const nodeModulesPath = buildConfig._nodeModulesPath;
     if (nodeModulesPath) {
         if (
             (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) &&
@@ -80,7 +80,7 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
             child.on('error', rej);
             child.on('exit', (exitCode: number) => {
                 if (exitCode === 0) {
-                    afterTsTranspileTask(compilation, scriptOptions, buildAction, tscCommand, logger)
+                    afterTsTranspileTask(compilation, scriptOptions, buildConfig, tscCommand, logger)
                         .then(() => {
                             res();
                         })
@@ -98,12 +98,12 @@ export async function performScriptCompilations(buildAction: BuildActionInternal
 async function afterTsTranspileTask(
     compilation: ScriptCompilationOptionsInternal,
     scriptOptions: ScriptOptionsInternal,
-    buildAction: BuildActionInternal,
+    buildConfig: BuildConfigInternal,
 
     tscCommand: string,
     logger: LoggerBase
 ): Promise<void> {
-    const outputRootDir = buildAction._outputPath;
+    const outputRootDir = buildConfig._outputPath;
     const tsConfigInfo = compilation._tsConfigInfo;
 
     // Replace version
@@ -111,7 +111,7 @@ async function afterTsTranspileTask(
         logger.debug('Checking version placeholder');
         const hasVersionReplaced = await replaceVersion(
             compilation._tsOutDirRootResolved,
-            buildAction._packageVersion,
+            buildConfig._packageVersion,
             `${path.join(compilation._tsOutDirRootResolved, '**/version.js')}`,
             logger
         );
@@ -135,9 +135,9 @@ async function afterTsTranspileTask(
         }
 
         let stylePreprocessorIncludePaths: string[] = [];
-        if (buildAction.style && buildAction.style.includePaths) {
-            stylePreprocessorIncludePaths = buildAction.style.includePaths.map((p) =>
-                path.resolve(buildAction._projectRoot, p)
+        if (buildConfig.style && buildConfig.style.includePaths) {
+            stylePreprocessorIncludePaths = buildConfig.style.includePaths.map((p) =>
+                path.resolve(buildConfig._projectRoot, p)
             );
         }
 
@@ -146,7 +146,7 @@ async function afterTsTranspileTask(
         const inlineResourcesModule = await import('./ng-resource-inlining/inline-resources');
 
         await inlineResourcesModule.inlineResources(
-            buildAction._projectRoot,
+            buildConfig._projectRoot,
             compilation._tsOutDirRootResolved,
             `${path.join(compilation._tsOutDirRootResolved, '**/*.js')}`,
             stylePreprocessorIncludePaths,
@@ -157,7 +157,7 @@ async function afterTsTranspileTask(
     }
 
     // Move typings and metadata files
-    if (compilation._declaration && buildAction._packageJsonOutDir !== compilation._tsOutDirRootResolved) {
+    if (compilation._declaration && buildConfig._packageJsonOutDir !== compilation._tsOutDirRootResolved) {
         // Angular
         if (/ngc$/.test(tscCommand)) {
             logger.debug('Moving typing and metadata files to output root');
@@ -165,7 +165,7 @@ async function afterTsTranspileTask(
             await globCopyFiles(
                 compilation._tsOutDirRootResolved,
                 '**/*.+(d.ts|metadata.json)',
-                buildAction._packageJsonOutDir,
+                buildConfig._packageJsonOutDir,
                 true
             );
         } else {
@@ -174,25 +174,25 @@ async function afterTsTranspileTask(
             await globCopyFiles(
                 compilation._tsOutDirRootResolved,
                 '**/*.+(d.ts)',
-                buildAction._packageJsonOutDir,
+                buildConfig._packageJsonOutDir,
                 true
             );
         }
     }
 
     // Re-export
-    if (buildAction._nestedPackage && compilation._declaration) {
+    if (buildConfig._nestedPackage && compilation._declaration) {
         let reExportName = compilation._entryName;
-        if (buildAction._nestedPackage && buildAction._packageNameWithoutScope) {
-            reExportName = buildAction._packageNameWithoutScope.substr(
-                buildAction._packageNameWithoutScope.lastIndexOf('/') + 1
+        if (buildConfig._nestedPackage && buildConfig._packageNameWithoutScope) {
+            reExportName = buildConfig._packageNameWithoutScope.substr(
+                buildConfig._packageNameWithoutScope.lastIndexOf('/') + 1
             );
         }
 
-        const relPath = normalizePath(path.relative(outputRootDir, buildAction._packageJsonOutDir));
+        const relPath = normalizePath(path.relative(outputRootDir, buildConfig._packageJsonOutDir));
 
         // add banner to index
-        const bannerContent = buildAction._bannerText ? `${buildAction._bannerText}\n` : '';
+        const bannerContent = buildConfig._bannerText ? `${buildConfig._bannerText}\n` : '';
 
         logger.debug('Re-exporting typing files to output root');
 
@@ -207,7 +207,7 @@ async function afterTsTranspileTask(
                 tsConfigInfo.tsConfigJson.angularCompilerOptions &&
                 tsConfigInfo.tsConfigJson.angularCompilerOptions.flatModuleId
                     ? tsConfigInfo.tsConfigJson.angularCompilerOptions.flatModuleId
-                    : buildAction._packageName;
+                    : buildConfig._packageName;
 
             const metadataJson = {
                 __symbolic: 'module',
@@ -227,7 +227,7 @@ async function afterTsTranspileTask(
     if (compilation._bundles.length > 0) {
         for (const bundleOptions of compilation._bundles) {
             const scriptTargetText = ScriptTarget[compilation._scriptTarget];
-            const rollupOptions = getRollupConfig(bundleOptions, scriptOptions, buildAction, logger);
+            const rollupOptions = getRollupConfig(bundleOptions, scriptOptions, buildConfig, logger);
 
             logger.info(
                 `Bundling with rollup, format: ${rollupOptions.outputOptions.format} and script target: ${scriptTargetText}`
@@ -252,7 +252,7 @@ async function afterTsTranspileTask(
         }
 
         let dirToClean = compilation._tsOutDirRootResolved;
-        if (buildAction._nestedPackage && isInFolder(outputRootDir, path.dirname(dirToClean))) {
+        if (buildConfig._nestedPackage && isInFolder(outputRootDir, path.dirname(dirToClean))) {
             dirToClean = path.dirname(dirToClean);
         }
 
