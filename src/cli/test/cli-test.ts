@@ -2,9 +2,9 @@ import * as path from 'path';
 
 import * as karma from 'karma';
 import { Configuration as WebpackConfiguration } from 'webpack';
+
 import { applyEnvOverrides, applyProjectExtends, getWorkflowConfig, normalizeEnvironment } from '../../helpers';
-import { TestCommandOptions } from '../../models';
-import { ProjectConfigInternal } from '../../models/internals';
+import { ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
 import { LogLevelString, Logger, LoggerBase } from '../../utils';
 import { getWebpackTestConfig } from '../../webpack/configs';
 
@@ -81,21 +81,27 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             await applyProjectExtends(projectConfigInternal, workflowConfig.projects, projectConfig._config);
         }
 
-        if (!projectConfigInternal.actions || !projectConfigInternal.actions.test) {
+        if (!projectConfigInternal.tasks || !projectConfigInternal.tasks.test) {
             continue;
         }
 
-        const testAction = projectConfigInternal.actions.test;
+        const testConfig = projectConfigInternal.tasks.test;
 
         if (projectConfigInternal._config !== 'auto') {
-            applyEnvOverrides(testAction, environment);
+            applyEnvOverrides(testConfig, environment);
         }
 
-        if (testAction.skip) {
+        if (testConfig.skip) {
             continue;
         }
 
-        const projectRoot = projectConfigInternal._projectRoot;
+        const testConfigInternal: TestConfigInternal = {
+            ...testConfig,
+            _config: projectConfigInternal._config,
+            _workspaceRoot: projectConfigInternal._workspaceRoot,
+            _projectRoot: projectConfigInternal._projectRoot,
+            _projectName: projectConfigInternal._projectName
+        };
 
         if (argv.browsers) {
             if (Array.isArray(argv.browsers)) {
@@ -103,8 +109,8 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             } else {
                 karmaOptions.browsers = argv.browsers.split(',').filter((b) => b.length);
             }
-        } else if (testAction.browsers) {
-            karmaOptions.browsers = testAction.browsers;
+        } else if (testConfigInternal.browsers) {
+            karmaOptions.browsers = testConfigInternal.browsers;
         }
 
         if (argv.reporters) {
@@ -113,33 +119,41 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             } else {
                 karmaOptions.reporters = argv.reporters.split(',').filter((r) => r.length);
             }
-        } else if (testAction.reporters) {
-            karmaOptions.reporters = testAction.reporters;
+        } else if (testConfigInternal.reporters) {
+            karmaOptions.reporters = testConfigInternal.reporters;
         }
 
         if (argv.codeCoverage != null) {
             karmaOptions.codeCoverage = argv.codeCoverage;
-        } else if (testAction.codeCoverage != null) {
-            karmaOptions.codeCoverage = testAction.codeCoverage;
+        } else if (testConfigInternal.codeCoverage != null) {
+            karmaOptions.codeCoverage = testConfigInternal.codeCoverage;
         }
 
-        if (testAction.karmaConfig) {
-            karmaOptions.configFile = path.resolve(projectRoot, testAction.karmaConfig);
+        if (testConfigInternal.karmaConfig) {
+            karmaOptions.configFile = path.resolve(testConfigInternal._projectRoot, testConfigInternal.karmaConfig);
         }
 
-        const webpackConfig = await getWebpackTestConfig(projectConfigInternal._projectName, projectRoot, testAction);
+        const webpackConfig = await getWebpackTestConfig(testConfigInternal);
         karmaOptions.webpackConfig = webpackConfig;
     }
 
-    const karmaServer = new karma.Server(karmaOptions);
+    // const karmaServer = new karma.Server(karmaOptions);
+
     // Karma typings incorrectly define start's return value as void
-    const karmaStartPromise = (karmaServer.start() as unknown) as Promise<void>;
+    // const karmaStartPromise = (karmaServer.start() as unknown) as Promise<void>;
+    // const karmaServerWithStop = (karmaServer as unknown) as { stop: () => Promise<void> };
+    // if (typeof karmaServerWithStop.stop === 'function') {
+    //     await karmaStartPromise;
+    //     // await karmaServerWithStop.stop();
+    // }
 
-    const karmaServerWithStop = (karmaServer as unknown) as { stop: () => Promise<void> };
-    if (typeof karmaServerWithStop.stop === 'function') {
-        await karmaStartPromise;
-        await karmaServerWithStop.stop();
-    }
+    const exitCode = await new Promise<number>((res) => {
+        const karmaServer = new karma.Server(karmaOptions, (serverCallback) => {
+            res(serverCallback);
+        });
 
-    return 0;
+        karmaServer.start();
+    });
+
+    return exitCode;
 }
