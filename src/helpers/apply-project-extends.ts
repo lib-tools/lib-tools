@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 
-import { ProjectConfigStandalone, WorkflowConfig } from '../models';
-import { ProjectConfigInternal } from '../models/internals';
+import { ProjectConfigInternal, ProjectConfigStandalone, WorkflowConfig } from '../models';
+
 import { readJsonWithComments } from '../utils';
 
 import { getCachedProjectConfigSchema } from './get-cached-project-config-schema';
