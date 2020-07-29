@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as rollup from 'rollup';
 
 import { getRollupConfig, minifyESBundle } from '../../../helpers';
-import { BuildConfigInternal } from '../../..//models/internals';
+import { BuildConfigInternal } from '../../../models';
 import { LoggerBase } from '../../../utils';
 
 export async function performScriptBundles(buildConfig: BuildConfigInternal, logger: LoggerBase): Promise<void> {
