@@ -6,19 +6,19 @@ import * as CleanCSS from 'clean-css';
 import * as postcss from 'postcss';
 import * as sass from 'sass';
 
-import { BuildActionInternal } from '../../../models/internals';
+import { BuildConfigInternal } from '../../../models';
 import { LoggerBase, normalizePath } from '../../../utils';
 
-export async function processStyles(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
-    if (!buildAction._styleEntries || !buildAction._styleEntries.length) {
+export async function processStyles(buildConfig: BuildConfigInternal, logger: LoggerBase): Promise<void> {
+    if (!buildConfig._styleEntries || !buildConfig._styleEntries.length) {
         return;
     }
 
     await Promise.all(
-        buildAction._styleEntries.map(async (styleEntry) => {
+        buildConfig._styleEntries.map(async (styleEntry) => {
             const inputFilePath = styleEntry._inputFilePath;
             const outFilePath = styleEntry._outputFilePath;
-            const inputRelToWorkspace = normalizePath(path.relative(buildAction._workspaceRoot, inputFilePath));
+            const inputRelToWorkspace = normalizePath(path.relative(buildConfig._workspaceRoot, inputFilePath));
 
             if (/\.s[ac]ss$/i.test(inputFilePath)) {
                 logger.info(`Compiling ${inputRelToWorkspace}`);
@@ -78,7 +78,7 @@ export async function processStyles(buildAction: BuildActionInternal, logger: Lo
 
             if (styleEntry._minify !== false) {
                 const minFileToWorkspace = normalizePath(
-                    path.relative(buildAction._workspaceRoot, styleEntry._minOutputFilePath)
+                    path.relative(buildConfig._workspaceRoot, styleEntry._minOutputFilePath)
                 );
 
                 logger.debug(`Generating minify file ${minFileToWorkspace}`);

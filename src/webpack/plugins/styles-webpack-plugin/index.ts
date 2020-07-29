@@ -1,10 +1,10 @@
 import * as webpack from 'webpack';
 
-import { BuildActionInternal } from '../../../models/internals';
+import { BuildConfigInternal } from '../../../models';
 import { LogLevelString, Logger } from '../../../utils';
 
 export interface StylesWebpackPluginOptions {
-    buildAction: BuildActionInternal;
+    buildConfig: BuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -28,13 +28,13 @@ export class StylesWebpackPlugin {
     }
 
     private async processStyles(): Promise<void> {
-        const buildAction = this.options.buildAction;
+        const buildConfig = this.options.buildConfig;
 
-        if (!buildAction._styleEntries || !buildAction._styleEntries.length) {
+        if (!buildConfig._styleEntries || !buildConfig._styleEntries.length) {
             return;
         }
 
         const stylesModule = await import('./process-styles');
-        await stylesModule.processStyles(buildAction, this.logger);
+        await stylesModule.processStyles(buildConfig, this.logger);
     }
 }
