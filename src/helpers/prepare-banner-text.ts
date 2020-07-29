@@ -2,26 +2,26 @@ import * as path from 'path';
 
 import { readFile } from 'fs-extra';
 
-import { BuildActionInternal } from '../models/internals';
+import { BuildConfigInternal } from '../models';
 import { findUp } from '../utils';
 
-export async function prepareBannerText(buildAction: BuildActionInternal): Promise<void> {
-    if (!buildAction.banner) {
+export async function prepareBannerText(buildConfig: BuildConfigInternal): Promise<void> {
+    if (!buildConfig.banner) {
         return;
     }
 
-    let bannerText = buildAction.banner;
+    let bannerText = buildConfig.banner;
 
     if (/\.txt$/i.test(bannerText)) {
-        const bannerFilePath = await findUp(bannerText, buildAction._projectRoot, buildAction._workspaceRoot);
+        const bannerFilePath = await findUp(bannerText, buildConfig._projectRoot, buildConfig._workspaceRoot);
         if (bannerFilePath) {
             bannerText = await readFile(bannerFilePath, 'utf-8');
         } else {
             throw new Error(
                 `The banner text file: ${path.resolve(
-                    buildAction._projectRoot,
+                    buildConfig._projectRoot,
                     bannerText
-                )} doesn't exist. Correct value in 'projects[${buildAction._projectName}].scriptBundle.banner'.`
+                )} doesn't exist. Correct value in 'projects[${buildConfig._projectName}].scriptBundle.banner'.`
             );
         }
     }
@@ -32,11 +32,11 @@ export async function prepareBannerText(buildAction: BuildActionInternal): Promi
 
     bannerText = addCommentToBanner(bannerText);
     bannerText = bannerText.replace(/[$|[]CURRENT[_-]?YEAR[$|\]]/gim, new Date().getFullYear().toString());
-    bannerText = bannerText.replace(/[$|[](PROJECT|PACKAGE)[_-]?NAME[$|\]]/gim, buildAction._packageName);
-    bannerText = bannerText.replace(/[$|[](PROJECT|PACKAGE)?[_-]?VERSION[$|\]]/gim, buildAction._packageVersion);
-    bannerText = bannerText.replace(/0\.0\.0-PLACEHOLDER/i, buildAction._packageVersion);
+    bannerText = bannerText.replace(/[$|[](PROJECT|PACKAGE)[_-]?NAME[$|\]]/gim, buildConfig._packageName);
+    bannerText = bannerText.replace(/[$|[](PROJECT|PACKAGE)?[_-]?VERSION[$|\]]/gim, buildConfig._packageVersion);
+    bannerText = bannerText.replace(/0\.0\.0-PLACEHOLDER/i, buildConfig._packageVersion);
 
-    buildAction._bannerText = bannerText;
+    buildConfig._bannerText = bannerText;
 }
 
 function addCommentToBanner(banner: string): string {
