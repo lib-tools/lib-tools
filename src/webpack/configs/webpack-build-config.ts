@@ -7,8 +7,7 @@ import {
     normalizeEnvironment,
     toBuildActionInternal
 } from '../../helpers';
-import { BuildCommandOptions } from '../../models';
-import { BuildActionInternal, BuildCommandOptionsInternal, ProjectConfigInternal } from '../../models/internals';
+import { BuildCommandOptions, BuildConfigInternal, ProjectConfigInternal } from '../../models';
 
 import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
 import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
@@ -19,8 +18,8 @@ export async function getWebpackBuildConfig(
 ): Promise<Configuration[]> {
     const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
-    const environment = env ? normalizeEnvironment(env, prod) : {};
-    let buildOptions: BuildCommandOptionsInternal = { environment };
+    let environment = env ? normalizeEnvironment(env, prod) : {};
+    let buildOptions: BuildCommandOptions = {};
 
     if (verbose) {
         buildOptions.logLevel = 'debug';
@@ -49,38 +48,38 @@ export async function getWebpackBuildConfig(
                 delete rawEnv.buildOptions;
             }
 
-            buildOptions.environment = {
-                ...buildOptions.environment,
+            environment = {
+                ...environment,
                 ...normalizeEnvironment(rawEnv as { [key: string]: boolean | string }, prod)
             };
         }
 
         if (argv && argv.mode) {
             if (argv.mode === 'production') {
-                buildOptions.environment.prod = true;
-                buildOptions.environment.production = true;
+                environment.prod = true;
+                environment.production = true;
 
-                if (buildOptions.environment.dev) {
-                    buildOptions.environment.dev = false;
+                if (environment.dev) {
+                    environment.dev = false;
                 }
-                if (buildOptions.environment.development) {
-                    buildOptions.environment.development = false;
+                if (environment.development) {
+                    environment.development = false;
                 }
             } else if (argv.mode === 'development') {
-                buildOptions.environment.dev = true;
-                buildOptions.environment.development = true;
+                environment.dev = true;
+                environment.development = true;
 
-                if (buildOptions.environment.prod) {
-                    buildOptions.environment.prod = false;
+                if (environment.prod) {
+                    environment.prod = false;
                 }
-                if (buildOptions.environment.production) {
-                    buildOptions.environment.production = false;
+                if (environment.production) {
+                    environment.production = false;
                 }
             }
         }
     } else {
         if (argv) {
-            buildOptions = { ...(argv as BuildCommandOptionsInternal), ...buildOptions };
+            buildOptions = { ...(argv as BuildCommandOptions), ...buildOptions };
         }
 
         if (buildOptions.filter) {
@@ -101,6 +100,8 @@ export async function getWebpackBuildConfig(
         }
     }
 
+    buildOptions.environment = environment;
+
     const workflowConfig = await getWorkflowConfig(buildOptions);
 
     const filteredProjectConfigs = Object.keys(workflowConfig.projects)
@@ -119,22 +120,22 @@ export async function getWebpackBuildConfig(
             await applyProjectExtends(projectConfigInternal, workflowConfig.projects, projectConfig._config);
         }
 
-        if (!projectConfigInternal.actions || !projectConfigInternal.actions.build) {
+        if (!projectConfigInternal.tasks || !projectConfigInternal.tasks.build) {
             continue;
         }
 
         if (projectConfigInternal._config !== 'auto') {
-            applyEnvOverrides(projectConfigInternal.actions.build, buildOptions.environment);
+            applyEnvOverrides(projectConfigInternal.tasks.build, environment);
         }
 
-        if (projectConfigInternal.actions.build.skip) {
+        if (projectConfigInternal.tasks.build.skip) {
             continue;
         }
 
-        const buildActionInternal = await toBuildActionInternal(projectConfigInternal, buildOptions);
+        const buildConfigInternal = await toBuildActionInternal(projectConfigInternal, buildOptions);
 
         const wpConfig = (await getWebpackBuildConfigInternal(
-            buildActionInternal,
+            buildConfigInternal,
             buildOptions
         )) as Configuration | null;
 
@@ -147,60 +148,60 @@ export async function getWebpackBuildConfig(
 }
 
 async function getWebpackBuildConfigInternal(
-    buildAction: BuildActionInternal,
-    buildOptions: BuildCommandOptionsInternal
+    buildConfig: BuildConfigInternal,
+    buildOptions: BuildCommandOptions
 ): Promise<Configuration> {
     const plugins: Plugin[] = [
         new ProjectBuildInfoWebpackPlugin({
-            buildAction,
+            buildConfig,
             logLevel: buildOptions.logLevel
         })
     ];
 
     // Clean plugin
-    if (buildAction.clean !== false) {
+    if (buildConfig.clean !== false) {
         const pluginModule = await import('../plugins/clean-webpack-plugin');
         const CleanWebpackPlugin = pluginModule.CleanWebpackPlugin;
         plugins.push(
             new CleanWebpackPlugin({
-                buildAction,
+                buildConfig,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
     // styles
-    if (buildAction._styleEntries && buildAction._styleEntries.length > 0) {
+    if (buildConfig._styleEntries && buildConfig._styleEntries.length > 0) {
         const pluginModule = await import('../plugins/styles-webpack-plugin');
         const StylesWebpackPlugin = pluginModule.StylesWebpackPlugin;
         plugins.push(
             new StylesWebpackPlugin({
-                buildAction,
+                buildConfig,
                 logLevel: buildOptions.logLevel
             })
         );
     }
 
-    if (buildAction._script) {
+    if (buildConfig._script) {
         // Script compilations plugin
-        if (buildAction._script._compilations.length > 0) {
+        if (buildConfig._script._compilations.length > 0) {
             const pluginModule = await import('../plugins/script-compilations-webpack-plugin');
             const ScriptCompilationsWebpackPlugin = pluginModule.ScriptCompilationsWebpackPlugin;
             plugins.push(
                 new ScriptCompilationsWebpackPlugin({
-                    buildAction,
+                    buildConfig,
                     logLevel: buildOptions.logLevel
                 })
             );
         }
 
         // Script bundles plugin
-        if (buildAction._script._bundles.length > 0) {
+        if (buildConfig._script._bundles.length > 0) {
             const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
             const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
             plugins.push(
                 new ScriptBundlesWebpackPlugin({
-                    buildAction,
+                    buildConfig,
                     logLevel: buildOptions.logLevel
                 })
             );
@@ -208,12 +209,12 @@ async function getWebpackBuildConfigInternal(
     }
 
     // Copy plugin
-    if (buildAction._assetEntries.length > 0) {
+    if (buildConfig._assetEntries.length > 0) {
         const pluginModule = await import('../plugins/copy-webpack-plugin');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
         plugins.push(
             new CopyWebpackPlugin({
-                buildAction,
+                buildConfig,
                 logLevel: buildOptions.logLevel
             })
         );
@@ -222,19 +223,19 @@ async function getWebpackBuildConfigInternal(
     // package.json plugin
     plugins.push(
         new PackageJsonFileWebpackPlugin({
-            buildAction,
+            buildConfig,
             logLevel: buildOptions.logLevel
         })
     );
 
     const webpackConfig: Configuration = {
-        name: buildAction._projectName,
+        name: buildConfig._projectName,
         entry: () => ({}),
         output: {
-            path: buildAction._outputPath,
+            path: buildConfig._outputPath,
             filename: '[name].js'
         },
-        context: buildAction._projectRoot,
+        context: buildConfig._projectRoot,
         plugins,
         stats: 'errors-only'
     };
