@@ -1,5 +1,5 @@
-import { BuildAction } from './build-action';
-import { TestAction } from './test-action';
+import { BuildConfig } from './build-config';
+import { TestConfig } from './test-config';
 
 /**
  * @additionalProperties false
@@ -16,16 +16,16 @@ export interface ProjectConfig {
     root?: string;
 
     /**
-     * The action configurations.
+     * The task configurations.
      */
-    actions?: {
+    tasks?: {
         /**
          * Build action configuration.
          */
-        build?: BuildAction;
+        build?: BuildConfig;
         /**
          * Test action configuration.
          */
-        test?: TestAction;
+        test?: TestConfig;
     };
 }

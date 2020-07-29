@@ -1,9 +1,9 @@
-import { OverridableAction } from './overridable-action';
+import { OverridableConfig } from './overridable-config';
 
 /**
  * @additionalProperties false
  */
-export interface TestActionBase {
+export interface TestConfigBase {
     entry?: string;
     tsConfig?: string;
     polyfills?: string | string[];
@@ -17,6 +17,7 @@ export interface TestActionBase {
     sourceMap?: boolean;
     codeCoverage?: boolean;
     codeCoverageExclude?: string[];
+
     /**
      * Set true to skip the action for test.
      */
@@ -27,11 +28,11 @@ export interface TestActionBase {
  * The build action.
  * @additionalProperties false
  */
-export interface TestAction extends TestActionBase, OverridableAction<TestActionBase> {
+export interface TestConfig extends TestConfigBase, OverridableConfig<TestConfigBase> {
     /**
      * To override properties based on build environment.
      */
     envOverrides?: {
-        [name: string]: Partial<TestActionBase>;
+        [name: string]: Partial<TestConfigBase>;
     };
 }

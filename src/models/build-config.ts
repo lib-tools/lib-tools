@@ -1,4 +1,4 @@
-import { OverridableAction } from './overridable-action';
+import { OverridableConfig } from './overridable-config';
 
 /**
  * @additionalProperties false
@@ -516,7 +516,7 @@ export interface ScriptOptions {
 /**
  * @additionalProperties false
  */
-export interface BuildActionBase {
+export interface BuildConfigBase {
     /**
      * The output directory for build results. Default to `dist/packages/{package-name}`.
      */
@@ -557,11 +557,11 @@ export interface BuildActionBase {
  * The build action.
  * @additionalProperties false
  */
-export interface BuildAction extends BuildActionBase, OverridableAction<BuildActionBase> {
+export interface BuildConfig extends BuildConfigBase, OverridableConfig<BuildConfigBase> {
     /**
      * To override properties based on build environment.
      */
     envOverrides?: {
-        [name: string]: Partial<BuildActionBase>;
+        [name: string]: Partial<BuildConfigBase>;
     };
 }

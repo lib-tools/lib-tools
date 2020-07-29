@@ -1,4 +1,4 @@
-import { WorkflowConfig } from '../workflow-config';
+import { WorkflowConfig } from './workflow-config';
 
 import { ProjectConfigInternal } from './project-config-internal';
 

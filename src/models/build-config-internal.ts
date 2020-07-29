@@ -3,13 +3,13 @@ import { ParsedCommandLine, ScriptTarget } from 'typescript';
 import {
     AssetEntry,
     AutoPrefixerOptions,
-    BuildAction,
+    BuildConfig,
     CleanCSSOptions,
     ScriptBundleOptions,
     ScriptCompilationOptions,
     ScriptOptions,
     StyleEntry
-} from '../build-action';
+} from './build-config';
 import { PackageJsonLike } from './package-jon-like';
 
 export interface StyleEntryInternal extends StyleEntry {
@@ -73,7 +73,7 @@ export interface ScriptOptionsInternal extends ScriptOptions {
     _bundles: ScriptBundleOptionsInternal[];
 }
 
-export interface BuildActionInternal extends BuildAction {
+export interface BuildConfigInternal extends BuildConfig {
     _workspaceRoot: string;
     _config: 'auto' | string;
     _nodeModulesPath: string | null;
