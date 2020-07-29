@@ -3,7 +3,7 @@
   "projects": {
     "ng-config": {
       "root": "./modules/ng-config",
-      "actions": {
+      "tasks": {
         "build": {
           "script": {
             "compilations": "auto"
@@ -13,7 +13,7 @@
     },
     "ng-config-http-config": {
       "root": "./modules/ng-config/http-config",
-      "actions": {
+      "tasks": {
         "build": {
           "script": {
             "compilations": "auto"
@@ -23,7 +23,7 @@
     },
     "ng-config-firebase-remote-config": {
       "root": "./modules/ng-config-firebase-remote-config",
-      "actions": {
+      "tasks": {
         "build": {
           "script": {
             "compilations": "auto"

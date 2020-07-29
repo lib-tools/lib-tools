@@ -3,7 +3,7 @@
   "projects": {
     "transpilations-and-bundles-full-config-demo": {
       "root": "./",
-      "actions": {
+      "tasks": {
         "build": {
           "outputPath": "dist/transpilations-and-bundles-demo",
           "script": {
@@ -41,7 +41,7 @@
     },
     "transpilations-and-bundles-minimal-config-demo": {
       "root": "./",
-      "actions": {
+      "tasks": {
         "build": {
           "script": {
             "compilations": "auto"
@@ -51,7 +51,7 @@
     },
     "bundles-only-demo": {
       "root": "./",
-      "actions": {
+      "tasks": {
         "build": {
           "outputPath": "dist/bundles-only-demo",
           "script": {
@@ -85,7 +85,7 @@
     },
     "test-demo": {
       "root": "./",
-      "actions": {
+      "tasks": {
         "test": {
           "karmaConfig": "karma.conf.js",
           "entry": "test/test.ts",
