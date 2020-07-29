@@ -3,16 +3,16 @@ import * as path from 'path';
 import * as rollup from 'rollup';
 
 import { getRollupConfig, minifyESBundle } from '../../../helpers';
-import { BuildActionInternal } from '../../..//models/internals';
+import { BuildConfigInternal } from '../../..//models/internals';
 import { LoggerBase } from '../../../utils';
 
-export async function performScriptBundles(buildAction: BuildActionInternal, logger: LoggerBase): Promise<void> {
-    if (!buildAction._script || !buildAction._script._bundles.length) {
+export async function performScriptBundles(buildConfig: BuildConfigInternal, logger: LoggerBase): Promise<void> {
+    if (!buildConfig._script || !buildConfig._script._bundles.length) {
         return;
     }
 
-    for (const bundleOptions of buildAction._script._bundles) {
-        const rollupOptions = getRollupConfig(bundleOptions, buildAction._script, buildAction, logger);
+    for (const bundleOptions of buildConfig._script._bundles) {
+        const rollupOptions = getRollupConfig(bundleOptions, buildConfig._script, buildConfig, logger);
 
         logger.info(`Bundling with rollup, format: ${rollupOptions.outputOptions.format}`);
 

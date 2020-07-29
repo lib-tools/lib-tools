@@ -1,12 +1,12 @@
 import * as webpack from 'webpack';
 
-import { BuildActionInternal } from '../../../models/internals';
+import { BuildConfigInternal } from '../../../models';
 import { LogLevelString, Logger } from '../../../utils';
 
 import { performScriptBundles } from './script-bundles';
 
 export interface ScriptBundlesWebpackPluginOptions {
-    buildAction: BuildActionInternal;
+    buildConfig: BuildConfigInternal;
     logLevel?: LogLevelString;
 }
 
@@ -28,12 +28,12 @@ export class ScriptBundlesWebpackPlugin {
     }
 
     private async performBundles(): Promise<void> {
-        const buildAction = this.options.buildAction;
+        const buildConfig = this.options.buildConfig;
 
-        if (!buildAction._script || !buildAction._script._bundles.length) {
+        if (!buildConfig._script || !buildConfig._script._bundles.length) {
             return;
         }
 
-        await performScriptBundles(buildAction, this.logger);
+        await performScriptBundles(buildConfig, this.logger);
     }
 }
