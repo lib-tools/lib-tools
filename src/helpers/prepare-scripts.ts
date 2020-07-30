@@ -19,8 +19,8 @@ import {
 import { isInFolder, isSamePaths, normalizePath } from '../utils';
 
 import { dashCaseToCamelCase } from './dash-case-to-camel-case';
-import { detectTsconfigPath } from './detect-tsconfig-path';
 import { detectTsEntryName } from './detect-ts-entry-name';
+import { findTsconfigBuildFile } from './find-tsconfig-build-file';
 import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
 import { addPredefinedUmdIds, getUmdGlobalVariable } from './umd-ids';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
@@ -47,7 +47,7 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
             );
         }
     } else if (buildConfig.script) {
-        tsConfigPath = await detectTsconfigPath(workspaceRoot, projectRoot);
+        tsConfigPath = await findTsconfigBuildFile(workspaceRoot, projectRoot);
     }
 
     if (tsConfigPath) {
