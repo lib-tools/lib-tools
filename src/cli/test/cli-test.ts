@@ -3,7 +3,15 @@ import * as path from 'path';
 import * as karma from 'karma';
 import { Configuration as WebpackConfiguration } from 'webpack';
 
-import { applyEnvOverrides, applyProjectExtends, getWorkflowConfig, normalizeEnvironment } from '../../helpers';
+import {
+    applyEnvOverrides,
+    applyProjectExtends,
+    findKarmaConfigFile,
+    findTestEntryFile,
+    findTestTsconfigFile,
+    getWorkflowConfig,
+    normalizeEnvironment
+} from '../../helpers';
 import { ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
 import { LogLevelString, Logger, LoggerBase } from '../../utils';
 import { getWebpackTestConfig } from '../../webpack/configs';
@@ -88,12 +96,41 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             continue;
         }
 
+        const workspaceRoot = projectConfigInternal._workspaceRoot;
+        const projectRoot = projectConfigInternal._projectRoot;
+
+        let tsConfigPath: string | null = null;
+        let entryFilePath: string | null = null;
+        let karmaConfigPath: string | null = null;
+
+        if (testConfig.tsConfig) {
+            tsConfigPath = path.resolve(projectRoot, testConfig.tsConfig);
+        } else if (projectConfigInternal._config !== 'auto') {
+            tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
+        }
+
+        if (testConfig.entry) {
+            entryFilePath = path.resolve(projectRoot, testConfig.entry);
+        } else if (projectConfigInternal._config !== 'auto') {
+            entryFilePath = await findTestEntryFile(projectRoot, workspaceRoot, tsConfigPath);
+        }
+
+        if (testConfig.karmaConfig) {
+            karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
+        } else if (projectConfigInternal._config !== 'auto') {
+            karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
+        }
+
         const testConfigInternal: TestConfigInternal = {
             ...testConfig,
             _config: projectConfigInternal._config,
             _workspaceRoot: projectConfigInternal._workspaceRoot,
             _projectRoot: projectConfigInternal._projectRoot,
-            _projectName: projectConfigInternal._projectName
+            _projectName: projectConfigInternal._projectName,
+
+            _entryFilePath: entryFilePath,
+            _tsConfigPath: tsConfigPath,
+            _karmaConfigPath: karmaConfigPath
         };
 
         const karmaOptions: KarmaConfigOptions = {
