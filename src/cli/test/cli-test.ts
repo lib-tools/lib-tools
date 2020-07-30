@@ -40,7 +40,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         logLevel
     });
 
-    const workflowConfig = await getWorkflowConfig(argv);
+    const workflowConfig = await getWorkflowConfig(argv, 'test');
     const filteredProjectNames: string[] = [];
 
     if (argv.filter) {
