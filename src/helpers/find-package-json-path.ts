@@ -6,7 +6,7 @@ import { findUp } from '../utils';
 
 const cache = new Map<string, string>();
 
-export async function findPackageJsonPath(workspaceRoot: string, projectRoot?: string): Promise<string | null> {
+export async function findPackageJsonPath(projectRoot: string | null, workspaceRoot: string): Promise<string | null> {
     if (projectRoot) {
         const cachedPath = cache.get(projectRoot);
         if (cachedPath) {

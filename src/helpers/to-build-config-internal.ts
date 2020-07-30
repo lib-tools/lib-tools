@@ -9,9 +9,9 @@ import {
 } from '../models';
 import { isInFolder, isSamePaths } from '../utils';
 
+import { findBuildTsconfigFile } from './find-build-tsconfig-file';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
-import { findTsconfigBuildFile } from './find-tsconfig-build-file';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { prepareAssetEntries } from './prepare-asset-entries';
 import { prepareBannerText } from './prepare-banner-text';
@@ -34,13 +34,13 @@ export async function toBuildActionInternal(
     const projectRoot = projectConfig._projectRoot;
     const projectName = projectConfig._projectName;
 
-    const packageJsonPath = await findPackageJsonPath(workspaceRoot, projectRoot);
+    const packageJsonPath = await findPackageJsonPath(projectRoot, workspaceRoot);
     if (!packageJsonPath) {
         throw new Error('Could not detect package.json file.');
     }
     const packageJson = await getCachedPackageJson(packageJsonPath);
 
-    const rootPackageJsonPath = await findPackageJsonPath(workspaceRoot);
+    const rootPackageJsonPath = await findPackageJsonPath(null, workspaceRoot);
     let rootPackageJson: PackageJsonLike | null = null;
     if (rootPackageJsonPath) {
         rootPackageJson = await getCachedPackageJson(rootPackageJsonPath);
@@ -125,7 +125,7 @@ export async function toBuildActionInternal(
         if (buildConfig.script && buildConfig.script.tsConfig) {
             tsConfigPath = path.resolve(projectRoot, buildConfig.script.tsConfig);
         } else if (buildConfig.script) {
-            tsConfigPath = await findTsconfigBuildFile(workspaceRoot, projectRoot);
+            tsConfigPath = await findBuildTsconfigFile(projectRoot, workspaceRoot);
         }
 
         let outputPath: string | null = null;

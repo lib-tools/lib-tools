@@ -16,10 +16,12 @@ import {
     WorkflowConfig,
     WorkflowConfigInternal
 } from '../models';
-import { Logger, findUp, normalizePath, readJsonWithComments } from '../utils';
+import { Logger, normalizePath, readJsonWithComments } from '../utils';
 
-import { findTsconfigBuildFile } from './find-tsconfig-build-file';
-import { findTsconfigTestFile } from './find-tsconfig-test-file';
+import { findBuildTsconfigFile } from './find-build-tsconfig-file';
+import { findTestEntryFile } from './find-test-entry-file';
+import { findTestTsconfigFile } from './find-test-tsconfig-file';
+import { findKarmaConfigFile } from './find-karma-config-file';
 import { detectTsEntryName } from './detect-ts-entry-name';
 import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
 import { getCachedWorkflowConfigSchema } from './get-cached-workflow-config-schema';
@@ -105,7 +107,7 @@ export async function detectWorkflowConfig(
             const projectRoot = path.dirname(packageJsonPath);
 
             if (taskName === 'build') {
-                const buildConfig = await detectBuildConfigAuto(workspaceRoot, projectRoot, packageNameWithoutScope);
+                const buildConfig = await detectBuildConfig(workspaceRoot, projectRoot, packageNameWithoutScope);
                 if (buildConfig != null) {
                     const projectInternal: ProjectConfigInternal = {
                         _config: 'auto',
@@ -121,7 +123,7 @@ export async function detectWorkflowConfig(
                     projects.push(projectInternal);
                 }
             } else if (taskName === 'test') {
-                const testConfig = await detectTestConfigAuto(workspaceRoot, projectRoot);
+                const testConfig = await detectTestConfig(workspaceRoot, projectRoot);
                 if (testConfig != null) {
                     const projectInternal: ProjectConfigInternal = {
                         _config: 'auto',
@@ -154,12 +156,12 @@ export async function detectWorkflowConfig(
     };
 }
 
-async function detectBuildConfigAuto(
+async function detectBuildConfig(
     workspaceRoot: string,
     projectRoot: string,
     packageNameWithoutScope: string
 ): Promise<BuildConfig | null> {
-    const tsConfigPath = await findTsconfigBuildFile(workspaceRoot, projectRoot);
+    const tsConfigPath = await findBuildTsconfigFile(projectRoot, workspaceRoot);
     if (!tsConfigPath) {
         return null;
     }
@@ -184,40 +186,11 @@ async function detectBuildConfigAuto(
     };
 }
 
-async function detectTestConfigAuto(workspaceRoot: string, projectRoot: string): Promise<TestConfig | null> {
-    const tsConfigPath = await findTsconfigTestFile(workspaceRoot, projectRoot);
-    let entryFilePath: string | null = null;
+async function detectTestConfig(workspaceRoot: string, projectRoot: string): Promise<TestConfig | null> {
+    const tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
+    const entryFilePath = await findTestEntryFile(projectRoot, workspaceRoot, tsConfigPath);
 
-    if (tsConfigPath) {
-        const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
-        if (tsConfigJson.files && tsConfigJson.files.length) {
-            let testFile = tsConfigJson.files.find((f) => /test([-_]index)?\.tsx?$/i.test(f));
-            if (!testFile) {
-                testFile = tsConfigJson.files[0];
-            }
-
-            if (testFile) {
-                const testFileAbs = path.resolve(path.dirname(tsConfigPath), testFile);
-                if (await pathExists(testFileAbs)) {
-                    entryFilePath = testFileAbs;
-                }
-            }
-        }
-    }
-
-    if (!entryFilePath) {
-        entryFilePath = await findUp(
-            ['test.ts', 'test_index.ts', 'test.js', 'test_index.js'],
-            [path.resolve(projectRoot, 'test'), path.resolve(projectRoot, 'src')],
-            workspaceRoot
-        );
-    }
-
-    const karmaConfigFilePath = await findUp(
-        ['karma.conf.ts', 'karma.conf.js', '.config/karma.conf.ts', '.config/karma.conf.js'],
-        [path.resolve(projectRoot, 'test'), path.resolve(projectRoot, 'src')],
-        workspaceRoot
-    );
+    const karmaConfigFilePath = await findKarmaConfigFile(projectRoot, workspaceRoot);
 
     if (!karmaConfigFilePath && !entryFilePath) {
         return null;
