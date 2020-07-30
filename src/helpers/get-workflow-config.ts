@@ -12,7 +12,10 @@ import { toWorkflowConfigInternal } from './to-workflow-config-internal';
 
 const ajv = new Ajv();
 
-export async function getWorkflowConfig(commandOptions: SharedCommandOptions): Promise<WorkflowConfigInternal> {
+export async function getWorkflowConfig(
+    commandOptions: SharedCommandOptions,
+    taskName: 'build' | 'test'
+): Promise<WorkflowConfigInternal> {
     let foundConfigPath: string | null = null;
     if (commandOptions.workflow && commandOptions.workflow !== 'auto') {
         foundConfigPath = path.isAbsolute(commandOptions.workflow)
@@ -46,7 +49,7 @@ export async function getWorkflowConfig(commandOptions: SharedCommandOptions): P
             throw new Error(`Workflow configuration file could not be detected.`);
         }
 
-        const workflowConfig = await detectWorkflowConfig(commandOptions);
+        const workflowConfig = await detectWorkflowConfig(commandOptions, taskName);
 
         if (workflowConfig == null) {
             throw new Error(`Workflow configuration could not be detected automatically.`);
