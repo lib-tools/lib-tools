@@ -11,14 +11,16 @@ import {
     BuildConfig,
     ProjectConfigInternal,
     SharedCommandOptions,
+    TestConfig,
     TsConfigInfo,
     WorkflowConfig,
     WorkflowConfigInternal
 } from '../models';
-import { Logger, readJsonWithComments } from '../utils';
+import { Logger, findUp, readJsonWithComments } from '../utils';
 
-import { detectTsconfigPath } from './detect-tsconfig-path';
 import { findNodeModulesPath } from './find-node-modules-path';
+import { findTsconfigBuildFile } from './find-tsconfig-build-file';
+import { findTsconfigTestFile } from './find-tsconfig-test-file';
 import { detectTsEntryName } from './detect-ts-entry-name';
 import { getCachedPackageJson } from './get-cached-package-json';
 import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
@@ -28,7 +30,8 @@ import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-conten
 const ajv = new Ajv();
 
 export async function detectWorkflowConfig(
-    commandOptions: SharedCommandOptions
+    commandOptions: SharedCommandOptions,
+    taskName: 'build' | 'test'
 ): Promise<WorkflowConfigInternal | null> {
     const foundPackageJsonPaths = await globAsync(
         '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
@@ -86,58 +89,17 @@ export async function detectWorkflowConfig(
                 projects.push(projectInternal);
             }
         } else {
-            const packageJson = await getCachedPackageJson(packageJsonPath);
-            const packageName = packageJson.name;
-            if (!packageName) {
-                continue;
-            }
-
-            const tsConfigPath = await detectTsconfigPath(process.cwd(), path.dirname(packageJsonPath));
-            if (!tsConfigPath) {
-                continue;
-            }
-
-            const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
-            const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
-            const tsConfigInfo: TsConfigInfo = {
-                tsConfigPath,
-                tsConfigJson,
-                tsCompilerConfig
-            };
-
-            let packageNameWithoutScope = packageName;
-            const slashIndex = packageName.indexOf('/');
-            if (slashIndex > -1 && packageName.startsWith('@')) {
-                packageNameWithoutScope = packageName.substr(slashIndex + 1);
-            }
-
-            const entryName = await detectTsEntryName(tsConfigInfo, packageNameWithoutScope);
-            if (!entryName) {
-                continue;
-            }
-
-            const nodeModulePath = await findNodeModulesPath(process.cwd());
-            const workspaceRoot = nodeModulePath ? path.dirname(nodeModulePath) : process.cwd();
-            const projectRoot = path.dirname(packageJsonPath);
-            const projectName = packageNameWithoutScope.replace(/\//g, '-');
-
-            const buildConfig: BuildConfig = {
-                script: {
-                    compilations: 'auto'
+            if (taskName === 'build') {
+                const projectInternal = await detectProjectInternalForBuild(packageJsonPath);
+                if (projectInternal != null) {
+                    projects.push(projectInternal);
                 }
-            };
-
-            const projectInternal: ProjectConfigInternal = {
-                root: path.relative(workspaceRoot, projectRoot),
-                tasks: {
-                    build: buildConfig
-                },
-                _config: 'auto',
-                _workspaceRoot: workspaceRoot,
-                _projectRoot: projectRoot,
-                _projectName: projectName
-            };
-            projects.push(projectInternal);
+            } else if (taskName === 'test') {
+                const projectInternal = await detectProjectInternalForTest(packageJsonPath);
+                if (projectInternal != null) {
+                    projects.push(projectInternal);
+                }
+            }
         }
     }
 
@@ -153,4 +115,138 @@ export async function detectWorkflowConfig(
     return {
         projects: projectMap
     };
+}
+
+async function detectProjectInternalForBuild(packageJsonPath: string): Promise<ProjectConfigInternal | null> {
+    const packageJson = await getCachedPackageJson(packageJsonPath);
+    const packageName = packageJson.name;
+    if (!packageName) {
+        return null;
+    }
+
+    const tsConfigPath = await findTsconfigBuildFile(process.cwd(), path.dirname(packageJsonPath));
+    if (!tsConfigPath) {
+        return null;
+    }
+
+    const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
+    const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
+    const tsConfigInfo: TsConfigInfo = {
+        tsConfigPath,
+        tsConfigJson,
+        tsCompilerConfig
+    };
+
+    let packageNameWithoutScope = packageName;
+    const slashIndex = packageName.indexOf('/');
+    if (slashIndex > -1 && packageName.startsWith('@')) {
+        packageNameWithoutScope = packageName.substr(slashIndex + 1);
+    }
+
+    const entryName = await detectTsEntryName(tsConfigInfo, packageNameWithoutScope);
+    if (!entryName) {
+        return null;
+    }
+
+    const nodeModulePath = await findNodeModulesPath(process.cwd());
+    const workspaceRoot = nodeModulePath ? path.dirname(nodeModulePath) : process.cwd();
+    const projectRoot = path.dirname(packageJsonPath);
+    const projectName = packageNameWithoutScope.replace(/\//g, '-');
+
+    const buildConfig: BuildConfig = {
+        script: {
+            compilations: 'auto'
+        }
+    };
+
+    const projectInternal: ProjectConfigInternal = {
+        root: path.relative(workspaceRoot, projectRoot),
+        tasks: {
+            build: buildConfig
+        },
+        _config: 'auto',
+        _workspaceRoot: workspaceRoot,
+        _projectRoot: projectRoot,
+        _projectName: projectName
+    };
+
+    return projectInternal;
+}
+
+async function detectProjectInternalForTest(packageJsonPath: string): Promise<ProjectConfigInternal | null> {
+    const workspaceRoot = process.cwd();
+    const projectRoot = path.dirname(packageJsonPath);
+
+    const nodeModulePath = await findNodeModulesPath(workspaceRoot);
+    if (!nodeModulePath) {
+        return null;
+    }
+
+    const packageJson = await getCachedPackageJson(packageJsonPath);
+    const packageName = packageJson.name;
+    if (!packageName) {
+        return null;
+    }
+
+    let packageNameWithoutScope = packageName;
+    const slashIndex = packageName.indexOf('/');
+    if (slashIndex > -1 && packageName.startsWith('@')) {
+        packageNameWithoutScope = packageName.substr(slashIndex + 1);
+    }
+    const projectName = packageNameWithoutScope.replace(/\//g, '-');
+
+    const tsConfigPath = await findTsconfigTestFile(workspaceRoot, projectRoot);
+    if (!tsConfigPath) {
+        return null;
+    }
+
+    let entryFilePath: string | undefined;
+    const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
+    if (tsConfigJson.files && tsConfigJson.files.length) {
+        let testFile = tsConfigJson.files.find((f) => /test\.ts$/i.test(f));
+        if (!testFile) {
+            testFile = tsConfigJson.files[0];
+        }
+
+        if (testFile) {
+            const testFileAbs = path.resolve(path.dirname(tsConfigPath), testFile);
+            if (await pathExists(testFileAbs)) {
+                entryFilePath = testFileAbs;
+            }
+        }
+    }
+
+    if (!entryFilePath) {
+        return null;
+    }
+
+    const karmaConfigFilePath = await findUp(
+        ['karma.conf.ts', 'karma.conf.js', '.config/karma.conf.ts', '.config/karma.conf.js'],
+        [path.resolve(projectRoot, 'test'), path.resolve(projectRoot, 'src')],
+        workspaceRoot
+    );
+
+    if (!karmaConfigFilePath) {
+        return null;
+    }
+
+    const testConfig: TestConfig = {
+        tsConfig: path.relative(projectRoot, tsConfigPath),
+        entry: path.relative(projectRoot, entryFilePath),
+        karmaConfig: path.relative(projectRoot, karmaConfigFilePath),
+        codeCoverage: true
+    };
+
+    const projectInternal: ProjectConfigInternal = {
+        root: path.relative(workspaceRoot, projectRoot),
+        tasks: {
+            test: testConfig
+        },
+        _config: 'auto',
+        _workspaceRoot: workspaceRoot,
+        _projectRoot: projectRoot,
+        _projectName: projectName
+    };
+
+    return projectInternal;
 }
