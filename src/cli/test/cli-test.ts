@@ -124,8 +124,8 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         const testConfigInternal: TestConfigInternal = {
             ...testConfig,
             _config: projectConfigInternal._config,
-            _workspaceRoot: projectConfigInternal._workspaceRoot,
-            _projectRoot: projectConfigInternal._projectRoot,
+            _workspaceRoot: workspaceRoot,
+            _projectRoot: projectRoot,
             _projectName: projectConfigInternal._projectName,
 
             _entryFilePath: entryFilePath,
