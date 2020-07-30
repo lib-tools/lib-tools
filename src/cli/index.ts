@@ -14,6 +14,9 @@ function initYargs(): yargs.Argv {
     const buildCommandUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
                         Usage:
                             lib build [options...]`;
+    const testCommandUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
+                            Usage:
+                                lib test [options...]`;
 
     const yargsInstance = yargs
         .usage(cliUsage)
@@ -29,7 +32,7 @@ function initYargs(): yargs.Argv {
                     .example('lib build', 'Build the project(s).')
                     .option('workflow', {
                         describe:
-                            'The workflow configuration file location or set `auto` to analyze project structure and build automatically.',
+                            'The workflow configuration file location or `auto` to analyze project structure and run build task automatically.',
                         type: 'string'
                     })
                     .option('env', {
@@ -80,7 +83,7 @@ function initYargs(): yargs.Argv {
             'Test the project(s)',
             (childYargs) => {
                 return childYargs
-                    .usage(buildCommandUsage)
+                    .usage(testCommandUsage)
                     .example('lib test', 'Test the project(s).')
                     .option('browsers', {
                         describe: 'A list of browsers to launch and capture.',
@@ -100,7 +103,7 @@ function initYargs(): yargs.Argv {
                     })
                     .option('workflow', {
                         describe:
-                            'The workflow configuration file location or set `auto` to analyze project structure and test automatically.',
+                            'The workflow configuration file location or `auto` to analyze project structure and run test automatically.',
                         type: 'string'
                     })
                     .option('env', {
