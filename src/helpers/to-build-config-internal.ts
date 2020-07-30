@@ -9,9 +9,9 @@ import {
 } from '../models';
 import { isInFolder, isSamePaths } from '../utils';
 
-import { detectTsconfigPath } from './detect-tsconfig-path';
 import { findNodeModulesPath } from './find-node-modules-path';
 import { findPackageJsonPath } from './find-package-json-path';
+import { findTsconfigBuildFile } from './find-tsconfig-build-file';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { prepareAssetEntries } from './prepare-asset-entries';
 import { prepareBannerText } from './prepare-banner-text';
@@ -125,7 +125,7 @@ export async function toBuildActionInternal(
         if (buildConfig.script && buildConfig.script.tsConfig) {
             tsConfigPath = path.resolve(projectRoot, buildConfig.script.tsConfig);
         } else if (buildConfig.script) {
-            tsConfigPath = await detectTsconfigPath(workspaceRoot, projectRoot);
+            tsConfigPath = await findTsconfigBuildFile(workspaceRoot, projectRoot);
         }
 
         let outputPath: string | null = null;
