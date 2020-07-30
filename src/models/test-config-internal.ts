@@ -5,4 +5,8 @@ export interface TestConfigInternal extends TestConfig {
     _config: 'auto' | string;
     _projectName: string;
     _projectRoot: string;
+
+    _entryFilePath: string | null;
+    _tsConfigPath: string | null;
+    _karmaConfigPath: string | null;
 }
