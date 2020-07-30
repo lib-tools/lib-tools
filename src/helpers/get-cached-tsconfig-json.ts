@@ -2,9 +2,14 @@ import * as ts from 'typescript';
 
 import { formatTsDiagnostics } from './format-ts-diagnostics';
 
-const cache = new Map<string, { [key: string]: unknown }>();
+export interface TsConfigFileSchema {
+    [key: string]: unknown;
+    files?: string[];
+}
 
-export function getCachedTsconfigJson(tsConfigPath: string): { [key: string]: unknown } {
+const cache = new Map<string, TsConfigFileSchema>();
+
+export function getCachedTsconfigJson(tsConfigPath: string): TsConfigFileSchema {
     const cachedTsConfigJson = cache.get(tsConfigPath);
     if (cachedTsConfigJson) {
         return cachedTsConfigJson;
@@ -21,5 +26,5 @@ export function getCachedTsconfigJson(tsConfigPath: string): { [key: string]: un
 
     cache.set(tsConfigPath, jsonConfigFile.config);
 
-    return jsonConfigFile.config as { [key: string]: unknown };
+    return jsonConfigFile.config as TsConfigFileSchema;
 }
