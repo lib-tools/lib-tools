@@ -1,6 +1,6 @@
 export interface SharedCommandOptions {
     /**
-     * The workflow configuration file location or set `auto` to analyze project structure automatically.
+     * The workflow configuration file location or `auto` to analyze project structure and run task automatically.
      */
     workflow?: string | 'auto';
 
