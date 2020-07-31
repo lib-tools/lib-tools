@@ -6,11 +6,11 @@ import { Configuration as WebpackConfiguration } from 'webpack';
 import {
     applyEnvOverrides,
     applyProjectExtends,
+    extractEnvironment,
     findKarmaConfigFile,
     findTestEntryFile,
     findTestTsconfigFile,
-    getWorkflowConfig,
-    normalizeEnvironment
+    getWorkflowConfig
 } from '../../helpers';
 import { ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
 import { LogLevelString, Logger, LoggerBase, normalizePath } from '../../utils';
@@ -26,23 +26,14 @@ export interface KarmaConfigOptions extends karma.ConfigOptions {
 }
 
 export async function cliTest(argv: TestCommandOptions & { [key: string]: unknown }): Promise<number> {
-    const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
-    let env: { [key: string]: boolean | string } | undefined;
-
+    const environment = extractEnvironment(argv);
     if (argv.environment) {
-        env = argv.environment as { [key: string]: boolean | string };
         delete argv.environment;
     }
 
     if (argv.env) {
-        if (!env) {
-            env = argv.env as { [key: string]: boolean | string };
-        }
-
         delete argv.env;
     }
-
-    const environment = env ? normalizeEnvironment(env, prod) : {};
 
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
     const logLevel = verbose ? 'debug' : argv.logLevel ? (argv.logLevel as LogLevelString) : 'info';
