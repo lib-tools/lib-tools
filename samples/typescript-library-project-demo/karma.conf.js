@@ -37,14 +37,6 @@ module.exports = (config) => {
         junitReporter: {
             outputDir: './junit'
         },
-        // webpack: require('./webpack.config.test.js'),
-        // webpackMiddleware: {
-        //     noInfo: true,
-        //     stats: 'errors-only'
-        // },
-        // mime: {
-        //     'text/x-typescript': ['ts', 'tsx']
-        // },
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,
