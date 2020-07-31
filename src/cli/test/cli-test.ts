@@ -27,6 +27,7 @@ export interface KarmaConfigOptions extends karma.ConfigOptions {
 
 export async function cliTest(argv: TestCommandOptions & { [key: string]: unknown }): Promise<number> {
     const environment = getEnvironment(null, argv);
+
     if (argv.environment) {
         delete argv.environment;
     }
@@ -64,6 +65,8 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
     const filteredProjectConfigs = Object.keys(workflowConfig.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
         .map((projectName) => workflowConfig.projects[projectName]);
+
+    let testedProjectCount = 0;
 
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
@@ -223,6 +226,8 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             karmaOptions.reporters = testConfigInternal.reporters;
         }
 
+        ++testedProjectCount;
+
         let karmaServerWithStop: { stop: () => Promise<void> } | undefined;
         const exitCode = await new Promise<number>((res) => {
             const karmaServer = new karma.Server(karmaOptions, (serverCallback) => {
@@ -240,6 +245,12 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         if (exitCode !== 0) {
             return exitCode;
         }
+    }
+
+    if (testedProjectCount < 1) {
+        logger.error('No project is available to test.');
+
+        return -1;
     }
 
     return 0;
