@@ -3,8 +3,8 @@ import { Configuration, Plugin } from 'webpack';
 import {
     applyEnvOverrides,
     applyProjectExtends,
+    getEnvironment,
     getWorkflowConfig,
-    normalizeEnvironment,
     toBuildActionInternal
 } from '../../helpers';
 import { BuildCommandOptions, BuildConfigInternal, ProjectConfigInternal } from '../../models';
@@ -16,11 +16,9 @@ export async function getWebpackBuildConfig(
     env?: { [key: string]: boolean | string },
     argv?: BuildCommandOptions & { [key: string]: unknown }
 ): Promise<Configuration[]> {
-    const prod = argv && typeof argv.prod === 'boolean' ? argv.prod : undefined;
-    const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
-    let environment = env ? normalizeEnvironment(env, prod) : {};
+    let environment = getEnvironment(env, argv);
     let buildOptions: BuildCommandOptions = {};
-
+    const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
     if (verbose) {
         buildOptions.logLevel = 'debug';
     }
@@ -50,7 +48,7 @@ export async function getWebpackBuildConfig(
 
             environment = {
                 ...environment,
-                ...normalizeEnvironment(rawEnv as { [key: string]: boolean | string }, prod)
+                ...getEnvironment(rawEnv as { [key: string]: boolean | string }, null)
             };
         }
 
