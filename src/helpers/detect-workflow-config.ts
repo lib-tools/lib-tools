@@ -200,6 +200,13 @@ async function detectTestConfig(workspaceRoot: string, projectRoot: string): Pro
         tsConfig: tsConfigPath ? path.relative(projectRoot, tsConfigPath) : undefined,
         entry: entryFilePath ? path.relative(projectRoot, entryFilePath) : undefined,
         karmaConfig: karmaConfigFilePath ? path.relative(projectRoot, karmaConfigFilePath) : undefined,
-        codeCoverage: true
+        codeCoverageExclude: ['**/test.ts', '**/index.ts', '**/public_api.ts'],
+        envOverrides: {
+            ci: {
+                browsers: ['ChromeHeadlessCI'],
+                reporters: ['progress', 'junit'],
+                codeCoverage: true
+            }
+        }
     };
 }
