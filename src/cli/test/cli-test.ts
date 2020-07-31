@@ -13,14 +13,16 @@ import {
     normalizeEnvironment
 } from '../../helpers';
 import { ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
-import { LogLevelString, Logger, LoggerBase } from '../../utils';
+import { LogLevelString, Logger, LoggerBase, normalizePath } from '../../utils';
 import { getWebpackTestConfig } from '../../webpack/configs';
 
 export interface KarmaConfigOptions extends karma.ConfigOptions {
-    configFile?: string;
-    webpackConfig?: WebpackConfiguration;
+    webpackConfig: WebpackConfiguration;
+    configFile: string | null;
     codeCoverage?: boolean;
-    logger?: LoggerBase;
+    logger: LoggerBase;
+    coverageIstanbulReporter?: { [key: string]: unknown };
+    junitReporter?: { [key: string]: unknown };
 }
 
 export async function cliTest(argv: TestCommandOptions & { [key: string]: unknown }): Promise<number> {
@@ -72,10 +74,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
         .map((projectName) => workflowConfig.projects[projectName]);
 
-    if (!filteredProjectConfigs.length) {
-        throw new Error('No project config to test.');
-    }
-
     for (const projectConfig of filteredProjectConfigs) {
         const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
         if (projectConfigInternal._config !== 'auto') {
@@ -99,9 +97,22 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         const workspaceRoot = projectConfigInternal._workspaceRoot;
         const projectRoot = projectConfigInternal._projectRoot;
 
+        let karmaConfigPath: string | null = null;
         let tsConfigPath: string | null = null;
         let entryFilePath: string | null = null;
-        let karmaConfigPath: string | null = null;
+        let codeCoverage: boolean | undefined;
+
+        if (argv.karmaConfig) {
+            karmaConfigPath = path.isAbsolute(argv.karmaConfig)
+                ? path.resolve(argv.karmaConfig)
+                : path.resolve(process.cwd(), argv.karmaConfig);
+        } else {
+            if (testConfig.karmaConfig) {
+                karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
+            } else if (projectConfigInternal._config !== 'auto') {
+                karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
+            }
+        }
 
         if (testConfig.tsConfig) {
             tsConfigPath = path.resolve(projectRoot, testConfig.tsConfig);
@@ -115,10 +126,10 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             entryFilePath = await findTestEntryFile(projectRoot, workspaceRoot, tsConfigPath);
         }
 
-        if (testConfig.karmaConfig) {
-            karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
-        } else if (projectConfigInternal._config !== 'auto') {
-            karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
+        if (argv.codeCoverage != null) {
+            codeCoverage = argv.codeCoverage;
+        } else if (testConfig.codeCoverage != null) {
+            codeCoverage = testConfig.codeCoverage;
         }
 
         const testConfigInternal: TestConfigInternal = {
@@ -130,14 +141,74 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
 
             _entryFilePath: entryFilePath,
             _tsConfigPath: tsConfigPath,
-            _karmaConfigPath: karmaConfigPath
+            _karmaConfigPath: karmaConfigPath,
+            _codeCoverage: codeCoverage
         };
 
+        const webpackConfig = await getWebpackTestConfig(testConfigInternal);
+
+        let karmaDefaultOptions: Partial<KarmaConfigOptions> = {};
+        if (!karmaConfigPath) {
+            karmaDefaultOptions = {
+                basePath: projectRoot,
+                frameworks: ['jasmine', 'lib-tools'],
+                plugins: [
+                    require('karma-jasmine'),
+                    require('karma-chrome-launcher'),
+                    require('karma-jasmine-html-reporter'),
+                    require('karma-coverage-istanbul-reporter'),
+                    require('karma-junit-reporter'),
+                    require(path.resolve(__dirname, '../../karma-plugin'))
+                ],
+                client: {
+                    // leave Jasmine Spec Runner output visible in browser
+                    clearContext: false
+                },
+                coverageIstanbulReporter: {
+                    dir: path.resolve(workspaceRoot, 'coverage', projectConfigInternal._projectName),
+                    reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
+                    fixWebpackSourcePaths: true
+                    // thresholds: {
+                    //     statements: 80,
+                    //     lines: 80,
+                    //     branches: 80,
+                    //     functions: 80
+                    // }
+                },
+                reporters: codeCoverage ? ['progress', 'kjhtml', 'coverage-istanbul'] : ['progress', 'kjhtml'],
+                junitReporter: {
+                    outputDir: normalizePath(
+                        path.relative(
+                            projectRoot,
+                            path.resolve(workspaceRoot, `junit/${projectConfigInternal._projectName}`)
+                        )
+                    )
+                },
+                port: 9876,
+                colors: true,
+                logLevel: 'info',
+                autoWatch: true,
+                browsers: ['Chrome'],
+                customLaunchers: {
+                    ChromeHeadlessCI: {
+                        base: 'ChromeHeadless',
+                        flags: ['--no-sandbox']
+                    }
+                },
+                restartOnFileChange: true
+            };
+        }
+
         const karmaOptions: KarmaConfigOptions = {
+            ...karmaDefaultOptions,
+            configFile: karmaConfigPath,
+            webpackConfig,
+            codeCoverage,
             logger
         };
 
         if (argv.watch != null) {
+            webpackConfig.watch = argv.watch;
             karmaOptions.singleRun = !argv.watch;
         }
 
@@ -161,24 +232,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             karmaOptions.reporters = testConfigInternal.reporters;
         }
 
-        if (argv.codeCoverage != null) {
-            karmaOptions.codeCoverage = argv.codeCoverage;
-        } else if (testConfigInternal.codeCoverage != null) {
-            karmaOptions.codeCoverage = testConfigInternal.codeCoverage;
-        }
-
-        if (argv.karmaConfig) {
-            karmaOptions.configFile = path.isAbsolute(argv.karmaConfig)
-                ? path.resolve(argv.karmaConfig)
-                : path.resolve(process.cwd(), argv.karmaConfig);
-        } else if (testConfigInternal.karmaConfig) {
-            karmaOptions.configFile = path.resolve(testConfigInternal._projectRoot, testConfigInternal.karmaConfig);
-        }
-
-        karmaOptions.webpackConfig = await getWebpackTestConfig(testConfigInternal);
-
         let karmaServerWithStop: { stop: () => Promise<void> } | undefined;
-
         const exitCode = await new Promise<number>((res) => {
             const karmaServer = new karma.Server(karmaOptions, (serverCallback) => {
                 res(serverCallback);
