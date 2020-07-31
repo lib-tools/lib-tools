@@ -1,6 +1,7 @@
 export * from './apply-env-overrides';
 export * from './apply-project-extends';
 export * from './detect-workflow-config';
+export * from './extract-environment';
 export * from './find-build-tsconfig-file';
 export * from './find-karma-config-file';
 export * from './find-test-entry-file';
@@ -13,7 +14,6 @@ export * from './get-rollup-config';
 export * from './get-workflow-config';
 export * from './is-angular-project';
 export * from './minify-es-bundle';
-export * from './normalize-environment';
 export * from './run-webpack';
 export * from './to-build-config-internal';
 export * from './to-workflow-config-internal';
