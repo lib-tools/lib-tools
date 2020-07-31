@@ -12,14 +12,8 @@ import { isAngularProject } from '../../helpers';
 const globAsync = promisify(glob);
 
 export async function getWebpackTestConfig(testConfig: TestConfigInternal): Promise<Configuration> {
-    const workspaceRoot = testConfig._workspaceRoot;
-    const projectRoot = testConfig._projectRoot;
-    const projectName = testConfig._projectName;
-
     const plugins: Plugin[] = [];
     const rules: Rule[] = [];
-
-    const entryFilePath = testConfig.entry ? path.resolve(projectRoot, testConfig.entry) : undefined;
 
     if (testConfig.vendorSourceMap) {
         rules.push({
@@ -29,9 +23,9 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
         });
     }
 
-    if (testConfig.tsConfig) {
-        const tsConfigPath = path.resolve(projectRoot, testConfig.tsConfig);
-        if (await isAngularProject(workspaceRoot)) {
+    if (testConfig._tsConfigPath) {
+        const tsConfigPath = testConfig._tsConfigPath;
+        if (await isAngularProject(testConfig._workspaceRoot)) {
             rules.push({
                 test: /\.tsx?$/,
                 loader: NgToolsLoader
@@ -47,7 +41,7 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
                 test: /\.tsx?$/,
                 loader: require.resolve('ts-loader'),
                 options: {
-                    mainPath: entryFilePath,
+                    mainPath: testConfig._entryFilePath,
                     configFile: tsConfigPath,
                     skipCodeGeneration: true,
                     sourceMap: testConfig.sourceMap,
@@ -59,13 +53,13 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
         }
     }
 
-    if (testConfig.codeCoverage) {
+    if (testConfig._codeCoverage) {
         const exclude: (string | RegExp)[] = [/\.(e2e|spec)\.tsx?$/, /node_modules/];
         const codeCoverageExclude = testConfig.codeCoverageExclude;
 
         if (codeCoverageExclude) {
             for (const excludeGlob of codeCoverageExclude) {
-                const excludeFiles = await globAsync(path.join(projectRoot, excludeGlob), { nodir: true });
+                const excludeFiles = await globAsync(path.join(testConfig._projectRoot, excludeGlob), { nodir: true });
                 for (const f of excludeFiles) {
                     const nf = path.normalize(f);
                     exclude.push(nf);
@@ -86,7 +80,7 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
     }
 
     const webpackConfig: Configuration = {
-        name: projectName,
+        name: testConfig._projectName,
         mode: 'development',
         // devtool: testConfig.sourceMap ? false : 'eval',
         devtool: testConfig.sourceMap ? 'inline-source-map' : 'eval',
@@ -102,7 +96,7 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
             filename: '[name].js',
             crossOriginLoading: 'anonymous'
         },
-        context: projectRoot,
+        context: testConfig._projectRoot,
         module: {
             rules
         },
@@ -134,14 +128,14 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
         stats: 'errors-only'
     };
 
-    if (entryFilePath || (testConfig.polyfills && testConfig.polyfills.length > 0)) {
+    if (testConfig._entryFilePath || (testConfig.polyfills && testConfig.polyfills.length > 0)) {
         webpackConfig.entry = {};
-        if (entryFilePath) {
-            webpackConfig.entry.main = entryFilePath;
+        if (testConfig._entryFilePath) {
+            webpackConfig.entry.main = testConfig._entryFilePath;
         }
         if (testConfig.polyfills && testConfig.polyfills.length > 0) {
             const polyfills = Array.isArray(testConfig.polyfills) ? testConfig.polyfills : [testConfig.polyfills];
-            webpackConfig.entry.polyfills = await resolvePolyfillPaths(polyfills, projectRoot);
+            webpackConfig.entry.polyfills = await resolvePolyfillPaths(polyfills, testConfig._projectRoot);
         }
     } else {
         webpackConfig.entry = () => {
