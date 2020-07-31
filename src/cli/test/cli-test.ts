@@ -6,10 +6,10 @@ import { Configuration as WebpackConfiguration } from 'webpack';
 import {
     applyEnvOverrides,
     applyProjectExtends,
-    extractEnvironment,
     findKarmaConfigFile,
     findTestEntryFile,
     findTestTsconfigFile,
+    getEnvironment,
     getWorkflowConfig
 } from '../../helpers';
 import { ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
@@ -26,7 +26,7 @@ export interface KarmaConfigOptions extends karma.ConfigOptions {
 }
 
 export async function cliTest(argv: TestCommandOptions & { [key: string]: unknown }): Promise<number> {
-    const environment = extractEnvironment(argv);
+    const environment = getEnvironment(null, argv);
     if (argv.environment) {
         delete argv.environment;
     }
