@@ -1,17 +1,28 @@
-export function extractEnvironment(argv: { [key: string]: unknown }): { [key: string]: boolean | string } {
+export function getEnvironment(
+    env: { [key: string]: boolean | string } | null | undefined,
+    argv: { [key: string]: unknown } | null | undefined
+): { [key: string]: boolean | string } {
     const environment: { [key: string]: boolean | string } = {};
-    const argEnv = argv.environment || argv.env;
 
-    if (argEnv && typeof argEnv === 'object') {
-        const envObj = argEnv as { [key: string]: boolean | string };
-        Object.keys(envObj).forEach((key: string) => {
-            const normalizedKey = normalizeEnvName(key);
-            environment[normalizedKey] = toBooleanOrString(envObj[key]);
-        });
+    let envObj: { [key: string]: unknown } = {
+        ...env
+    };
+
+    if (argv && (argv.environment || argv.env)) {
+        const argvEnv = (argv.environment || argv.env) as { [key: string]: unknown };
+        envObj = {
+            ...envObj,
+            ...argvEnv
+        };
     }
 
+    Object.keys(envObj).forEach((key: string) => {
+        const normalizedKey = normalizeEnvName(key);
+        environment[normalizedKey] = toBooleanOrString(envObj[key]);
+    });
+
     // production override
-    if (typeof argv.prod === 'boolean') {
+    if (argv && typeof argv.prod === 'boolean') {
         environment.production = argv.prod;
     } else if (
         environment.production == null &&
@@ -22,7 +33,7 @@ export function extractEnvironment(argv: { [key: string]: unknown }): { [key: st
     }
 
     // ci override
-    if (typeof argv.ci === 'boolean') {
+    if (argv && typeof argv.ci === 'boolean') {
         environment.ci = argv.ci;
     } else if (environment.ci == null && process.env.ci) {
         environment.ci = true;
@@ -47,7 +58,7 @@ function normalizeEnvName(envName: string): string {
     }
 }
 
-function toBooleanOrString(value: string | boolean | null | undefined): boolean | string {
+function toBooleanOrString(value: unknown): boolean | string {
     if (value == null) {
         return false;
     }
@@ -64,5 +75,5 @@ function toBooleanOrString(value: string | boolean | null | undefined): boolean 
         }
     }
 
-    return value;
+    return `${value}`;
 }

@@ -1,7 +1,6 @@
 export * from './apply-env-overrides';
 export * from './apply-project-extends';
 export * from './detect-workflow-config';
-export * from './extract-environment';
 export * from './find-build-tsconfig-file';
 export * from './find-karma-config-file';
 export * from './find-test-entry-file';
@@ -10,6 +9,7 @@ export * from './get-cached-package-json';
 export * from './get-cached-project-config-schema';
 export * from './get-cached-tsconfig-json';
 export * from './get-cached-workflow-config-schema';
+export * from './get-environment';
 export * from './get-rollup-config';
 export * from './get-workflow-config';
 export * from './is-angular-project';
