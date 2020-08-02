@@ -23,7 +23,7 @@ const versionPlaceholderRegex = /0\.0\.0-PLACEHOLDER/i;
 
 export async function toBuildActionInternal(
     projectConfig: ProjectConfigInternal,
-    buildOptions: BuildCommandOptions
+    buildCommandOptions: BuildCommandOptions
 ): Promise<BuildConfigInternal> {
     if (!projectConfig.tasks || !projectConfig.tasks.build) {
         throw new Error('No build actions in configuration.');
@@ -57,8 +57,8 @@ export async function toBuildActionInternal(
     }
 
     let packageVersion: string;
-    if (buildOptions.version) {
-        packageVersion = buildOptions.version;
+    if (buildCommandOptions.version) {
+        packageVersion = buildCommandOptions.version;
     } else {
         if (
             !packageJson.version ||
