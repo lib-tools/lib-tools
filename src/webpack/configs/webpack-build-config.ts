@@ -17,10 +17,10 @@ export async function getWebpackBuildConfig(
     argv?: BuildCommandOptions & { [key: string]: unknown }
 ): Promise<Configuration[]> {
     let environment = getEnvironment(env, argv);
-    let buildOptions: BuildCommandOptions = {};
+    let buildCommandOptions: BuildCommandOptions = {};
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
     if (verbose) {
-        buildOptions.logLevel = 'debug';
+        buildCommandOptions.logLevel = 'debug';
     }
 
     const filteredProjectNames: string[] = [];
@@ -38,12 +38,12 @@ export async function getWebpackBuildConfig(
                     ? (JSON.parse(rawEnvStr) as { [key: string]: unknown })
                     : (rawEnvStr as { [key: string]: unknown });
 
-            if (rawEnv.buildOptions) {
-                if (typeof rawEnv.buildOptions === 'object') {
-                    buildOptions = { ...buildOptions, ...rawEnv.buildOptions };
+            if (rawEnv.buildCommandOptions) {
+                if (typeof rawEnv.buildCommandOptions === 'object') {
+                    buildCommandOptions = { ...buildCommandOptions, ...rawEnv.buildCommandOptions };
                 }
 
-                delete rawEnv.buildOptions;
+                delete rawEnv.buildCommandOptions;
             }
 
             environment = {
@@ -77,18 +77,18 @@ export async function getWebpackBuildConfig(
         }
     } else {
         if (argv) {
-            buildOptions = { ...(argv as BuildCommandOptions), ...buildOptions };
+            buildCommandOptions = { ...(argv as BuildCommandOptions), ...buildCommandOptions };
         }
 
-        if (buildOptions.filter) {
-            if (Array.isArray(buildOptions.filter)) {
-                buildOptions.filter
+        if (buildCommandOptions.filter) {
+            if (Array.isArray(buildCommandOptions.filter)) {
+                buildCommandOptions.filter
                     .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
                     .forEach((projectName) => {
                         filteredProjectNames.push(projectName);
                     });
             } else {
-                buildOptions.filter
+                buildCommandOptions.filter
                     .split(',')
                     .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
                     .forEach((projectName) => {
@@ -98,9 +98,9 @@ export async function getWebpackBuildConfig(
         }
     }
 
-    buildOptions.environment = environment;
+    buildCommandOptions.environment = environment;
 
-    const workflowConfig = await getWorkflowConfig(buildOptions, 'build');
+    const workflowConfig = await getWorkflowConfig(buildCommandOptions, 'build');
 
     const filteredProjectConfigs = Object.keys(workflowConfig.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
@@ -130,11 +130,11 @@ export async function getWebpackBuildConfig(
             continue;
         }
 
-        const buildConfigInternal = await toBuildActionInternal(projectConfigInternal, buildOptions);
+        const buildConfigInternal = await toBuildActionInternal(projectConfigInternal, buildCommandOptions);
 
         const wpConfig = (await getWebpackBuildConfigInternal(
             buildConfigInternal,
-            buildOptions
+            buildCommandOptions
         )) as Configuration | null;
 
         if (wpConfig) {
@@ -147,12 +147,12 @@ export async function getWebpackBuildConfig(
 
 async function getWebpackBuildConfigInternal(
     buildConfig: BuildConfigInternal,
-    buildOptions: BuildCommandOptions
+    buildCommandOptions: BuildCommandOptions
 ): Promise<Configuration> {
     const plugins: Plugin[] = [
         new BuildInfoWebpackPlugin({
             buildConfig,
-            logLevel: buildOptions.logLevel
+            logLevel: buildCommandOptions.logLevel
         })
     ];
 
@@ -163,7 +163,7 @@ async function getWebpackBuildConfigInternal(
         plugins.push(
             new CleanWebpackPlugin({
                 buildConfig,
-                logLevel: buildOptions.logLevel
+                logLevel: buildCommandOptions.logLevel
             })
         );
     }
@@ -175,7 +175,7 @@ async function getWebpackBuildConfigInternal(
         plugins.push(
             new StylesWebpackPlugin({
                 buildConfig,
-                logLevel: buildOptions.logLevel
+                logLevel: buildCommandOptions.logLevel
             })
         );
     }
@@ -188,7 +188,7 @@ async function getWebpackBuildConfigInternal(
             plugins.push(
                 new ScriptCompilationsWebpackPlugin({
                     buildConfig,
-                    logLevel: buildOptions.logLevel
+                    logLevel: buildCommandOptions.logLevel
                 })
             );
         }
@@ -200,7 +200,7 @@ async function getWebpackBuildConfigInternal(
             plugins.push(
                 new ScriptBundlesWebpackPlugin({
                     buildConfig,
-                    logLevel: buildOptions.logLevel
+                    logLevel: buildCommandOptions.logLevel
                 })
             );
         }
@@ -213,7 +213,7 @@ async function getWebpackBuildConfigInternal(
         plugins.push(
             new CopyWebpackPlugin({
                 buildConfig,
-                logLevel: buildOptions.logLevel
+                logLevel: buildCommandOptions.logLevel
             })
         );
     }
@@ -222,7 +222,7 @@ async function getWebpackBuildConfigInternal(
     plugins.push(
         new PackageJsonFileWebpackPlugin({
             buildConfig,
-            logLevel: buildOptions.logLevel
+            logLevel: buildCommandOptions.logLevel
         })
     );
 
