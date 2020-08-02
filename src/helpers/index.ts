@@ -5,6 +5,7 @@ export * from './find-build-tsconfig-file';
 export * from './find-karma-config-file';
 export * from './find-test-entry-file';
 export * from './find-test-tsconfig-file';
+export * from './find-package-json-path';
 export * from './get-cached-package-json';
 export * from './get-cached-project-config-schema';
 export * from './get-cached-tsconfig-json';
