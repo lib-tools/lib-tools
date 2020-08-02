@@ -5,7 +5,7 @@ import { pathExists, remove, writeFile } from 'fs-extra';
 import * as rollup from 'rollup';
 import { ScriptTarget } from 'typescript';
 
-import { getRollupConfig, minifyESBundle } from '../../../helpers';
+import { getRollupConfig, isAngularProject, minifyESBundle } from '../../../helpers';
 import { BuildConfigInternal, ScriptCompilationOptionsInternal, ScriptOptionsInternal } from '../../../models';
 import { LoggerBase, globCopyFiles, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
@@ -23,10 +23,7 @@ export async function performScriptCompilations(buildConfig: BuildConfigInternal
     let tscCommand = 'tsc';
     const nodeModulesPath = buildConfig._nodeModulesPath;
     if (nodeModulesPath) {
-        if (
-            (await pathExists(path.join(nodeModulesPath, '.bin/ngc'))) &&
-            (await pathExists(path.join(nodeModulesPath, '@angular/compiler-cli/package.json')))
-        ) {
+        if (await isAngularProject(buildConfig._workspaceRoot, buildConfig._packageJson)) {
             tscCommand = path.join(nodeModulesPath, '.bin/ngc');
         } else if (await pathExists(path.join(nodeModulesPath, '.bin/tsc'))) {
             tscCommand = path.join(nodeModulesPath, '.bin/tsc');
