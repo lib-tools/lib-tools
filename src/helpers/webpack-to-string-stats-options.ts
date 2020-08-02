@@ -8,7 +8,7 @@ export function getWebpackToStringStatsOptions(
         colors: true,
         errors: true,
         warnings: true,
-        assets: true, // buildOptions.debug,
+        assets: true,
 
         hash: false,
         version: false,
