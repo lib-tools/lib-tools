@@ -9,7 +9,7 @@ import {
 } from '../../helpers';
 import { BuildCommandOptions, BuildConfigInternal, ProjectConfigInternal } from '../../models';
 
-import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin';
+import { BuildInfoWebpackPlugin } from '../plugins/build-info-webpack-plugin';
 import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
 
 export async function getWebpackBuildConfig(
@@ -150,7 +150,7 @@ async function getWebpackBuildConfigInternal(
     buildOptions: BuildCommandOptions
 ): Promise<Configuration> {
     const plugins: Plugin[] = [
-        new ProjectBuildInfoWebpackPlugin({
+        new BuildInfoWebpackPlugin({
             buildConfig,
             logLevel: buildOptions.logLevel
         })
