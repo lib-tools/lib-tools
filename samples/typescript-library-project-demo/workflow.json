@@ -52,8 +52,7 @@
             "compilations": "auto"
           }
         },
-        "test": {
-        }
+        "test": {}
       }
     },
     "bundles-only-demo": {
@@ -74,7 +73,10 @@
                 "sourceMap": true,
                 "minify": true,
                 "commonjs": {
-                  "extensions": [".ts", ".js"]
+                  "extensions": [
+                    ".ts",
+                    ".js"
+                  ]
                 },
                 "dependenciesAsExternals": false,
                 "peerDependenciesAsExternals": false
