@@ -149,7 +149,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             _codeCoverage: codeCoverage
         };
 
-        const webpackConfig = await getWebpackTestConfig(testConfigInternal);
+        const webpackConfig = await getWebpackTestConfig(testConfigInternal, argv);
 
         let karmaDefaultOptions: Partial<KarmaConfigOptions> = {};
         if (!karmaConfigPath) {
