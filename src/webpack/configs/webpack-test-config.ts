@@ -6,13 +6,22 @@ import { pathExists } from 'fs-extra';
 import * as glob from 'glob';
 import { Configuration, Plugin, Rule } from 'webpack';
 
-import { TestConfigInternal } from '../../models';
 import { isAngularProject } from '../../helpers';
+import { TestCommandOptions, TestConfigInternal } from '../../models';
+import { TestInfoWebpackPlugin } from '../plugins/test-info-webpack-plugin';
 
 const globAsync = promisify(glob);
 
-export async function getWebpackTestConfig(testConfig: TestConfigInternal): Promise<Configuration> {
-    const plugins: Plugin[] = [];
+export async function getWebpackTestConfig(
+    testConfig: TestConfigInternal,
+    testCommandOptions: TestCommandOptions
+): Promise<Configuration> {
+    const plugins: Plugin[] = [
+        new TestInfoWebpackPlugin({
+            testConfig,
+            logLevel: testCommandOptions.logLevel
+        })
+    ];
     const rules: Rule[] = [];
 
     if (testConfig.vendorSourceMap) {
