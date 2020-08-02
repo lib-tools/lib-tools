@@ -7,12 +7,14 @@ import {
     applyEnvOverrides,
     applyProjectExtends,
     findKarmaConfigFile,
+    findPackageJsonPath,
     findTestEntryFile,
     findTestTsconfigFile,
+    getCachedPackageJson,
     getEnvironment,
     getWorkflowConfig
 } from '../../helpers';
-import { ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
+import { PackageJsonLike, ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
 import { LogLevelString, Logger, LoggerBase, normalizePath } from '../../utils';
 import { getWebpackTestConfig } from '../../webpack/configs';
 
@@ -126,6 +128,13 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             codeCoverage = testConfig.codeCoverage;
         }
 
+        let packageJson: PackageJsonLike | null = null;
+
+        const packageJsonPath = await findPackageJsonPath(projectRoot, workspaceRoot);
+        if (packageJsonPath) {
+            packageJson = await getCachedPackageJson(packageJsonPath);
+        }
+
         const testConfigInternal: TestConfigInternal = {
             ...testConfig,
             _config: projectConfigInternal._config,
@@ -133,6 +142,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             _projectRoot: projectRoot,
             _projectName: projectConfigInternal._projectName,
 
+            _packageJson: packageJson,
             _entryFilePath: entryFilePath,
             _tsConfigPath: tsConfigPath,
             _karmaConfigPath: karmaConfigPath,
