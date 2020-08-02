@@ -25,7 +25,7 @@ export async function getWebpackTestConfig(testConfig: TestConfigInternal): Prom
 
     if (testConfig._tsConfigPath) {
         const tsConfigPath = testConfig._tsConfigPath;
-        if (await isAngularProject(testConfig._workspaceRoot)) {
+        if (await isAngularProject(testConfig._workspaceRoot, testConfig._packageJson)) {
             rules.push({
                 test: /\.tsx?$/,
                 loader: NgToolsLoader
