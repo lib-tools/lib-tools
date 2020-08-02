@@ -1,11 +1,11 @@
 {
   "$schema": "../../dist/schemas/schema.json",
   "projects": {
-    "transpilations-and-bundles-full-config-demo": {
+    "transpilations-bundles-test-demo": {
       "root": "./",
       "tasks": {
         "build": {
-          "outputPath": "dist/transpilations-and-bundles-demo",
+          "outputPath": "dist/transpilations-bundles-test-demo",
           "script": {
             "compilations": [
               {
@@ -36,16 +36,23 @@
               "tslib": "tslib"
             }
           }
+        },
+        "test": {
+          "karmaConfig": "karma.conf.js",
+          "entry": "test/test.ts",
+          "tsConfig": "tsconfig.test.json"
         }
       }
     },
-    "transpilations-and-bundles-minimal-config-demo": {
+    "transpilations-bundles-test-minimal-config-demo": {
       "root": "./",
       "tasks": {
         "build": {
           "script": {
             "compilations": "auto"
           }
+        },
+        "test": {
         }
       }
     },
@@ -80,17 +87,6 @@
             "dependenciesAsExternals": true,
             "peerDependenciesAsExternals": true
           }
-        }
-      }
-    },
-    "test-demo": {
-      "root": "./",
-      "tasks": {
-        "test": {
-          "karmaConfig": "karma.conf.js",
-          "entry": "test/test.ts",
-          "tsConfig": "tsconfig.test.json"
-
         }
       }
     }
