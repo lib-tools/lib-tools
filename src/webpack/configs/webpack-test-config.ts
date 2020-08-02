@@ -37,7 +37,16 @@ export async function getWebpackTestConfig(
         if (await isAngularProject(testConfig._workspaceRoot, testConfig._packageJson)) {
             rules.push({
                 test: /\.tsx?$/,
-                loader: NgToolsLoader
+                loader: NgToolsLoader,
+                options: {
+                    mainPath: testConfig._entryFilePath,
+                    configFile: tsConfigPath,
+                    skipCodeGeneration: true,
+                    sourceMap: testConfig.sourceMap,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    contextElementDependencyConstructor: require('webpack/lib/dependencies/ContextElementDependency'),
+                    directTemplateLoading: true
+                }
             });
 
             plugins.push(
@@ -50,13 +59,7 @@ export async function getWebpackTestConfig(
                 test: /\.tsx?$/,
                 loader: require.resolve('ts-loader'),
                 options: {
-                    mainPath: testConfig._entryFilePath,
-                    configFile: tsConfigPath,
-                    skipCodeGeneration: true,
-                    sourceMap: testConfig.sourceMap,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    contextElementDependencyConstructor: require('webpack/lib/dependencies/ContextElementDependency'),
-                    directTemplateLoading: true
+                    configFile: tsConfigPath
                 }
             });
         }
