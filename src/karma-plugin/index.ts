@@ -4,15 +4,17 @@ import { ConfigOptions as KarmaConfigOptions } from 'karma';
 import * as webpack from 'webpack';
 import * as webpackDevMiddleware from 'webpack-dev-middleware';
 
+import { getWebpackTestConfigFromKarma } from '../webpack/configs';
 import { FailureKarmaWebpackPlugin } from '../webpack/plugins/failure-karma-webpack-plugin';
 import { TurnOffWatchWebpackPlugin } from '../webpack/plugins/turn-off-watch-webpack-plugin';
 
-import { LoggerBase } from '../utils';
+import { Logger, LoggerBase } from '../utils';
 
 export interface PluginOptions extends KarmaConfigOptions {
-    webpackConfig: webpack.Configuration;
+    configFile: string;
+    webpackConfig?: webpack.Configuration;
     codeCoverage?: boolean;
-    logger: LoggerBase;
+    logger?: LoggerBase;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,7 +46,7 @@ function fallbackMiddleware() {
     };
 }
 
-const init = (
+const init = async (
     config: PluginOptions,
     emitter: {
         on: (eventName: string, cb: (doneFn: () => void) => void) => void;
@@ -53,14 +55,13 @@ const init = (
     },
     customFileHandlers: { urlRegex: RegExp; handler: NextHandleFunction }[]
 ) => {
-    const logger = config.logger;
+    const logger = config.logger || new Logger({ logLevel: 'info' });
 
     config.reporters = config.reporters || [];
     if (config.codeCoverage && !config.reporters.includes('coverage-istanbul')) {
         config.reporters.push('coverage-istanbul');
     }
 
-    const webpackConfig = config.webpackConfig;
     const webpackMiddlewareConfig: webpackDevMiddleware.Options = {
         logLevel: 'error',
         stats: {
@@ -69,20 +70,33 @@ const init = (
         publicPath: '/_karma_webpack_/'
     };
 
-    function unblock(): void {
-        isBlocked = false;
-        blocked.forEach((cb) => cb());
-        blocked = [];
-    }
-
-    const compilationErrorCb = (_: string | undefined, errors: string[]) => {
+    const compilationErrorCallback = (_: string | undefined, errors: string[]) => {
         emitter.emit('compile_error', errors);
         emitter.emit('run_complete', [], { exitCode: 1 });
         unblock();
     };
 
+    let webpackConfig: webpack.Configuration;
+
+    // From lib cli
+    if (config.webpackConfig) {
+        webpackConfig = config.webpackConfig;
+    } else {
+        webpackConfig = await getWebpackTestConfigFromKarma(config);
+    }
+
     webpackConfig.plugins = webpackConfig.plugins || [];
-    webpackConfig.plugins.push(new FailureKarmaWebpackPlugin(compilationErrorCb));
+    webpackConfig.plugins.push(new FailureKarmaWebpackPlugin(compilationErrorCallback));
+    webpackConfig.watch = !config.singleRun;
+    if (config.singleRun) {
+        webpackConfig.plugins.unshift(new TurnOffWatchWebpackPlugin());
+    }
+
+    function unblock(): void {
+        isBlocked = false;
+        blocked.forEach((cb) => cb());
+        blocked = [];
+    }
 
     config.customContextFile = `${__dirname}/karma-context.html`;
     config.customDebugFile = `${__dirname}/karma-debug.html`;
@@ -91,15 +105,6 @@ const init = (
     config.beforeMiddleware.push('lib-tools--blocker');
     config.middleware = config.middleware || [];
     config.middleware.push('lib-tools--fallback');
-
-    webpackConfig.watch = !config.singleRun;
-    if (config.singleRun) {
-        webpackConfig.plugins.unshift(new TurnOffWatchWebpackPlugin());
-    }
-
-    webpackConfig.output = webpackConfig.output || {};
-    webpackConfig.output.path = '/_karma_webpack_/';
-    webpackConfig.output.publicPath = '/_karma_webpack_/';
 
     let compiler: webpack.Compiler;
     try {
