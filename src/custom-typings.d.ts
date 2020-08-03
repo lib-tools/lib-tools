@@ -1,5 +1,13 @@
 declare namespace NodeJS {
     export interface Global {
+        buildCounter?: {
+            count: number;
+        };
+
+        testCounter?: {
+            count: number;
+        };
+
         libCli?: {
             packageName: string;
             version: string;
