@@ -15,11 +15,20 @@ const ajv = new Ajv();
 
 export async function applyProjectExtends(
     projectConfig: ProjectConfigInternal,
-    projectCollection: { [key: string]: ProjectConfigInternal } = {},
+    projects: { [key: string]: ProjectConfigInternal } | ProjectConfigInternal[] = {},
     configPath: string
 ): Promise<void> {
     if (!projectConfig.extends || !projectConfig.extends.trim().length) {
         return;
+    }
+
+    let projectCollection: { [key: string]: ProjectConfigInternal } = {};
+    if (Array.isArray(projects)) {
+        projects.forEach((project) => {
+            projectCollection[project._projectName] = project;
+        });
+    } else {
+        projectCollection = projects;
     }
 
     await applyProjectExtendsInternal(projectConfig, projectCollection, configPath);
