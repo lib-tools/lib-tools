@@ -100,7 +100,7 @@ export async function getWebpackBuildConfig(
 
     buildCommandOptions.environment = environment;
 
-    const workflowConfig = await getWorkflowConfig(buildCommandOptions, 'build');
+    const workflowConfig = await getWorkflowConfig(buildCommandOptions, 'build', null);
 
     const filteredProjectConfigs = Object.keys(workflowConfig.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
