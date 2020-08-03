@@ -4,7 +4,7 @@ import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 
 import { SharedCommandOptions, WorkflowConfig, WorkflowConfigInternal } from '../models';
-import { findUp, readJsonWithComments } from '../utils';
+import { LoggerBase, findUp, readJsonWithComments } from '../utils';
 
 import { detectWorkflowConfig } from './detect-workflow-config';
 import { getCachedWorkflowConfigSchema } from './get-cached-workflow-config-schema';
@@ -14,7 +14,8 @@ const ajv = new Ajv();
 
 export async function getWorkflowConfig(
     commandOptions: SharedCommandOptions,
-    taskName: 'build' | 'test'
+    taskName: 'build' | 'test',
+    customLogger: LoggerBase | null
 ): Promise<WorkflowConfigInternal> {
     let foundConfigPath: string | null = null;
     if (commandOptions.workflow && commandOptions.workflow !== 'auto') {
@@ -39,7 +40,7 @@ export async function getWorkflowConfig(
         }
         const valid = ajv.validate('workflowSchema', workflowConfig);
         if (!valid) {
-            throw new Error(`Invalid configuration. ${ajv.errorsText()}`);
+            throw new Error(`Invalid workflow configuration. ${ajv.errorsText()}`);
         }
 
         const workspaceRoot = path.extname(foundConfigPath) ? path.dirname(foundConfigPath) : foundConfigPath;
@@ -49,7 +50,7 @@ export async function getWorkflowConfig(
             throw new Error(`Workflow configuration file could not be detected.`);
         }
 
-        const workflowConfig = await detectWorkflowConfig(commandOptions, taskName);
+        const workflowConfig = await detectWorkflowConfig(commandOptions, taskName, customLogger);
 
         if (workflowConfig == null) {
             throw new Error(`Workflow configuration could not be detected automatically.`);
