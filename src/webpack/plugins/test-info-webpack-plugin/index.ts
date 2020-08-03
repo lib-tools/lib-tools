@@ -30,7 +30,6 @@ export class TestInfoWebpackPlugin {
             this.logger.info('\n');
         }
         ++testCounter.count;
-        const msg = `Running test for ${colorize(this.options.testConfig._projectName, 'cyan')}`;
-        this.logger.info(msg);
+        this.logger.info(`Running test for ${colorize(this.options.testConfig._projectName, 'cyan')}`);
     }
 }
