@@ -22,7 +22,7 @@ export interface SharedCommandOptions {
     /**
      * Logging level for output information.
      */
-    logLevel?: 'debug' | 'info' | 'warn' | 'none';
+    logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none';
 
     /**
      * Shortcut flag to set logLevel to `debug`.

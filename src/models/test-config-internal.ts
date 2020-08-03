@@ -9,8 +9,7 @@ export interface TestConfigInternal extends TestConfig {
     _projectRoot: string;
     _packageJson: PackageJsonLike | null;
 
-    _entryFilePath?: string | null;
-    _tsConfigPath?: string | null;
-    _karmaConfigPath?: string | null;
-    _codeCoverage?: boolean;
+    _entryFilePath: string | null;
+    _tsConfigPath: string | null;
+    _karmaConfigPath: string | null;
 }
