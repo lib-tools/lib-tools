@@ -16,7 +16,7 @@ import {
     WorkflowConfig,
     WorkflowConfigInternal
 } from '../models';
-import { Logger, normalizePath, readJsonWithComments } from '../utils';
+import { Logger, LoggerBase, normalizePath, readJsonWithComments } from '../utils';
 
 import { findBuildTsconfigFile } from './find-build-tsconfig-file';
 import { findTestEntryFile } from './find-test-entry-file';
@@ -32,7 +32,8 @@ const ajv = new Ajv();
 
 export async function detectWorkflowConfig(
     commandOptions: SharedCommandOptions,
-    taskName: 'build' | 'test'
+    taskName: 'build' | 'test',
+    customLogger: LoggerBase | null
 ): Promise<WorkflowConfigInternal | null> {
     const foundPackageJsonPaths = await globAsync(
         '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
@@ -50,9 +51,11 @@ export async function detectWorkflowConfig(
 
     const projects: ProjectConfigInternal[] = [];
 
-    const logger = new Logger({
-        logLevel: commandOptions.logLevel ? commandOptions.logLevel : 'info'
-    });
+    const logger =
+        customLogger ||
+        new Logger({
+            logLevel: commandOptions.logLevel ? commandOptions.logLevel : 'info'
+        });
 
     for (const packageJsonPath of foundPackageJsonPaths) {
         const workflowConfigPath = path.resolve(path.dirname(packageJsonPath), 'workflow.json');
