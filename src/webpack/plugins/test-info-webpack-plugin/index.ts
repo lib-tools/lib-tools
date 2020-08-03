@@ -1,7 +1,11 @@
 import { TestConfigInternal } from '../../../models';
-import { LogLevelString, Logger } from '../../../utils';
+import { LogLevelString, Logger, colorize } from '../../../utils';
 
-let counter = 0;
+if (!global.testCounter) {
+    global.testCounter = { count: 0 };
+}
+
+const testCounter = global.testCounter || { count: 0 };
 
 export interface TestInfoWebpackPluginOptions {
     testConfig: TestConfigInternal;
@@ -22,11 +26,11 @@ export class TestInfoWebpackPlugin {
     }
 
     apply(): void {
-        if (counter > 0) {
+        if (testCounter.count > 0) {
             this.logger.info('\n');
         }
-        ++counter;
-        const msg = `Running test for project ${this.options.testConfig._projectName}`;
+        ++testCounter.count;
+        const msg = `Running test for ${colorize(this.options.testConfig._projectName, 'cyan')}`;
         this.logger.info(msg);
     }
 }
