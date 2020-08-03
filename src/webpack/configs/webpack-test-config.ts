@@ -2,15 +2,53 @@ import * as path from 'path';
 import { promisify } from 'util';
 
 import { AngularCompilerPlugin, NgToolsLoader } from '@ngtools/webpack';
+import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 import * as glob from 'glob';
+import { ConfigOptions as KarmaConfigOptions } from 'karma';
 import { Configuration, Plugin, Rule } from 'webpack';
 
-import { isAngularProject } from '../../helpers';
-import { TestCommandOptions, TestConfigInternal } from '../../models';
+import {
+    applyProjectExtends,
+    findPackageJsonPath,
+    findTestEntryFile,
+    findTestTsconfigFile,
+    getCachedPackageJson,
+    getCachedWorkflowConfigSchema,
+    isAngularProject
+} from '../../helpers';
+import {
+    PackageJsonLike,
+    ProjectConfigInternal,
+    TestCommandOptions,
+    TestConfigInternal,
+    WorkflowConfig
+} from '../../models';
+import { LogLevelString, findUp, isInFolder, isSamePaths, readJsonWithComments } from '../../utils';
+
 import { TestInfoWebpackPlugin } from '../plugins/test-info-webpack-plugin';
 
 const globAsync = promisify(glob);
+const ajv = new Ajv();
+
+export async function getWebpackTestConfigFromKarma(
+    karmaConfig: KarmaConfigOptions & { configFile: string }
+): Promise<Configuration> {
+    const karmaConfigFile = karmaConfig.configFile;
+    const testConfig = await getTestConfigFromKarmaConfigFile(karmaConfigFile);
+    if (!testConfig) {
+        throw new Error('Could not detect workflow test config.');
+    }
+
+    const logLevel = karmaConfig.logLevel != null ? (karmaConfig.logLevel as LogLevelString) : 'info';
+    const argv = {
+        logLevel
+    };
+
+    const webpackConfig = await getWebpackTestConfig(testConfig, argv);
+
+    return webpackConfig;
+}
 
 export async function getWebpackTestConfig(
     testConfig: TestConfigInternal,
@@ -34,7 +72,11 @@ export async function getWebpackTestConfig(
 
     if (testConfig._tsConfigPath) {
         const tsConfigPath = testConfig._tsConfigPath;
-        if (await isAngularProject(testConfig._workspaceRoot, testConfig._packageJson)) {
+        if (
+            testConfig._entryFilePath &&
+            /\.tsx?$/i.test(testConfig._entryFilePath) &&
+            (await isAngularProject(testConfig._workspaceRoot, testConfig._packageJson))
+        ) {
             rules.push({
                 test: /\.tsx?$/,
                 loader: NgToolsLoader,
@@ -65,7 +107,7 @@ export async function getWebpackTestConfig(
         }
     }
 
-    if (testConfig._codeCoverage) {
+    if (testConfig.codeCoverage) {
         const exclude: (string | RegExp)[] = [/\.(e2e|spec)\.tsx?$/, /node_modules/];
         const codeCoverageExclude = testConfig.codeCoverageExclude;
 
@@ -175,4 +217,145 @@ async function resolvePolyfillPaths(polyfills: string[], projectRoot: string): P
     }
 
     return resolvedPaths;
+}
+
+async function getTestConfigFromKarmaConfigFile(karmaConfigFile: string): Promise<TestConfigInternal | null> {
+    const karmaConfigBaseDir = path.dirname(karmaConfigFile);
+    const foundWorkflowConfigPath = await findUp(
+        ['workflow.json'],
+        karmaConfigBaseDir,
+        path.parse(karmaConfigBaseDir).root
+    );
+
+    if (foundWorkflowConfigPath) {
+        const workflowConfig = (await readJsonWithComments(foundWorkflowConfigPath)) as WorkflowConfig;
+        const schema = await getCachedWorkflowConfigSchema();
+        if (!ajv.getSchema('workflowSchema')) {
+            ajv.addSchema(schema, 'workflowSchema');
+        }
+        const valid = ajv.validate('workflowSchema', workflowConfig);
+        if (!valid) {
+            throw new Error(`Invalid workflow configuration. ${ajv.errorsText()}`);
+        }
+
+        const workspaceRoot = path.dirname(foundWorkflowConfigPath);
+        const projectConfigs = Object.keys(workflowConfig.projects).map((projectName) => {
+            const projectConfig = workflowConfig.projects[projectName];
+
+            if (projectConfig.root && path.isAbsolute(projectConfig.root)) {
+                throw new Error(
+                    `Invalid workflow configuration. The 'projects[${projectName}].root' must be relative path.`
+                );
+            }
+
+            const projectRoot = path.resolve(workspaceRoot, projectConfig.root || '');
+
+            const projectConfigInternal: ProjectConfigInternal = {
+                ...projectConfig,
+                _workspaceRoot: workspaceRoot,
+                _config: foundWorkflowConfigPath,
+                _projectName: projectName,
+                _projectRoot: projectRoot
+            };
+
+            return projectConfigInternal;
+        });
+
+        for (const projectConfig of projectConfigs) {
+            await applyProjectExtends(projectConfig, projectConfigs, projectConfig._config);
+            if (!projectConfig.tasks || !projectConfig.tasks.test) {
+                continue;
+            }
+
+            const testConfig = projectConfig.tasks.test;
+
+            if (testConfig.skip) {
+                continue;
+            }
+
+            const projectRoot = projectConfig._projectRoot;
+
+            if (
+                testConfig.karmaConfig &&
+                !isSamePaths(karmaConfigFile, path.resolve(projectRoot, testConfig.karmaConfig))
+            ) {
+                continue;
+            }
+
+            let tsConfigPath: string | null = null;
+            let entryFilePath: string | null = null;
+
+            if (testConfig.tsConfig) {
+                tsConfigPath = path.resolve(projectRoot, testConfig.tsConfig);
+            } else {
+                tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
+            }
+
+            if (testConfig.entry) {
+                entryFilePath = path.resolve(projectRoot, testConfig.entry);
+            } else {
+                entryFilePath = await findTestEntryFile(projectRoot, workspaceRoot, tsConfigPath);
+            }
+
+            let packageJson: PackageJsonLike | null = null;
+
+            const packageJsonPath = await findPackageJsonPath(projectRoot, workspaceRoot);
+            if (packageJsonPath) {
+                packageJson = await getCachedPackageJson(packageJsonPath);
+            }
+
+            const testConfigInternal: TestConfigInternal = {
+                ...testConfig,
+                _config: projectConfig._config,
+                _workspaceRoot: workspaceRoot,
+                _projectRoot: projectRoot,
+                _projectName: projectConfig._projectName,
+                _packageJson: packageJson,
+                _entryFilePath: entryFilePath,
+                _tsConfigPath: tsConfigPath,
+                _karmaConfigPath: karmaConfigFile
+            };
+
+            return testConfigInternal;
+        }
+
+        return null;
+    } else {
+        const workspaceRoot = isInFolder(process.cwd(), karmaConfigBaseDir) ? process.cwd() : karmaConfigBaseDir;
+        const tsConfigPath = await findTestTsconfigFile(karmaConfigBaseDir, workspaceRoot);
+        const entryFilePath = await findTestEntryFile(karmaConfigBaseDir, workspaceRoot, tsConfigPath);
+        if (!entryFilePath) {
+            return null;
+        }
+
+        const packageJsonPath = await findUp('package.json', karmaConfigBaseDir, workspaceRoot);
+        let packageJson: PackageJsonLike | null = null;
+        if (!packageJsonPath) {
+            return null;
+        }
+
+        packageJson = await getCachedPackageJson(packageJsonPath);
+        const packageName = packageJson.name;
+        if (!packageName) {
+            return null;
+        }
+
+        let packageNameWithoutScope = packageName;
+        const slashIndex = packageName.indexOf('/');
+        if (slashIndex > -1 && packageName.startsWith('@')) {
+            packageNameWithoutScope = packageName.substr(slashIndex + 1);
+        }
+        const projectName = packageNameWithoutScope.replace(/\//g, '-');
+
+        return {
+            _config: 'auto',
+            _workspaceRoot: workspaceRoot,
+            _projectRoot: karmaConfigBaseDir,
+            _projectName: projectName,
+            _packageJson: packageJson,
+            _tsConfigPath: tsConfigPath,
+            _entryFilePath: entryFilePath,
+            _karmaConfigPath: karmaConfigFile
+        };
+    }
 }
