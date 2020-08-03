@@ -15,7 +15,7 @@ import {
     getWorkflowConfig
 } from '../../helpers';
 import { PackageJsonLike, ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
-import { LogLevelString, Logger, LoggerBase, normalizePath } from '../../utils';
+import { Logger, LoggerBase, normalizePath } from '../../utils';
 import { getWebpackTestConfig } from '../../webpack/configs';
 
 export interface KarmaConfigOptions extends karma.ConfigOptions {
@@ -39,12 +39,12 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
     }
 
     const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
-    const logLevel = verbose ? 'debug' : argv.logLevel ? (argv.logLevel as LogLevelString) : 'info';
+    const logLevel = verbose ? 'debug' : argv.logLevel ? argv.logLevel : 'info';
     const logger = new Logger({
         logLevel
     });
 
-    const workflowConfig = await getWorkflowConfig(argv, 'test');
+    const workflowConfig = await getWorkflowConfig(argv, 'test', logger);
     const filteredProjectNames: string[] = [];
 
     if (argv.filter) {
@@ -124,6 +124,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
 
         if (argv.codeCoverage != null) {
             codeCoverage = argv.codeCoverage;
+            testConfig.codeCoverage = argv.codeCoverage;
         } else if (testConfig.codeCoverage != null) {
             codeCoverage = testConfig.codeCoverage;
         }
@@ -145,8 +146,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             _packageJson: packageJson,
             _entryFilePath: entryFilePath,
             _tsConfigPath: tsConfigPath,
-            _karmaConfigPath: karmaConfigPath,
-            _codeCoverage: codeCoverage
+            _karmaConfigPath: karmaConfigPath
         };
 
         const webpackConfig = await getWebpackTestConfig(testConfigInternal, argv);
