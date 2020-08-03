@@ -1,7 +1,11 @@
 import { BuildConfigInternal } from '../../../models';
-import { LogLevelString, Logger } from '../../../utils';
+import { LogLevelString, Logger, colorize } from '../../../utils';
 
-let counter = 0;
+if (!global.buildCounter) {
+    global.buildCounter = { count: 0 };
+}
+
+const buildCounter = global.buildCounter || { count: 0 };
 
 export interface BuildInfoWebpackPluginOptions {
     buildConfig: BuildConfigInternal;
@@ -22,11 +26,10 @@ export class BuildInfoWebpackPlugin {
     }
 
     apply(): void {
-        if (counter > 0) {
+        if (buildCounter.count > 0) {
             this.logger.info('\n');
         }
-        ++counter;
-        const msg = `Preparing project ${this.options.buildConfig._projectName} for build`;
-        this.logger.info(msg);
+        ++buildCounter.count;
+        this.logger.info(`Running build for ${colorize(this.options.buildConfig._projectName, 'cyan')}`);
     }
 }
