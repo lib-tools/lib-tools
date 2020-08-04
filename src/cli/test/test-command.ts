@@ -26,6 +26,10 @@ export function getTestCommand(cliPackageName: string, cliVersion: string): yarg
                     describe: 'Output code coverage report.',
                     type: 'boolean'
                 })
+                .option('codeCoverageExclude', {
+                    describe: 'A list of minimatch pattern to exclude files from code coverage report.',
+                    type: 'string'
+                })
                 .option('karmaConfig', {
                     describe: 'Custom karma.conf.js file path.',
                     type: 'string'
