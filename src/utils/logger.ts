@@ -9,7 +9,7 @@ export enum LogLevel {
     Debug = 16
 }
 
-export type LogLevelString = 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none';
+export type LogLevelString = 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none' | 'disable';
 
 export interface LoggerOptions {
     logLevel?: LogLevel | LogLevelString;
@@ -116,6 +116,7 @@ export class Logger implements LoggerBase {
             case 'fatal':
                 return LogLevel.Fatal;
             case 'none':
+            case 'disable':
                 return LogLevel.None;
             default:
                 return LogLevel.None;
