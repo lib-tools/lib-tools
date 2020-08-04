@@ -30,10 +30,6 @@ export function getTestCommand(cliPackageName: string, cliVersion: string): yarg
                     describe: 'A list of minimatch pattern to exclude files from code coverage report.',
                     type: 'string'
                 })
-                .option('karmaConfig', {
-                    describe: 'Custom karma.conf.js file path.',
-                    type: 'string'
-                })
                 // Shared command options
                 .option('workflow', {
                     describe:
@@ -45,22 +41,13 @@ export function getTestCommand(cliPackageName: string, cliVersion: string): yarg
                     describe:
                         'Environment name to override the task configuration with `envOverrides[environment]` options.'
                 })
-                .option('prod', {
-                    describe: 'Shortcut flag to set environment to `production`.',
-                    type: 'boolean'
-                })
                 .option('filter', {
                     describe: 'Filter the project(s) by project name(s).',
                     type: 'array'
                 })
                 .option('logLevel', {
                     describe: 'Logging level for output information.',
-                    // type: 'string'
                     choices: ['debug', 'info', 'warn', 'error', 'disable']
-                })
-                .option('verbose', {
-                    describe: 'Shortcut flag to set logLevel to `debug`.',
-                    type: 'boolean'
                 })
                 .option('watch', {
                     describe: 'Run in watch mode.',
