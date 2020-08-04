@@ -8,8 +8,7 @@ export interface TestConfigInternal extends TestConfig {
     _projectName: string;
     _projectRoot: string;
     _packageJson: PackageJsonLike | null;
-
-    _entryFilePath: string | null;
+    _testIndexFilePath: string | null;
     _tsConfigPath: string | null;
     _karmaConfigPath: string | null;
 }
