@@ -10,11 +10,6 @@ export interface SharedCommandOptions {
     environment?: { [key: string]: boolean | string };
 
     /**
-     * Shortcut flag to set environment to `production`.
-     */
-    prod?: boolean;
-
-    /**
      * Filter the project(s) by project name(s).
      */
     filter?: string | string[];
@@ -22,12 +17,7 @@ export interface SharedCommandOptions {
     /**
      * Logging level for output information.
      */
-    logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none';
-
-    /**
-     * Shortcut flag to set logLevel to `debug`.
-     */
-    verbose?: boolean;
+    logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none' | 'disable';
 
     /**
      * Run in watch mode.
