@@ -1,4 +1,4 @@
-import { dashCaseToCamelCase } from './dash-case-to-camel-case';
+import { dashCaseToCamelCase } from '../utils';
 
 const predefinedUmdIds: { [key: string]: string } = {
     moment: 'moment',
