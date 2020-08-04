@@ -1,21 +1,17 @@
 import * as path from 'path';
 
-import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 
-import { SharedCommandOptions, WorkflowConfig, WorkflowConfigInternal } from '../models';
-import { LoggerBase, findUp, readJsonWithComments } from '../utils';
+import { SharedCommandOptions, WorkflowConfigInternal } from '../models';
+import { findUp } from '../utils';
 
 import { detectWorkflowConfig } from './detect-workflow-config';
-import { getCachedWorkflowConfigSchema } from './get-cached-workflow-config-schema';
+import { readWorkflowConfig } from './read-workflow-config';
 import { toWorkflowConfigInternal } from './to-workflow-config-internal';
-
-const ajv = new Ajv();
 
 export async function getWorkflowConfig(
     commandOptions: SharedCommandOptions,
-    taskName: 'build' | 'test',
-    customLogger: LoggerBase | null
+    taskName: 'build' | 'test'
 ): Promise<WorkflowConfigInternal> {
     let foundConfigPath: string | null = null;
     if (commandOptions.workflow && commandOptions.workflow !== 'auto') {
@@ -33,16 +29,7 @@ export async function getWorkflowConfig(
     }
 
     if (foundConfigPath) {
-        const workflowConfig = (await readJsonWithComments(foundConfigPath)) as WorkflowConfig;
-        const schema = await getCachedWorkflowConfigSchema();
-        if (!ajv.getSchema('workflowSchema')) {
-            ajv.addSchema(schema, 'workflowSchema');
-        }
-        const valid = ajv.validate('workflowSchema', workflowConfig);
-        if (!valid) {
-            throw new Error(`Invalid workflow configuration. ${ajv.errorsText()}`);
-        }
-
+        const workflowConfig = await readWorkflowConfig(foundConfigPath);
         const workspaceRoot = path.extname(foundConfigPath) ? path.dirname(foundConfigPath) : foundConfigPath;
         return toWorkflowConfigInternal(workflowConfig, foundConfigPath, workspaceRoot);
     } else {
@@ -50,7 +37,7 @@ export async function getWorkflowConfig(
             throw new Error(`Workflow configuration file could not be detected.`);
         }
 
-        const workflowConfig = await detectWorkflowConfig(commandOptions, taskName, customLogger);
+        const workflowConfig = await detectWorkflowConfig(taskName);
 
         if (workflowConfig == null) {
             throw new Error(`Workflow configuration could not be detected automatically.`);
