@@ -17,7 +17,7 @@ import { prepareAssetEntries } from './prepare-asset-entries';
 import { prepareBannerText } from './prepare-banner-text';
 import { prepareScripts } from './prepare-scripts';
 import { prepareStyles } from './prepare-styles';
-import { getCachedPackageJson } from './get-cached-package-json';
+import { readPackageJson } from './read-package-json';
 
 const versionPlaceholderRegex = /0\.0\.0-PLACEHOLDER/i;
 
@@ -38,12 +38,12 @@ export async function toBuildActionInternal(
     if (!packageJsonPath) {
         throw new Error('Could not detect package.json file.');
     }
-    const packageJson = await getCachedPackageJson(packageJsonPath);
+    const packageJson = await readPackageJson(packageJsonPath);
 
     const rootPackageJsonPath = await findPackageJsonPath(null, workspaceRoot);
     let rootPackageJson: PackageJsonLike | null = null;
     if (rootPackageJsonPath) {
-        rootPackageJson = await getCachedPackageJson(rootPackageJsonPath);
+        rootPackageJson = await readPackageJson(rootPackageJsonPath);
     }
 
     const packageName = packageJson.name;
