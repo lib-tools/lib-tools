@@ -3,12 +3,14 @@ import * as http from 'http';
 import { ConfigOptions as KarmaConfigOptions } from 'karma';
 import * as webpack from 'webpack';
 import * as webpackDevMiddleware from 'webpack-dev-middleware';
+import * as yargs from 'yargs';
 
-import { getWebpackTestConfigFromKarma } from '../webpack/configs';
+import { getTestConfigFromKarma } from '../helpers';
+import { LogLevelString, Logger, LoggerBase } from '../utils';
+
+import { getWebpackTestConfig } from '../webpack/configs';
 import { FailureKarmaWebpackPlugin } from '../webpack/plugins/failure-karma-webpack-plugin';
 import { TurnOffWatchWebpackPlugin } from '../webpack/plugins/turn-off-watch-webpack-plugin';
-
-import { Logger, LoggerBase } from '../utils';
 
 export interface PluginOptions extends KarmaConfigOptions {
     configFile: string;
@@ -55,12 +57,29 @@ const init = async (
     },
     customFileHandlers: { urlRegex: RegExp; handler: NextHandleFunction }[]
 ) => {
-    const logger = config.logger || new Logger({ logLevel: 'info' });
-
-    config.reporters = config.reporters || [];
-    if (config.codeCoverage && !config.reporters.includes('coverage-istanbul')) {
-        config.reporters.push('coverage-istanbul');
+    let logLevel: LogLevelString = 'info';
+    if (config.logLevel != null) {
+        if (
+            config.logLevel === 'debug' ||
+            config.logLevel === 'info' ||
+            config.logLevel === 'warn' ||
+            config.logLevel === 'error'
+        ) {
+            logLevel = config.logLevel;
+        } else {
+            logLevel = 'none';
+        }
     }
+
+    const logger = config.logger || new Logger({ logLevel });
+
+    config.customContextFile = `${__dirname}/karma-context.html`;
+    config.customDebugFile = `${__dirname}/karma-debug.html`;
+
+    config.beforeMiddleware = config.beforeMiddleware || [];
+    config.beforeMiddleware.push('lib-tools--blocker');
+    config.middleware = config.middleware || [];
+    config.middleware.push('lib-tools--fallback');
 
     const webpackMiddlewareConfig: webpackDevMiddleware.Options = {
         logLevel: 'error',
@@ -78,11 +97,44 @@ const init = async (
 
     let webpackConfig: webpack.Configuration;
 
-    // From lib cli
     if (config.webpackConfig) {
         webpackConfig = config.webpackConfig;
     } else {
-        webpackConfig = await getWebpackTestConfigFromKarma(config);
+        const args =
+            process.argv.length > 4 && /(\\|\/)?karma(\.js)?$/i.test(process.argv[1]) ? process.argv.slice(4) : [];
+        const commandOptions = yargs
+            .option('browsers', {
+                type: 'string'
+            })
+            .option('reporters', {
+                type: 'string'
+            })
+            .option('codeCoverage', {
+                type: 'boolean'
+            })
+            .option('codeCoverageExclude', {
+                type: 'string'
+            })
+            .parse(args);
+
+        const testConfig = await getTestConfigFromKarma(config, commandOptions);
+        if (!testConfig) {
+            throw new Error('Could not load workflow test config.');
+        }
+
+        if (commandOptions.codeCoverage == null && testConfig.codeCoverage != null) {
+            config.codeCoverage = testConfig.codeCoverage;
+        }
+
+        if (commandOptions.reporters == null && testConfig.reporters != null) {
+            config.reporters = testConfig.reporters;
+        }
+
+        if (commandOptions.browsers == null && testConfig.browsers != null) {
+            config.browsers = testConfig.browsers;
+        }
+
+        webpackConfig = await getWebpackTestConfig(testConfig, commandOptions);
     }
 
     webpackConfig.plugins = webpackConfig.plugins || [];
@@ -92,19 +144,16 @@ const init = async (
         webpackConfig.plugins.unshift(new TurnOffWatchWebpackPlugin());
     }
 
+    config.reporters = config.reporters || [];
+    if (config.codeCoverage && !config.reporters.includes('coverage-istanbul')) {
+        config.reporters.push('coverage-istanbul');
+    }
+
     function unblock(): void {
         isBlocked = false;
         blocked.forEach((cb) => cb());
         blocked = [];
     }
-
-    config.customContextFile = `${__dirname}/karma-context.html`;
-    config.customDebugFile = `${__dirname}/karma-debug.html`;
-
-    config.beforeMiddleware = config.beforeMiddleware || [];
-    config.beforeMiddleware.push('lib-tools--blocker');
-    config.middleware = config.middleware || [];
-    config.middleware.push('lib-tools--fallback');
 
     let compiler: webpack.Compiler;
     try {
