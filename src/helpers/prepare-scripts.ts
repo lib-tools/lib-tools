@@ -16,12 +16,11 @@ import {
     ScriptTargetString,
     TsConfigInfo
 } from '../models';
-import { isInFolder, isSamePaths, normalizePath } from '../utils';
+import { dashCaseToCamelCase, isInFolder, isSamePaths, normalizePath } from '../utils';
 
-import { dashCaseToCamelCase } from './dash-case-to-camel-case';
 import { detectTsEntryName } from './detect-ts-entry-name';
 import { findBuildTsconfigFile } from './find-build-tsconfig-file';
-import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
+import { readTsconfigJson } from './read-tsconfig-json';
 import { addPredefinedUmdIds, getUmdGlobalVariable } from './umd-ids';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
 import { toTsScriptTarget } from './to-ts-script-target';
@@ -51,7 +50,7 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
     }
 
     if (tsConfigPath) {
-        const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
+        const tsConfigJson = readTsconfigJson(tsConfigPath);
         const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
         tsConfigInfo = {
             tsConfigPath,
