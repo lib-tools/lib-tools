@@ -1,17 +1,11 @@
 import * as path from 'path';
 
-import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 
-import { ProjectConfigInternal, ProjectConfigStandalone, WorkflowConfig } from '../models';
+import { ProjectConfigInternal } from '../models';
 
-import { readJsonWithComments } from '../utils';
-
-import { getCachedProjectConfigSchema } from './get-cached-project-config-schema';
-import { getCachedWorkflowConfigSchema } from './get-cached-workflow-config-schema';
+import { readWorkflowConfig } from './read-workflow-config';
 import { toWorkflowConfigInternal } from './to-workflow-config-internal';
-
-const ajv = new Ajv();
 
 export async function applyProjectExtends(
     projectConfig: ProjectConfigInternal,
@@ -73,10 +67,6 @@ async function applyProjectExtendsInternal(
         delete clonedBaseProject._config;
     }
 
-    if ((clonedBaseProject as ProjectConfigStandalone).$schema) {
-        delete (clonedBaseProject as ProjectConfigStandalone).$schema;
-    }
-
     const extendedConfig = { ...clonedBaseProject, ...projectConfig };
     Object.assign(projectConfig, extendedConfig);
 }
@@ -130,7 +120,7 @@ async function getBaseProjectConfigFromFile(
     const configErrorLocation = `projects[${projectConfig._projectName}].extends`;
 
     const parts = projectConfig.extends.split(':');
-    if (parts.length < 2 || parts.length > 3) {
+    if (parts.length !== 3) {
         throw new Error(
             `Error in extending project config. Invalid extends name, config location ${currentConfigFile} -> ${configErrorLocation}.`
         );
@@ -147,76 +137,35 @@ async function getBaseProjectConfigFromFile(
     }
 
     try {
-        const projectNameToExtend = parts.length === 3 ? parts[2] : null;
-        if (projectNameToExtend) {
-            const workflowConfig = (await readJsonWithComments(extendsFilePath)) as WorkflowConfig;
-            const foundBaseProject = workflowConfig.projects[projectNameToExtend];
-            if (!foundBaseProject) {
-                throw new Error(
-                    `Error in extending project config. No base project config exists with name '${projectNameToExtend}', config location ${currentConfigFile} -> ${configErrorLocation}.`
-                );
-            }
-
-            const skipValidate = extendsFilePath === rootConfigPath || extendsFilePath === projectConfig._config;
-            if (!skipValidate) {
-                if (workflowConfig.$schema) {
-                    delete workflowConfig.$schema;
-                }
-
-                const schema = await getCachedWorkflowConfigSchema();
-                if (!ajv.getSchema('workflowSchema')) {
-                    ajv.addSchema(schema, 'workflowSchema');
-                }
-                const valid = ajv.validate('workflowSchema', workflowConfig);
-                if (!valid) {
-                    throw new Error(`Error in extending project config. Invalid configuration:\n\n${ajv.errorsText()}`);
-                }
-            }
-
-            const workflowConfigInternal = toWorkflowConfigInternal(
-                workflowConfig,
-                extendsFilePath,
-                projectConfig._workspaceRoot
+        const projectNameToExtend = parts[2];
+        const workflowConfig = await readWorkflowConfig(extendsFilePath);
+        const foundBaseProject = workflowConfig.projects[projectNameToExtend];
+        if (!foundBaseProject) {
+            throw new Error(
+                `Error in extending project config. No base project config exists with name '${projectNameToExtend}', config location ${currentConfigFile} -> ${configErrorLocation}.`
             );
-            const foundBaseProjectInternal = workflowConfigInternal.projects[projectNameToExtend];
-
-            if (foundBaseProjectInternal._projectName === projectConfig._projectName) {
-                throw new Error(
-                    `Error in extending project config. Base project name must not be the same as current project name, config location ${currentConfigFile} -> ${configErrorLocation}.`
-                );
-            }
-
-            return {
-                ...foundBaseProjectInternal,
-                _config: extendsFilePath,
-                _workspaceRoot: projectConfig._workspaceRoot,
-                _projectName: projectConfig._projectName,
-                _projectRoot: projectConfig._projectRoot
-            };
-        } else {
-            // Standalone project config
-            const foundBaseProject = (await readJsonWithComments(extendsFilePath)) as ProjectConfigStandalone;
-            if (foundBaseProject.$schema) {
-                delete foundBaseProject.$schema;
-            }
-
-            const schema = await getCachedProjectConfigSchema();
-            if (!ajv.getSchema('projectSchema')) {
-                ajv.addSchema(schema, 'projectSchema');
-            }
-            const valid = ajv.validate('projectSchema', foundBaseProject);
-            if (!valid) {
-                throw new Error(`Error in extending project config. Invalid configuration:\n\n${ajv.errorsText()}`);
-            }
-
-            return {
-                ...foundBaseProject,
-                _config: extendsFilePath,
-                _workspaceRoot: projectConfig._workspaceRoot,
-                _projectName: projectConfig._projectName,
-                _projectRoot: projectConfig._projectRoot
-            };
         }
+
+        const workflowConfigInternal = toWorkflowConfigInternal(
+            workflowConfig,
+            extendsFilePath,
+            projectConfig._workspaceRoot
+        );
+        const foundBaseProjectInternal = workflowConfigInternal.projects[projectNameToExtend];
+
+        if (foundBaseProjectInternal._projectName === projectConfig._projectName) {
+            throw new Error(
+                `Error in extending project config. Base project name must not be the same as current project name, config location ${currentConfigFile} -> ${configErrorLocation}.`
+            );
+        }
+
+        return {
+            ...foundBaseProjectInternal,
+            _config: extendsFilePath,
+            _workspaceRoot: projectConfig._workspaceRoot,
+            _projectName: projectConfig._projectName,
+            _projectRoot: projectConfig._projectRoot
+        };
     } catch (err) {
         throw new Error(
             `Error in extending project config, could not read file '${extendsFilePath}'. Config location ${currentConfigFile} -> ${configErrorLocation}.`
