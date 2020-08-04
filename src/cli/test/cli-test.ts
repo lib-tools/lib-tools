@@ -98,16 +98,10 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         let testIndexFilePath: string | null = null;
         let codeCoverage: boolean | undefined;
 
-        if (argv.karmaConfig) {
-            karmaConfigPath = path.isAbsolute(argv.karmaConfig)
-                ? path.resolve(argv.karmaConfig)
-                : path.resolve(process.cwd(), argv.karmaConfig);
-        } else {
-            if (testConfig.karmaConfig) {
-                karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
-            } else if (projectConfigInternal._config !== 'auto') {
-                karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
-            }
+        if (testConfig.karmaConfig) {
+            karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
+        } else if (projectConfigInternal._config !== 'auto') {
+            karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
         }
 
         if (testConfig.tsConfig) {
