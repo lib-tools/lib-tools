@@ -29,10 +29,6 @@ export function getBuildCommand(cliPackageName: string, cliVersion: string): yar
                     describe:
                         'Environment name to override the task configuration with `envOverrides[environment]` options.'
                 })
-                .option('prod', {
-                    describe: 'Shortcut flag to set environment to `production`.',
-                    type: 'boolean'
-                })
                 .option('filter', {
                     describe: 'Filter the project(s) by project name(s).',
                     type: 'array'
@@ -41,10 +37,6 @@ export function getBuildCommand(cliPackageName: string, cliVersion: string): yar
                     describe: 'Logging level for output information.',
                     // type: 'string'
                     choices: ['debug', 'info', 'warn', 'error', 'disable']
-                })
-                .option('verbose', {
-                    describe: 'Shortcut flag to set logLevel to `debug`.',
-                    type: 'boolean'
                 })
                 .option('watch', {
                     describe: 'Run in watch mode.',
