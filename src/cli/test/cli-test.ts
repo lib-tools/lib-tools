@@ -8,11 +8,11 @@ import {
     applyProjectExtends,
     findKarmaConfigFile,
     findPackageJsonPath,
-    findTestEntryFile,
+    findTestIndexFile,
     findTestTsconfigFile,
-    getCachedPackageJson,
     getEnvironment,
-    getWorkflowConfig
+    getWorkflowConfig,
+    readPackageJson
 } from '../../helpers';
 import { PackageJsonLike, ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
 import { Logger, LoggerBase, normalizePath } from '../../utils';
@@ -44,7 +44,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         logLevel
     });
 
-    const workflowConfig = await getWorkflowConfig(argv, 'test', logger);
+    const workflowConfig = await getWorkflowConfig(argv, 'test');
     const filteredProjectNames: string[] = [];
 
     if (argv.filter) {
@@ -95,7 +95,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
 
         let karmaConfigPath: string | null = null;
         let tsConfigPath: string | null = null;
-        let entryFilePath: string | null = null;
+        let testIndexFilePath: string | null = null;
         let codeCoverage: boolean | undefined;
 
         if (argv.karmaConfig) {
@@ -116,10 +116,10 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
         }
 
-        if (testConfig.entry) {
-            entryFilePath = path.resolve(projectRoot, testConfig.entry);
+        if (testConfig.testIndexFile) {
+            testIndexFilePath = path.resolve(projectRoot, testConfig.testIndexFile);
         } else if (projectConfigInternal._config !== 'auto') {
-            entryFilePath = await findTestEntryFile(projectRoot, workspaceRoot, tsConfigPath);
+            testIndexFilePath = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
         }
 
         if (argv.codeCoverage != null) {
@@ -133,7 +133,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
 
         const packageJsonPath = await findPackageJsonPath(projectRoot, workspaceRoot);
         if (packageJsonPath) {
-            packageJson = await getCachedPackageJson(packageJsonPath);
+            packageJson = await readPackageJson(packageJsonPath);
         }
 
         const testConfigInternal: TestConfigInternal = {
@@ -144,7 +144,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             _projectName: projectConfigInternal._projectName,
 
             _packageJson: packageJson,
-            _entryFilePath: entryFilePath,
+            _testIndexFilePath: testIndexFilePath,
             _tsConfigPath: tsConfigPath,
             _karmaConfigPath: karmaConfigPath
         };
