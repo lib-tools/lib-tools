@@ -1,40 +1,25 @@
 import * as path from 'path';
 import { promisify } from 'util';
 
-import * as Ajv from 'ajv';
 import { pathExists } from 'fs-extra';
 import * as glob from 'glob';
 
 const globAsync = promisify(glob);
 
-import {
-    BuildConfig,
-    ProjectConfigInternal,
-    SharedCommandOptions,
-    TestConfig,
-    TsConfigInfo,
-    WorkflowConfig,
-    WorkflowConfigInternal
-} from '../models';
-import { Logger, LoggerBase, normalizePath, readJsonWithComments } from '../utils';
+import { BuildConfig, ProjectConfigInternal, TestConfig, TsConfigInfo, WorkflowConfigInternal } from '../models';
+import { normalizePath } from '../utils';
 
+import { detectTsEntryName } from './detect-ts-entry-name';
 import { findBuildTsconfigFile } from './find-build-tsconfig-file';
-import { findTestEntryFile } from './find-test-entry-file';
+import { findTestIndexFile } from './find-test-index-file';
 import { findTestTsconfigFile } from './find-test-tsconfig-file';
 import { findKarmaConfigFile } from './find-karma-config-file';
-import { detectTsEntryName } from './detect-ts-entry-name';
-import { getCachedTsconfigJson } from './get-cached-tsconfig-json';
-import { getCachedWorkflowConfigSchema } from './get-cached-workflow-config-schema';
-import { getCachedPackageJson } from './get-cached-package-json';
 import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
+import { readTsconfigJson } from './read-tsconfig-json';
+import { readPackageJson } from './read-package-json';
+import { readWorkflowConfig } from './read-workflow-config';
 
-const ajv = new Ajv();
-
-export async function detectWorkflowConfig(
-    commandOptions: SharedCommandOptions,
-    taskName: 'build' | 'test',
-    customLogger: LoggerBase | null
-): Promise<WorkflowConfigInternal | null> {
+export async function detectWorkflowConfig(taskName: 'build' | 'test'): Promise<WorkflowConfigInternal | null> {
     const foundPackageJsonPaths = await globAsync(
         '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
         {
@@ -51,27 +36,10 @@ export async function detectWorkflowConfig(
 
     const projects: ProjectConfigInternal[] = [];
 
-    const logger =
-        customLogger ||
-        new Logger({
-            logLevel: commandOptions.logLevel ? commandOptions.logLevel : 'info'
-        });
-
     for (const packageJsonPath of foundPackageJsonPaths) {
         const workflowConfigPath = path.resolve(path.dirname(packageJsonPath), 'workflow.json');
         if (await pathExists(workflowConfigPath)) {
-            const workflowConfig = (await readJsonWithComments(workflowConfigPath)) as WorkflowConfig;
-            const schema = await getCachedWorkflowConfigSchema();
-            if (!ajv.getSchema('workflowSchema')) {
-                ajv.addSchema(schema, 'workflowSchema');
-            }
-
-            const valid = ajv.validate('workflowSchema', workflowConfig);
-            if (!valid) {
-                logger.warn(`Workflow config file is found at ${workflowConfigPath} but configuration is invalid.`);
-                continue;
-            }
-
+            const workflowConfig = await readWorkflowConfig(workflowConfigPath);
             const workspaceRoot = path.dirname(workflowConfigPath);
             const keys = Object.keys(workflowConfig.projects);
             for (const key of keys) {
@@ -93,7 +61,7 @@ export async function detectWorkflowConfig(
                 projects.push(projectInternal);
             }
         } else {
-            const packageJson = await getCachedPackageJson(packageJsonPath);
+            const packageJson = await readPackageJson(packageJsonPath);
             const packageName = packageJson.name;
             if (!packageName) {
                 continue;
@@ -169,7 +137,7 @@ async function detectBuildConfig(
         return null;
     }
 
-    const tsConfigJson = getCachedTsconfigJson(tsConfigPath);
+    const tsConfigJson = readTsconfigJson(tsConfigPath);
     const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
     const tsConfigInfo: TsConfigInfo = {
         tsConfigPath,
@@ -191,17 +159,17 @@ async function detectBuildConfig(
 
 async function detectTestConfig(workspaceRoot: string, projectRoot: string): Promise<TestConfig | null> {
     const tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
-    const entryFilePath = await findTestEntryFile(projectRoot, workspaceRoot, tsConfigPath);
+    const testIndexFile = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
 
     const karmaConfigFilePath = await findKarmaConfigFile(projectRoot, workspaceRoot);
 
-    if (!karmaConfigFilePath && !entryFilePath) {
+    if (!karmaConfigFilePath && !testIndexFile) {
         return null;
     }
 
     return {
         tsConfig: tsConfigPath ? path.relative(projectRoot, tsConfigPath) : undefined,
-        entry: entryFilePath ? path.relative(projectRoot, entryFilePath) : undefined,
+        testIndexFile: testIndexFile ? path.relative(projectRoot, testIndexFile) : undefined,
         karmaConfig: karmaConfigFilePath ? path.relative(projectRoot, karmaConfigFilePath) : undefined,
         codeCoverageExclude: ['**/test.ts', '**/index.ts', '**/public_api.ts'],
         envOverrides: {
