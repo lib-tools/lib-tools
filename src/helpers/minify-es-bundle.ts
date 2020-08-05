@@ -2,14 +2,12 @@ import * as path from 'path';
 
 import { existsSync, readFile, writeFile } from 'fs-extra';
 import { ECMA, SourceMapOptions, minify } from 'terser';
-import { LoggerBase } from '../utils';
 
 export async function minifyESBundle(
     inputPath: string,
     outputPath: string,
     sourceMap: boolean | null | undefined,
-    ecma: ECMA | undefined,
-    logger: LoggerBase
+    ecma: ECMA | undefined
 ): Promise<void> {
     const content = await readFile(inputPath, 'utf-8');
     let sourceMapOptions: SourceMapOptions | boolean = false;
@@ -25,28 +23,28 @@ export async function minifyESBundle(
         };
     }
 
-    const result = minify(content, {
+    const result = await minify(content, {
         sourceMap: sourceMapOptions,
         parse: {
             ecma,
             bare_returns: true
-        },
-        warnings: false,
-        output: {
-            // comments: /^\**!|@preserve|@license/
-            comments: 'some'
         }
+        // warnings: false,
+        // output: {
+        //     // comments: /^\**!|@preserve|@license/
+        //     comments: 'some'
+        // }
     });
 
-    if (result.error) {
-        throw result.error;
-    }
+    // if (result.error) {
+    //     throw result.error;
+    // }
 
-    if (result.warnings) {
-        result.warnings.forEach((warning) => {
-            logger.warn(warning);
-        });
-    }
+    // if (result.warnings) {
+    //     result.warnings.forEach((warning) => {
+    //         logger.warn(warning);
+    //     });
+    // }
 
     await writeFile(outputPath, result.code);
     if (sourceMap && result.map) {
