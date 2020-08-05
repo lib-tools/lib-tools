@@ -30,6 +30,10 @@ export function getTestCommand(cliPackageName: string, cliVersion: string): yarg
                     describe: 'A list of minimatch pattern to exclude files from code coverage report.',
                     type: 'string'
                 })
+                .option('singleRun', {
+                    describe: 'If true, test runner will stop watching and exit when run completed.',
+                    type: 'boolean'
+                })
                 // Shared command options
                 .option('workflow', {
                     describe:
@@ -48,10 +52,6 @@ export function getTestCommand(cliPackageName: string, cliVersion: string): yarg
                 .option('logLevel', {
                     describe: 'Logging level for output information.',
                     choices: ['debug', 'info', 'warn', 'error', 'disable']
-                })
-                .option('watch', {
-                    describe: 'Run in watch mode.',
-                    type: 'boolean'
                 })
                 .option('h', {
                     alias: 'help',
