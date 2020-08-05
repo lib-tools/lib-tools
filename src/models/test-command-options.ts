@@ -20,4 +20,9 @@ export interface TestCommandOptions extends SharedCommandOptions {
      * A list of minimatch pattern to exclude files from code coverage report.
      */
     codeCoverageExclude?: string | string[];
+
+    /**
+     * If true, test runner will stop watching and exit when run completed.
+     */
+    singleRun?: boolean;
 }
