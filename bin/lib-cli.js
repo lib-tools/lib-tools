@@ -92,9 +92,7 @@ async function main() {
         }
 
         process.exitCode = resultCode;
-        if (resultCode !== 0) {
-            exit(resultCode);
-        }
+        exit(resultCode);
     } catch (err) {
         process.exitCode = -1;
         console.error(err);
