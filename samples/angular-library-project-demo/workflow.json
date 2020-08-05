@@ -8,6 +8,13 @@
           "script": {
             "compilations": "auto"
           }
+        },
+        "test": {
+          "envOverrides": {
+            "ci": {
+              "singleRun": true
+            }
+          }
         }
       }
     },
