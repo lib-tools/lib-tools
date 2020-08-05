@@ -80,6 +80,10 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 : argv.browsers.split(',').filter((n) => n.trim().length > 0);
         }
 
+        if (argv.singleRun != null) {
+            testConfig.singleRun = argv.singleRun;
+        }
+
         let defaultKarmaOptions: Partial<KarmaConfigOptions> = {};
         if (testConfig._karmaConfigPath) {
             const karmaConfig = (karma.config.parseConfig(
@@ -94,6 +98,10 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             }
             if (karmaConfig.browsers && karmaConfig.browsers.length > 0 && !testConfig.browsers) {
                 testConfig.browsers = karmaConfig.browsers;
+            }
+
+            if (karmaConfig.singleRun != null && testConfig.singleRun == null) {
+                testConfig.singleRun = karmaConfig.singleRun;
             }
         } else {
             defaultKarmaOptions = {
@@ -165,8 +173,8 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             logLevel: argv.logLevel ? argv.logLevel : 'info'
         };
 
-        if (argv.watch != null) {
-            karmaOptions.singleRun = !argv.watch;
+        if (testConfig.singleRun != null) {
+            karmaOptions.singleRun = testConfig.singleRun;
         }
 
         if (testConfig.browsers) {
