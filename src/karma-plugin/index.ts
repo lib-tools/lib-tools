@@ -6,7 +6,7 @@ import * as webpackDevMiddleware from 'webpack-dev-middleware';
 import * as yargs from 'yargs';
 
 import { getTestConfigFromKarma } from '../helpers';
-import { LogLevelString, Logger, LoggerBase } from '../utils';
+import { Logger } from '../utils';
 
 import { getWebpackTestConfig } from '../webpack/configs';
 import { FailureKarmaWebpackPlugin } from '../webpack/plugins/failure-karma-webpack-plugin';
@@ -16,7 +16,6 @@ export interface PluginOptions extends KarmaConfigOptions {
     configFile: string;
     webpackConfig?: webpack.Configuration;
     codeCoverage?: boolean;
-    logger?: LoggerBase;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,21 +56,21 @@ const init = async (
     },
     customFileHandlers: { urlRegex: RegExp; handler: NextHandleFunction }[]
 ) => {
-    let logLevel: LogLevelString = 'info';
-    if (config.logLevel != null) {
-        if (
-            config.logLevel === 'debug' ||
-            config.logLevel === 'info' ||
-            config.logLevel === 'warn' ||
-            config.logLevel === 'error'
-        ) {
-            logLevel = config.logLevel;
-        } else {
-            logLevel = 'none';
-        }
-    }
+    // let logLevel: LogLevelString = 'info';
+    // if (config.logLevel != null) {
+    //     if (
+    //         config.logLevel === 'debug' ||
+    //         config.logLevel === 'info' ||
+    //         config.logLevel === 'warn' ||
+    //         config.logLevel === 'error'
+    //     ) {
+    //         logLevel = config.logLevel;
+    //     } else {
+    //         logLevel = 'none';
+    //     }
+    // }
 
-    const logger = config.logger || new Logger({ logLevel });
+    const logger = new Logger({ logLevel: 'info' });
 
     config.customContextFile = `${__dirname}/karma-context.html`;
     config.customDebugFile = `${__dirname}/karma-debug.html`;
@@ -102,7 +101,8 @@ const init = async (
     } else {
         const args =
             process.argv.length > 4 && /(\\|\/)?karma(\.js)?$/i.test(process.argv[1]) ? process.argv.slice(4) : [];
-        const commandOptions = yargs
+
+        const commandOptions = yargs(args)
             .option('browsers', {
                 type: 'string'
             })
@@ -114,8 +114,7 @@ const init = async (
             })
             .option('codeCoverageExclude', {
                 type: 'string'
-            })
-            .parse(args);
+            }).argv;
 
         const testConfig = await getTestConfigFromKarma(config, commandOptions);
         if (!testConfig) {
