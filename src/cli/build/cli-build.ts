@@ -2,7 +2,7 @@ import * as webpack from 'webpack';
 
 import { BuildCommandOptions } from '../../models';
 import { runWebpack } from '../../helpers';
-import { LogLevelString, Logger } from '../../utils';
+import { Logger } from '../../utils';
 
 import { getWebpackBuildConfig } from '../../webpack/configs';
 
@@ -23,8 +23,7 @@ export async function cliBuild(argv: BuildCommandOptions & { [key: string]: unkn
         delete argv.env;
     }
 
-    const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
-    const logLevel = verbose ? 'debug' : argv.logLevel ? (argv.logLevel as LogLevelString) : 'info';
+    const logLevel = argv.logLevel ? argv.logLevel : 'info';
     const logger = new Logger({
         logLevel
     });
