@@ -50,6 +50,11 @@ export interface TestConfigBase {
     vendorSourceMap?: boolean;
 
     /**
+     * If true, test runner will stop watching and exit when run completed.
+     */
+    singleRun?: boolean;
+
+    /**
      * Set true to skip the task.
      */
     skip?: boolean;
