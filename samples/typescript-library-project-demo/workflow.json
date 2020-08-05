@@ -39,8 +39,21 @@
         },
         "test": {
           "karmaConfig": "karma.conf.js",
-          "entry": "test/test.ts",
-          "tsConfig": "tsconfig.test.json"
+          "testIndexFile": "test/test.ts",
+          "tsConfig": "tsconfig.test.json",
+          "envOverrides": {
+            "ci": {
+              "reporters": ["progress", "kjhtml", "coverage-istanbul"],
+              "codeCoverageExclude": [
+                "**/test.ts",
+                "**/index.ts",
+                "**/public_api.ts"
+              ],
+              "browsers": [
+                "ChromeHeadlessCI"
+              ]
+            }
+          }
         }
       }
     },
