@@ -28,8 +28,7 @@ export async function performScriptBundles(buildConfig: BuildConfigInternal, log
                 bundleOptions._outputFilePath,
                 minFilePath,
                 bundleOptions.sourceMap,
-                bundleOptions._ecma,
-                logger
+                bundleOptions._ecma
             );
         }
     }
