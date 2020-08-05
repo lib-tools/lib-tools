@@ -238,8 +238,7 @@ async function afterTsTranspileTask(
                     bundleOptions._outputFilePath,
                     minFilePath,
                     bundleOptions.sourceMap,
-                    bundleOptions._ecma,
-                    logger
+                    bundleOptions._ecma
                 );
             }
         }
