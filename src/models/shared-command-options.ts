@@ -18,9 +18,4 @@ export interface SharedCommandOptions {
      * Logging level for output information.
      */
     logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'none' | 'disable';
-
-    /**
-     * Run in watch mode.
-     */
-    watch?: boolean;
 }
