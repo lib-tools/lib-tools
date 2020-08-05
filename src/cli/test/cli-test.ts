@@ -14,15 +14,20 @@ import {
     getWorkflowConfig,
     readPackageJson
 } from '../../helpers';
-import { PackageJsonLike, ProjectConfigInternal, TestCommandOptions, TestConfigInternal } from '../../models';
-import { Logger, LoggerBase, normalizePath } from '../../utils';
+import {
+    PackageJsonLike,
+    ProjectConfigInternal,
+    TestCommandOptions,
+    TestConfigInternal,
+    WorkflowConfigInternal
+} from '../../models';
+import { normalizePath } from '../../utils';
 import { getWebpackTestConfig } from '../../webpack/configs';
 
 export interface KarmaConfigOptions extends karma.ConfigOptions {
     webpackConfig: WebpackConfiguration;
     configFile: string | null;
     codeCoverage?: boolean;
-    logger: LoggerBase;
     coverageIstanbulReporter?: { [key: string]: unknown };
     junitReporter?: { [key: string]: unknown };
 }
@@ -38,117 +43,61 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         delete argv.env;
     }
 
-    const verbose = argv && typeof argv.verbose === 'boolean' ? argv.verbose : undefined;
-    const logLevel = verbose ? 'debug' : argv.logLevel ? argv.logLevel : 'info';
-    const logger = new Logger({
-        logLevel
-    });
-
     const workflowConfig = await getWorkflowConfig(argv, 'test');
-    const filteredProjectNames: string[] = [];
-
-    if (argv.filter) {
-        if (Array.isArray(argv.filter)) {
-            argv.filter
-                .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
-                .forEach((projectName) => {
-                    filteredProjectNames.push(projectName);
-                });
-        } else {
-            argv.filter
-                .split(',')
-                .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
-                .forEach((projectName) => {
-                    filteredProjectNames.push(projectName);
-                });
-        }
+    const filterNames =
+        argv.filter && Array.isArray(argv.filter)
+            ? argv.filter.filter((n) => n.trim().length > 0)
+            : (argv.filter || '').split(',').filter((n) => n.trim().length > 0);
+    const filteredTestConfigs = await getFilteredTestConfigs(workflowConfig, filterNames, environment);
+    if (!filteredTestConfigs.length) {
+        throw new Error('No workflow test config is available for testing.');
     }
 
-    const filteredProjectConfigs = Object.keys(workflowConfig.projects)
-        .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
-        .map((projectName) => workflowConfig.projects[projectName]);
-
-    let testedProjectCount = 0;
-
-    for (const projectConfig of filteredProjectConfigs) {
-        const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        if (projectConfigInternal._config !== 'auto') {
-            await applyProjectExtends(projectConfigInternal, workflowConfig.projects, projectConfig._config);
-        }
-
-        if (!projectConfigInternal.tasks || !projectConfigInternal.tasks.test) {
-            continue;
-        }
-
-        const testConfig = projectConfigInternal.tasks.test;
-
-        if (projectConfigInternal._config !== 'auto') {
-            applyEnvOverrides(testConfig, environment);
-        }
-
-        if (testConfig.skip) {
-            continue;
-        }
-
-        const workspaceRoot = projectConfigInternal._workspaceRoot;
-        const projectRoot = projectConfigInternal._projectRoot;
-
-        let karmaConfigPath: string | null = null;
-        let tsConfigPath: string | null = null;
-        let testIndexFilePath: string | null = null;
-        let codeCoverage: boolean | undefined;
-
-        if (testConfig.karmaConfig) {
-            karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
-        } else if (projectConfigInternal._config !== 'auto') {
-            karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
-        }
-
-        if (testConfig.tsConfig) {
-            tsConfigPath = path.resolve(projectRoot, testConfig.tsConfig);
-        } else if (projectConfigInternal._config !== 'auto') {
-            tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
-        }
-
-        if (testConfig.testIndexFile) {
-            testIndexFilePath = path.resolve(projectRoot, testConfig.testIndexFile);
-        } else if (projectConfigInternal._config !== 'auto') {
-            testIndexFilePath = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
-        }
-
+    for (const testConfig of filteredTestConfigs) {
         if (argv.codeCoverage != null) {
-            codeCoverage = argv.codeCoverage;
             testConfig.codeCoverage = argv.codeCoverage;
-        } else if (testConfig.codeCoverage != null) {
-            codeCoverage = testConfig.codeCoverage;
         }
 
-        let packageJson: PackageJsonLike | null = null;
-
-        const packageJsonPath = await findPackageJsonPath(projectRoot, workspaceRoot);
-        if (packageJsonPath) {
-            packageJson = await readPackageJson(packageJsonPath);
+        if (argv.codeCoverageExclude != null) {
+            testConfig.codeCoverageExclude = Array.isArray(argv.codeCoverageExclude)
+                ? argv.codeCoverageExclude.filter((n) => n.trim().length > 0)
+                : argv.codeCoverageExclude.split(',').filter((n) => n.trim().length > 0);
         }
 
-        const testConfigInternal: TestConfigInternal = {
-            ...testConfig,
-            _config: projectConfigInternal._config,
-            _workspaceRoot: workspaceRoot,
-            _projectRoot: projectRoot,
-            _projectName: projectConfigInternal._projectName,
+        if (argv.reporters != null) {
+            testConfig.reporters = Array.isArray(argv.reporters)
+                ? argv.reporters.filter((n) => n.trim().length > 0)
+                : argv.reporters.split(',').filter((n) => n.trim().length > 0);
 
-            _packageJson: packageJson,
-            _testIndexFilePath: testIndexFilePath,
-            _tsConfigPath: tsConfigPath,
-            _karmaConfigPath: karmaConfigPath
-        };
+            if (testConfig.reporters.includes('coverage-istanbul')) {
+                testConfig.codeCoverage = true;
+            }
+        }
 
-        const webpackConfig = await getWebpackTestConfig(testConfigInternal, argv);
+        if (argv.browsers != null) {
+            testConfig.browsers = Array.isArray(argv.browsers)
+                ? argv.browsers.filter((n) => n.trim().length > 0)
+                : argv.browsers.split(',').filter((n) => n.trim().length > 0);
+        }
 
-        let karmaDefaultOptions: Partial<KarmaConfigOptions> = {};
-        if (!karmaConfigPath) {
-            karmaDefaultOptions = {
-                basePath: projectRoot,
+        let defaultKarmaOptions: Partial<KarmaConfigOptions> = {};
+        if (testConfig._karmaConfigPath) {
+            const karmaConfig = (karma.config.parseConfig(
+                testConfig._karmaConfigPath,
+                {}
+            ) as unknown) as KarmaConfigOptions;
+            if (karmaConfig.reporters && karmaConfig.reporters.length > 0 && !testConfig.reporters) {
+                testConfig.reporters = karmaConfig.reporters;
+                if (testConfig.reporters.includes('coverage-istanbul')) {
+                    testConfig.codeCoverage = true;
+                }
+            }
+            if (karmaConfig.browsers && karmaConfig.browsers.length > 0 && !testConfig.browsers) {
+                testConfig.browsers = karmaConfig.browsers;
+            }
+        } else {
+            defaultKarmaOptions = {
+                basePath: testConfig._projectRoot,
                 frameworks: ['jasmine', 'lib-tools'],
                 plugins: [
                     require('karma-jasmine'),
@@ -159,34 +108,25 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                     require(path.resolve(__dirname, '../../karma-plugin'))
                 ],
                 client: {
-                    // leave Jasmine Spec Runner output visible in browser
                     clearContext: false
                 },
                 coverageIstanbulReporter: {
-                    dir: path.resolve(workspaceRoot, 'coverage', projectConfigInternal._projectName),
+                    dir: path.resolve(testConfig._workspaceRoot, 'coverage', testConfig._projectName),
                     reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
                     fixWebpackSourcePaths: true
-                    // thresholds: {
-                    //     statements: 80,
-                    //     lines: 80,
-                    //     branches: 80,
-                    //     functions: 80
-                    // }
                 },
-                reporters: codeCoverage ? ['progress', 'kjhtml', 'coverage-istanbul'] : ['progress', 'kjhtml'],
                 junitReporter: {
                     outputDir: normalizePath(
                         path.relative(
-                            projectRoot,
-                            path.resolve(workspaceRoot, `junit/${projectConfigInternal._projectName}`)
+                            testConfig._projectRoot,
+                            path.resolve(testConfig._workspaceRoot, `junit/${testConfig._projectName}`)
                         )
                     )
                 },
                 port: 9876,
                 colors: true,
-                logLevel: 'info',
+                logLevel: argv.logLevel ? argv.logLevel : 'info',
                 autoWatch: true,
-                browsers: ['Chrome'],
                 customLaunchers: {
                     ChromeHeadlessCI: {
                         base: 'ChromeHeadless',
@@ -195,67 +135,151 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 },
                 restartOnFileChange: true
             };
+
+            if (testConfig.reporters) {
+                defaultKarmaOptions.reporters = testConfig.reporters;
+            } else {
+                defaultKarmaOptions.reporters = testConfig.codeCoverage
+                    ? ['progress', 'junit', 'coverage-istanbul']
+                    : ['progress', 'kjhtml'];
+            }
+
+            if (testConfig.browsers) {
+                defaultKarmaOptions.browsers = testConfig.browsers;
+            } else {
+                if (environment.ci) {
+                    defaultKarmaOptions.browsers = ['ChromeHeadlessCI'];
+                } else {
+                    defaultKarmaOptions.browsers = ['Chrome'];
+                }
+            }
         }
 
+        const webpackConfig = await getWebpackTestConfig(testConfig, argv);
+
         const karmaOptions: KarmaConfigOptions = {
-            ...karmaDefaultOptions,
-            configFile: karmaConfigPath,
+            ...defaultKarmaOptions,
+            configFile: testConfig._karmaConfigPath,
             webpackConfig,
-            codeCoverage,
-            logger
+            codeCoverage: testConfig.codeCoverage,
+            logLevel: argv.logLevel ? argv.logLevel : 'info'
         };
 
         if (argv.watch != null) {
-            webpackConfig.watch = argv.watch;
             karmaOptions.singleRun = !argv.watch;
         }
 
-        if (argv.browsers) {
-            if (Array.isArray(argv.browsers)) {
-                karmaOptions.browsers = argv.browsers.filter((b) => b.length);
-            } else {
-                karmaOptions.browsers = argv.browsers.split(',').filter((b) => b.length);
-            }
-        } else if (testConfigInternal.browsers) {
-            karmaOptions.browsers = testConfigInternal.browsers;
+        if (testConfig.browsers) {
+            karmaOptions.browsers = testConfig.browsers;
         }
 
-        if (argv.reporters) {
-            if (Array.isArray(argv.reporters)) {
-                karmaOptions.reporters = argv.reporters.filter((r) => r.length);
-            } else {
-                karmaOptions.reporters = argv.reporters.split(',').filter((r) => r.length);
-            }
-        } else if (testConfigInternal.reporters) {
-            karmaOptions.reporters = testConfigInternal.reporters;
+        if (testConfig.reporters) {
+            karmaOptions.reporters = testConfig.reporters;
         }
 
-        ++testedProjectCount;
-
-        let karmaServerWithStop: { stop: () => Promise<void> } | undefined;
+        let karmaServer: karma.Server | undefined;
         const exitCode = await new Promise<number>((res) => {
-            const karmaServer = new karma.Server(karmaOptions, (serverCallback) => {
-                res(serverCallback);
+            karmaServer = new karma.Server(karmaOptions, (serverExitCode) => {
+                res(serverExitCode);
             });
-            karmaServerWithStop = (karmaServer as unknown) as { stop: () => Promise<void> };
 
             karmaServer.start();
-        });
+        }).then((serverExitCode) => {
+            if (karmaServer) {
+                const karmaServerWithStop = (karmaServer as unknown) as { stop: () => void };
+                if (typeof karmaServerWithStop.stop === 'function') {
+                    karmaServerWithStop.stop();
+                }
+            }
 
-        if (karmaServerWithStop && typeof karmaServerWithStop.stop === 'function') {
-            await karmaServerWithStop.stop();
-        }
+            return serverExitCode;
+        });
 
         if (exitCode !== 0) {
             return exitCode;
         }
     }
 
-    if (testedProjectCount < 1) {
-        logger.error('No project is available to test.');
+    return 0;
+}
 
-        return -1;
+async function getFilteredTestConfigs(
+    workflowConfig: WorkflowConfigInternal,
+    filterNames: string[],
+    environment: { [key: string]: boolean | string }
+): Promise<TestConfigInternal[]> {
+    const testConfigs: TestConfigInternal[] = [];
+    const projectNames = Object.keys(workflowConfig.projects);
+    for (const projectName of projectNames) {
+        if (filterNames.length && !filterNames.includes(projectName)) {
+            continue;
+        }
+
+        const projectConfig = JSON.parse(JSON.stringify(workflowConfig.projects[projectName])) as ProjectConfigInternal;
+
+        if (projectConfig._config !== 'auto') {
+            await applyProjectExtends(projectConfig, workflowConfig.projects, projectConfig._config);
+        }
+
+        if (!projectConfig.tasks || !projectConfig.tasks.test) {
+            continue;
+        }
+
+        const testConfig = projectConfig.tasks.test;
+
+        if (projectConfig._config !== 'auto') {
+            applyEnvOverrides(testConfig, environment);
+        }
+
+        if (testConfig.skip) {
+            continue;
+        }
+
+        const workspaceRoot = projectConfig._workspaceRoot;
+        const projectRoot = projectConfig._projectRoot;
+
+        let karmaConfigPath: string | null = null;
+        let tsConfigPath: string | null = null;
+        let testIndexFilePath: string | null = null;
+
+        if (testConfig.karmaConfig) {
+            karmaConfigPath = path.resolve(projectRoot, testConfig.karmaConfig);
+        } else if (projectConfig._config === 'auto') {
+            karmaConfigPath = await findKarmaConfigFile(projectRoot, workspaceRoot);
+        }
+
+        if (testConfig.tsConfig) {
+            tsConfigPath = path.resolve(projectRoot, testConfig.tsConfig);
+        } else {
+            tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
+        }
+
+        if (testConfig.testIndexFile) {
+            testIndexFilePath = path.resolve(projectRoot, testConfig.testIndexFile);
+        } else {
+            testIndexFilePath = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
+        }
+
+        let packageJson: PackageJsonLike | null = null;
+        const packageJsonPath = await findPackageJsonPath(projectRoot, workspaceRoot);
+        if (packageJsonPath) {
+            packageJson = await readPackageJson(packageJsonPath);
+        }
+
+        const testConfigInternal: TestConfigInternal = {
+            ...testConfig,
+            _config: projectConfig._config,
+            _workspaceRoot: workspaceRoot,
+            _projectRoot: projectRoot,
+            _projectName: projectConfig._projectName,
+            _packageJson: packageJson,
+            _testIndexFilePath: testIndexFilePath,
+            _tsConfigPath: tsConfigPath,
+            _karmaConfigPath: karmaConfigPath
+        };
+
+        testConfigs.push(testConfigInternal);
     }
 
-    return 0;
+    return testConfigs;
 }
