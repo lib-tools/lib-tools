@@ -66,7 +66,7 @@ export interface TestConfigBase {
  */
 export interface TestConfig extends TestConfigBase, OverridableConfig<TestConfigBase> {
     /**
-     * To override properties based on build environment.
+     * To override properties based on test environment.
      */
     envOverrides?: {
         [name: string]: Partial<TestConfigBase>;
