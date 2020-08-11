@@ -49,7 +49,10 @@
                 "**/index.ts",
                 "**/public_api.ts"
               ],
-              "reporters": ["junit", "coverage-istanbul"],
+              "reporters": [
+                "junit",
+                "coverage-istanbul"
+              ],
               "browsers": [
                 "ChromeHeadlessCI"
               ],
