@@ -26,5 +26,6 @@ jobs:
         npm ci
         npm run build
         npm run build:samples
+        npm run test:samples
       env:
         CI: true
