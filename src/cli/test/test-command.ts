@@ -22,10 +22,6 @@ export function getTestCommand(cliPackageName: string, cliVersion: string): yarg
                     describe: 'A list of reporters to use.',
                     type: 'array'
                 })
-                .option('codeCoverage', {
-                    describe: 'Output code coverage report.',
-                    type: 'boolean'
-                })
                 .option('codeCoverageExclude', {
                     describe: 'A list of minimatch pattern to exclude files from code coverage report.',
                     type: 'string'

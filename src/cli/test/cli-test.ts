@@ -27,7 +27,6 @@ import { getWebpackTestConfig } from '../../webpack/configs';
 export interface KarmaConfigOptions extends karma.ConfigOptions {
     webpackConfig: WebpackConfiguration;
     configFile: string | null;
-    codeCoverage?: boolean;
     coverageIstanbulReporter?: { [key: string]: unknown };
     junitReporter?: { [key: string]: unknown };
 }
@@ -54,10 +53,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
     }
 
     for (const testConfig of filteredTestConfigs) {
-        if (argv.codeCoverage != null) {
-            testConfig.codeCoverage = argv.codeCoverage;
-        }
-
         if (argv.codeCoverageExclude != null) {
             testConfig.codeCoverageExclude = Array.isArray(argv.codeCoverageExclude)
                 ? argv.codeCoverageExclude.filter((n) => n.trim().length > 0)
@@ -68,10 +63,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             testConfig.reporters = Array.isArray(argv.reporters)
                 ? argv.reporters.filter((n) => n.trim().length > 0)
                 : argv.reporters.split(',').filter((n) => n.trim().length > 0);
-
-            if (testConfig.reporters.includes('coverage-istanbul')) {
-                testConfig.codeCoverage = true;
-            }
         }
 
         if (argv.browsers != null) {
@@ -92,9 +83,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             ) as unknown) as KarmaConfigOptions;
             if (karmaConfig.reporters && karmaConfig.reporters.length > 0 && !testConfig.reporters) {
                 testConfig.reporters = karmaConfig.reporters;
-                if (testConfig.reporters.includes('coverage-istanbul')) {
-                    testConfig.codeCoverage = true;
-                }
             }
             if (karmaConfig.browsers && karmaConfig.browsers.length > 0 && !testConfig.browsers) {
                 testConfig.browsers = karmaConfig.browsers;
@@ -147,9 +135,11 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             if (testConfig.reporters) {
                 defaultKarmaOptions.reporters = testConfig.reporters;
             } else {
-                defaultKarmaOptions.reporters = testConfig.codeCoverage
-                    ? ['progress', 'junit', 'coverage-istanbul']
-                    : ['progress', 'kjhtml'];
+                if (environment.ci) {
+                    defaultKarmaOptions.reporters = ['junit', 'coverage-istanbul'];
+                } else {
+                    defaultKarmaOptions.reporters = ['progress', 'kjhtml'];
+                }
             }
 
             if (testConfig.browsers) {
@@ -169,7 +159,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             ...defaultKarmaOptions,
             configFile: testConfig._karmaConfigPath,
             webpackConfig,
-            codeCoverage: testConfig.codeCoverage,
             logLevel: argv.logLevel ? argv.logLevel : 'info'
         };
 
