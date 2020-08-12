@@ -15,7 +15,6 @@ import { TurnOffWatchWebpackPlugin } from '../webpack/plugins/turn-off-watch-web
 export interface PluginOptions extends KarmaConfigOptions {
     configFile: string;
     webpackConfig?: webpack.Configuration;
-    codeCoverage?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,9 +108,6 @@ const init = async (
             .option('reporters', {
                 type: 'string'
             })
-            .option('codeCoverage', {
-                type: 'boolean'
-            })
             .option('codeCoverageExclude', {
                 type: 'string'
             }).argv;
@@ -119,10 +115,6 @@ const init = async (
         const testConfig = await getTestConfigFromKarma(config, commandOptions);
         if (!testConfig) {
             throw new Error('Could not load workflow test config.');
-        }
-
-        if (commandOptions.codeCoverage == null && testConfig.codeCoverage != null) {
-            config.codeCoverage = testConfig.codeCoverage;
         }
 
         if (commandOptions.reporters == null && testConfig.reporters != null) {
@@ -141,11 +133,6 @@ const init = async (
     webpackConfig.watch = !config.singleRun;
     if (config.singleRun) {
         webpackConfig.plugins.unshift(new TurnOffWatchWebpackPlugin());
-    }
-
-    config.reporters = config.reporters || [];
-    if (config.codeCoverage && !config.reporters.includes('coverage-istanbul')) {
-        config.reporters.push('coverage-istanbul');
     }
 
     function unblock(): void {
