@@ -175,8 +175,7 @@ async function detectTestConfig(workspaceRoot: string, projectRoot: string): Pro
         envOverrides: {
             ci: {
                 browsers: ['ChromeHeadlessCI'],
-                reporters: ['progress', 'junit'],
-                codeCoverage: true
+                reporters: ['junit', 'coverage-istanbul']
             }
         }
     };

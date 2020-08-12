@@ -15,7 +15,6 @@ import { findUp, isInFolder, isSamePaths } from '../utils';
 
 export interface KarmaPluginOptions extends KarmaConfigOptions {
     configFile: string;
-    codeCoverage?: boolean;
 }
 
 export async function getTestConfigFromKarma(
@@ -147,12 +146,6 @@ export async function getTestConfigFromKarma(
 
     if (!testConfigInternal) {
         return null;
-    }
-
-    if (karmaConfig.codeCoverage != null) {
-        testConfigInternal.codeCoverage = karmaConfig.codeCoverage;
-    } else if (commandOptions.codeCoverage != null) {
-        testConfigInternal.codeCoverage = commandOptions.codeCoverage;
     }
 
     if (commandOptions.reporters != null) {
