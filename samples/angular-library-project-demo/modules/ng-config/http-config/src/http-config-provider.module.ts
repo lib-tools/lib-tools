@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ModuleWithProviders, NgModule } from '@angular/core';
 
 import { CONFIG_PROVIDER } from '@lib-tools-demo/ng-config';

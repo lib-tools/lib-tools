@@ -113,10 +113,13 @@ export class FirebaseRemoteConfigProvider implements ConfigProvider {
                     const nestedKeys = normalizedKey.split(doubleUnderscoreRegExp);
                     if (nestedKeys.length > 1 && isValidKeys(nestedKeys)) {
                         const firstKey = nestedKeys[0];
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         if (!mappedConfig[firstKey] || typeof mappedConfig[firstKey] !== 'object') {
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                             mappedConfig[firstKey] = {};
                         }
 
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         let accObj = mappedConfig[firstKey] as NestedConfigSection;
 
                         for (let i = 1; i < nestedKeys.length; i++) {
@@ -133,10 +136,12 @@ export class FirebaseRemoteConfigProvider implements ConfigProvider {
                             accObj = accObj[currentKey] as NestedConfigSection;
                         }
                     } else {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         mappedConfig[normalizedKey] = valueStr;
                     }
                 }
 
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return mappedConfig;
             })
         );

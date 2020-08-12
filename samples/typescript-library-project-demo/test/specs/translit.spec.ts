@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { TranslitRule, TranslitRuleItem, TranslitRulePhase, TranslitTraceItem, translit } from '../../src';
 
 describe('translit', () => {

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable max-classes-per-file */
 
 import { ApplicationInitStatus, Injectable } from '@angular/core';

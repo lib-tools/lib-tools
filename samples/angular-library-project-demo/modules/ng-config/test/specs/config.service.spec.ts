@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 // eslint-disable-next-line max-classes-per-file
 import { Injectable } from '@angular/core';
 import { TestBed } from '@angular/core/testing';

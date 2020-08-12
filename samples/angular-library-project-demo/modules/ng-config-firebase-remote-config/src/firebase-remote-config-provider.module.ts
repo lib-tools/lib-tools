@@ -14,6 +14,7 @@ import {
 @NgModule({
     providers: [
         {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             provide: CONFIG_PROVIDER,
             useClass: FirebaseRemoteConfigProvider,
             multi: true
