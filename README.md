@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
 [![Gitter](https://badges.gitter.im/lib-tools/community.svg)](https://gitter.im/lib-tools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-The `Lib Tools` helps you simplify the build/bundle, test and npm packaging workflows for common library project types such as Typescript/JavaScript library projects, Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool will automatically set up for you without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully configurable options!
+The `lib-tools` helps you simplify the build/bundle, test and npm packaging workflows for common library project types such as Typescript/JavaScript library projects, Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool will automatically set up for you without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully configurable options!
 
 ## Getting Started
 
