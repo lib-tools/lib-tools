@@ -35,7 +35,9 @@ export function getEnvironment(
     // ci override
     if (argv && typeof argv.ci === 'boolean') {
         environment.ci = argv.ci;
-    } else if (environment.ci == null && process.env.ci) {
+    } else if (argv && typeof argv.CI === 'boolean') {
+        environment.ci = argv.CI;
+    } else if (environment.ci == null && (process.env.ci || process.env.CI)) {
         environment.ci = true;
     }
 
