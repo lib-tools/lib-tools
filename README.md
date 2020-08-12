@@ -1,6 +1,7 @@
 # Lib Tools – Build, Test and NPM Package Workflows Make Easy
 
 [![GitHub Actions Status](https://github.com/lib-tools/lib-tools/workflows/Main%20Workflow/badge.svg)](https://github.com/lib-tools/lib-tools/actions)
+[![Azure Pipelines Status](https://dev.azure.com/lib-tools/lib-tools/_apis/build/status/lib-tools.lib-tools?branchName=master)](https://dev.azure.com/lib-tools/lib-tools/_build/latest?definitionId=1&branchName=master)
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
 [![Gitter](https://badges.gitter.im/lib-tools/community.svg)](https://gitter.im/lib-tools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
