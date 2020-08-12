@@ -70,3 +70,27 @@ jobs:
       - script: |
           npm run test:samples
         displayName: 'Run test samples'
+
+  - job: macOS
+      dependsOn:
+        - linux
+      condition: and(succeeded(), ne(variables['skipMacOSJob'], 'true'))
+      pool:
+        vmImage: 'macOS-latest'
+      steps:
+        - task: UseNode@1
+          inputs:
+            version: '12.x'
+          displayName: 'Use Node 12.x'
+        - script: |
+            npm ci
+          displayName: 'Install dependencies'
+        - script: |
+            npm run build
+          displayName: 'Run build'
+        - script: |
+            npm run build:samples
+          displayName: 'Run build samples'
+        - script: |
+            npm run test:samples
+          displayName: 'Run test samples'
