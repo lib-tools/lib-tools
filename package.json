@@ -45,7 +45,7 @@
     "generate-schemas": "node tools/generate-schemas.js",
     "copy-files": "node tools/copy-files.js",
     "show-help": "node -r source-map-support/register dist/bin/lib --help",
-    "build": "npm-run-all compile generate-schemas copy-files show-help",
+    "build": "npm run compile && npm run generate-schemas && npm run copy-files && npm run show-help",
     "build:samples": "npm-run build:sample:style-module-demo && npm run build:sample:typescript-library-project-demo && build:sample:angular-library-project-demo",
     "test:samples": "npm-run test:sample:style-module-demo && npm run test:sample:typescript-library-project-demo && test:sample:angular-library-project-demo",
     "build:sample:style-module-demo": "node -r source-map-support/register ./dist/bin/lib build --workflow=samples/style-module-demo/workflow.json --version=1.0.0",
