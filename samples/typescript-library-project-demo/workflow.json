@@ -43,7 +43,6 @@
           "tsConfig": "tsconfig.test.json",
           "envOverrides": {
             "ci": {
-              "codeCoverage": true,
               "codeCoverageExclude": [
                 "**/test.ts",
                 "**/index.ts",
