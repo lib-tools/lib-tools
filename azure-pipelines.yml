@@ -27,7 +27,7 @@ jobs:
         displayName: 'Run build samples'
       - script: |
           npm run test:samples
-      displayName: 'Run test samples'
+        displayName: 'Run test samples'
       - script: |
           npm run lint
         displayName: 'Run linting'
