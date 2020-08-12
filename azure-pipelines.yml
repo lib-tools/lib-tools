@@ -1,0 +1,96 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- master
+- refs/tags/v*
+
+jobs:
+  - job: basic
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: UseNode@1
+        inputs:
+          version: '12.x'
+        displayName: 'Use Node 12.x'
+      - script: |
+          npm ci
+        displayName: 'Install dependencies'
+      - script: |
+          npm run build
+        displayName: "Run build"
+      - script: |
+          npm run build:samples
+        displayName: 'Run build samples'
+      - script: |
+          npm run test:samples
+      displayName: 'Run test samples'
+      - script: |
+          npm run lint
+        displayName: 'Run linting'
+      - bash: |
+          verson=`node -p "require('./dist/package.json').version;"`
+          echo "##vso[task.setvariable variable=packageVersion]$verson"
+        displayName: 'Set package version variable'
+      - task: PublishPipelineArtifact@1
+        inputs:
+          artifactName: 'builds'
+          targetPath: 'dist'
+        displayName: 'Publish build artifacts'
+      - task: PublishPipelineArtifact@1
+        inputs:
+          artifactName: 'release-notes'
+          targetPath: 'release-notes/$(packageVersion)/'
+        condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'refs/tags/'))
+        displayName: 'Publish release notes'
+
+  - job: macOS
+    dependsOn:
+      - basic
+    condition: and(succeeded(), ne(variables['skipMacOSJob'], 'true'))
+    pool:
+      vmImage: 'macOS-latest'
+    steps:
+      - task: UseNode@1
+        inputs:
+          version: '12.x'
+        displayName: 'Use Node 12.x'
+      - script: |
+          npm ci
+        displayName: 'Install dependencies'
+      - script: |
+          npm run build
+        displayName: 'Run build'
+      - script: |
+          npm run build:samples
+        displayName: 'Run build samples'
+      - script: |
+          npm run test:samples
+        displayName: 'Run test samples'
+
+  - job: windows
+    dependsOn:
+      - basic
+    condition: and(succeeded(), ne(variables['skipWindowsJob'], 'true'))
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+      - task: UseNode@1
+        inputs:
+          version: '12.x'
+        displayName: 'Use Node 12.x'
+      - script: |
+          npm ci
+        displayName: 'Install dependencies'
+      - script: |
+          npm run build
+        displayName: 'Run build'
+      - script: |
+          npm run build:samples
+        displayName: 'Run build samples'
+      - script: |
+          npm run test:samples
+        displayName: 'Run test samples'
