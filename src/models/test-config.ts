@@ -35,11 +35,6 @@ export interface TestConfigBase {
     reporters?: string[];
 
     /**
-     * Output code coverage report.
-     */
-    codeCoverage?: boolean;
-
-    /**
      * A list of minimatch pattern to exclude files from code coverage report.
      */
     codeCoverageExclude?: string[];

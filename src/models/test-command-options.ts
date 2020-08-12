@@ -12,11 +12,6 @@ export interface TestCommandOptions extends SharedCommandOptions {
     reporters?: string | string[];
 
     /**
-     * Output code coverage report.
-     */
-    codeCoverage?: boolean;
-
-    /**
      * A list of minimatch pattern to exclude files from code coverage report.
      */
     codeCoverageExclude?: string | string[];
