@@ -128,7 +128,7 @@
     "prettier": "^2.0.5",
     "rxjs": "^6.6.2",
     "tsickle": "^0.39.1",
-    "typescript-json-schema": "^0.42.0",
+    "typescript-json-schema": "^0.43.0",
     "zone.js": "^0.11.1"
   }
 }
