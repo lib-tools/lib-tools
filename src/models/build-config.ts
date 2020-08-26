@@ -518,7 +518,7 @@ export interface ScriptOptions {
  */
 export interface BuildConfigBase {
     /**
-     * The output directory for build results. Default to `dist/packages/{package-name}`.
+     * The output directory for build results. Default to `[WorkspaceRoot]/dist/packages/[PackageName]`.
      */
     outputPath?: string;
 
