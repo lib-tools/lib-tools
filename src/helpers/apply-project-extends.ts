@@ -63,10 +63,6 @@ async function applyProjectExtendsInternal(
         delete clonedBaseProject.extends;
     }
 
-    if (clonedBaseProject._config) {
-        delete clonedBaseProject._config;
-    }
-
     const extendedConfig = { ...clonedBaseProject, ...projectConfig };
     Object.assign(projectConfig, extendedConfig);
 }
