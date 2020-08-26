@@ -15,6 +15,8 @@ import {
     readPackageJson
 } from '../../helpers';
 import {
+    CoverageIstanbulReporterOptions,
+    JunitReporterOptions,
     PackageJsonLike,
     ProjectConfigInternal,
     TestCommandOptions,
@@ -27,8 +29,8 @@ import { getWebpackTestConfig } from '../../webpack/configs';
 export interface KarmaConfigOptions extends karma.ConfigOptions {
     webpackConfig: WebpackConfiguration;
     configFile: string | null;
-    coverageIstanbulReporter?: { [key: string]: unknown };
-    junitReporter?: { [key: string]: unknown };
+    coverageIstanbulReporter?: CoverageIstanbulReporterOptions;
+    junitReporter?: JunitReporterOptions;
 }
 
 export async function cliTest(argv: TestCommandOptions & { [key: string]: unknown }): Promise<number> {
@@ -93,7 +95,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             }
         } else {
             defaultKarmaOptions = {
-                basePath: testConfig._projectRoot,
+                basePath: testConfig._workspaceRoot,
                 frameworks: ['jasmine', 'lib-tools'],
                 plugins: [
                     require('karma-jasmine'),
@@ -114,7 +116,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 junitReporter: {
                     outputDir: normalizePath(
                         path.relative(
-                            testConfig._projectRoot,
+                            testConfig._workspaceRoot,
                             path.resolve(testConfig._workspaceRoot, `junit/${testConfig._projectName}`)
                         )
                     )
@@ -161,6 +163,18 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             webpackConfig,
             logLevel: argv.logLevel ? argv.logLevel : 'info'
         };
+
+        if (!karmaOptions.frameworks || !karmaOptions.frameworks.includes('lib-tools')) {
+            karmaOptions.frameworks = karmaOptions.frameworks || [];
+            karmaOptions.frameworks.push('lib-tools');
+        }
+
+        if (testConfig.coverageIstanbulReporter) {
+            karmaOptions.coverageIstanbulReporter = {
+                ...karmaOptions.coverageIstanbulReporter,
+                ...testConfig.coverageIstanbulReporter
+            };
+        }
 
         if (testConfig.singleRun != null) {
             karmaOptions.singleRun = testConfig.singleRun;
