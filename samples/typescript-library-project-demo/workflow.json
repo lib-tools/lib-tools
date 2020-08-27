@@ -65,6 +65,7 @@
       "root": "./",
       "tasks": {
         "build": {
+          "outputPath": "dist/transpilations-bundles-test-minimal-config-demo",
           "script": {
             "compilations": "auto"
           }
