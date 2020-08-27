@@ -4,8 +4,7 @@
     "ng-config": {
       "root": "./modules/ng-config",
       "tasks": {
-        "build": {
-          "outputPath": "dist/packages/ng-config",
+        "build": {          
           "script": {
             "compilations": "auto"
           }
@@ -36,8 +35,7 @@
     "ng-config-http-config": {
       "root": "./modules/ng-config/http-config",
       "tasks": {
-        "build": {
-          "outputPath": "dist/packages/ng-config",
+        "build": {          
           "script": {
             "compilations": "auto"
           }
@@ -47,8 +45,7 @@
     "ng-config-firebase-remote-config": {
       "root": "./modules/ng-config-firebase-remote-config",
       "tasks": {
-        "build": {
-          "outputPath": "dist/packages/ng-config-firebase-remote-config",
+        "build": {          
           "script": {
             "compilations": "auto"
           }
