@@ -55,28 +55,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
     }
 
     for (const testConfig of filteredTestConfigs) {
-        if (argv.codeCoverageExclude != null) {
-            testConfig.codeCoverageExclude = Array.isArray(argv.codeCoverageExclude)
-                ? argv.codeCoverageExclude.filter((n) => n.trim().length > 0)
-                : argv.codeCoverageExclude.split(',').filter((n) => n.trim().length > 0);
-        }
-
-        if (argv.reporters != null) {
-            testConfig.reporters = Array.isArray(argv.reporters)
-                ? argv.reporters.filter((n) => n.trim().length > 0)
-                : argv.reporters.split(',').filter((n) => n.trim().length > 0);
-        }
-
-        if (argv.browsers != null) {
-            testConfig.browsers = Array.isArray(argv.browsers)
-                ? argv.browsers.filter((n) => n.trim().length > 0)
-                : argv.browsers.split(',').filter((n) => n.trim().length > 0);
-        }
-
-        if (argv.singleRun != null) {
-            testConfig.singleRun = argv.singleRun;
-        }
-
         const defaultKarmaOptions: Partial<KarmaConfigOptions> = {
             basePath: testConfig._workspaceRoot,
             frameworks: ['jasmine', 'lib-tools'],
@@ -117,15 +95,54 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             restartOnFileChange: true
         };
 
+        if (argv.codeCoverageExclude != null) {
+            testConfig.codeCoverageExclude = Array.isArray(argv.codeCoverageExclude)
+                ? argv.codeCoverageExclude.filter((n) => n.trim().length > 0)
+                : argv.codeCoverageExclude.split(',').filter((n) => n.trim().length > 0);
+        }
+
+        if (argv.reporters != null) {
+            testConfig.reporters = Array.isArray(argv.reporters)
+                ? argv.reporters.filter((n) => n.trim().length > 0)
+                : argv.reporters.split(',').filter((n) => n.trim().length > 0);
+        }
+
+        if (argv.browsers != null) {
+            testConfig.browsers = Array.isArray(argv.browsers)
+                ? argv.browsers.filter((n) => n.trim().length > 0)
+                : argv.browsers.split(',').filter((n) => n.trim().length > 0);
+        }
+
+        if (argv.singleRun != null) {
+            testConfig.singleRun = argv.singleRun;
+        }
+
+        if (testConfig.coverageIstanbulReporter) {
+            defaultKarmaOptions.coverageIstanbulReporter = {
+                ...defaultKarmaOptions.coverageIstanbulReporter,
+                ...testConfig.coverageIstanbulReporter
+            };
+        }
+
+        if (testConfig.junitReporter) {
+            defaultKarmaOptions.junitReporter = {
+                ...defaultKarmaOptions.junitReporter,
+                ...testConfig.junitReporter
+            };
+        }
+
         if (testConfig._karmaConfigPath) {
             const customKarmaOptions = (karma.config.parseConfig(
                 testConfig._karmaConfigPath,
                 {}
             ) as unknown) as KarmaConfigOptions;
 
+            const karmaRoot = path.dirname(testConfig._karmaConfigPath);
+
             if (customKarmaOptions.reporters && customKarmaOptions.reporters.length > 0 && !testConfig.reporters) {
                 testConfig.reporters = customKarmaOptions.reporters;
             }
+
             if (customKarmaOptions.browsers && customKarmaOptions.browsers.length > 0 && !testConfig.browsers) {
                 testConfig.browsers = customKarmaOptions.browsers;
             }
@@ -135,11 +152,33 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             }
 
             if (customKarmaOptions.coverageIstanbulReporter && !testConfig.coverageIstanbulReporter) {
-                testConfig.coverageIstanbulReporter = customKarmaOptions.coverageIstanbulReporter;
+                if (
+                    customKarmaOptions.coverageIstanbulReporter.dir &&
+                    !path.isAbsolute(customKarmaOptions.coverageIstanbulReporter.dir)
+                ) {
+                    customKarmaOptions.coverageIstanbulReporter.dir = path.resolve(
+                        karmaRoot,
+                        customKarmaOptions.coverageIstanbulReporter.dir
+                    );
+                }
+
+                defaultKarmaOptions.coverageIstanbulReporter = {
+                    ...defaultKarmaOptions.coverageIstanbulReporter,
+                    ...customKarmaOptions.coverageIstanbulReporter
+                };
             }
 
             if (customKarmaOptions.junitReporter && !testConfig.junitReporter) {
-                testConfig.junitReporter = customKarmaOptions.junitReporter;
+                if (customKarmaOptions.junitReporter.outputDir) {
+                    customKarmaOptions.junitReporter.outputDir = normalizePath(
+                        path.relative(karmaRoot, path.resolve(karmaRoot, customKarmaOptions.junitReporter.outputDir))
+                    );
+                }
+
+                defaultKarmaOptions.junitReporter = {
+                    ...defaultKarmaOptions.junitReporter,
+                    ...customKarmaOptions.junitReporter
+                };
             }
 
             if (customKarmaOptions.plugins && customKarmaOptions.plugins.length > 0) {
@@ -170,26 +209,26 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             if (customKarmaOptions.restartOnFileChange != null) {
                 defaultKarmaOptions.restartOnFileChange = customKarmaOptions.restartOnFileChange;
             }
-        } else {
-            if (testConfig.reporters) {
-                defaultKarmaOptions.reporters = testConfig.reporters;
-            } else {
-                if (environment.ci) {
-                    defaultKarmaOptions.reporters = ['junit', 'coverage-istanbul'];
-                } else {
-                    defaultKarmaOptions.reporters = ['progress', 'kjhtml'];
-                }
-            }
+        }
 
-            if (testConfig.browsers) {
-                defaultKarmaOptions.browsers = testConfig.browsers;
+        if (!testConfig.reporters) {
+            if (environment.ci) {
+                testConfig.reporters = ['junit', 'coverage-istanbul'];
             } else {
-                if (environment.ci) {
-                    defaultKarmaOptions.browsers = ['ChromeHeadlessCI'];
-                } else {
-                    defaultKarmaOptions.browsers = ['Chrome'];
-                }
+                testConfig.reporters = ['progress', 'kjhtml'];
             }
+        }
+
+        if (!testConfig.browsers) {
+            if (environment.ci) {
+                testConfig.browsers = ['ChromeHeadlessCI'];
+            } else {
+                testConfig.browsers = ['Chrome'];
+            }
+        }
+
+        if (testConfig.singleRun == null) {
+            testConfig.singleRun = environment.ci ? true : false;
         }
 
         const webpackConfig = await getWebpackTestConfig(testConfig, argv);
@@ -201,29 +240,16 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             logLevel: argv.logLevel ? argv.logLevel.toUpperCase() : 'INFO'
         };
 
-        if (!karmaOptions.frameworks || !karmaOptions.frameworks.includes('lib-tools')) {
-            karmaOptions.frameworks = karmaOptions.frameworks || [];
-            karmaOptions.frameworks.push('lib-tools');
-        }
-
-        if (testConfig.coverageIstanbulReporter) {
-            karmaOptions.coverageIstanbulReporter = testConfig.coverageIstanbulReporter;
-        }
-
-        if (testConfig.junitReporter) {
-            karmaOptions.junitReporter = testConfig.junitReporter;
-        }
-
-        if (testConfig.singleRun != null) {
-            karmaOptions.singleRun = testConfig.singleRun;
-        }
-
         if (testConfig.browsers) {
             karmaOptions.browsers = testConfig.browsers;
         }
 
         if (testConfig.reporters) {
             karmaOptions.reporters = testConfig.reporters;
+        }
+
+        if (testConfig.singleRun != null) {
+            karmaOptions.singleRun = testConfig.singleRun;
         }
 
         let karmaServer: karma.Server | undefined;
@@ -307,6 +333,23 @@ async function getFilteredTestConfigInternals(
             testIndexFilePath = path.resolve(projectRoot, testConfig.testIndexFile);
         } else {
             testIndexFilePath = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
+        }
+
+        if (
+            testConfig.coverageIstanbulReporter &&
+            testConfig.coverageIstanbulReporter.dir &&
+            !path.isAbsolute(testConfig.coverageIstanbulReporter.dir)
+        ) {
+            testConfig.coverageIstanbulReporter.dir = path.resolve(
+                projectRoot,
+                testConfig.coverageIstanbulReporter.dir
+            );
+        }
+
+        if (testConfig.junitReporter && testConfig.junitReporter.outputDir) {
+            testConfig.junitReporter.outputDir = normalizePath(
+                path.relative(projectRoot, path.resolve(projectRoot, testConfig.junitReporter.outputDir))
+            );
         }
 
         let packageJson: PackageJsonLike | null = null;
