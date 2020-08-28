@@ -52,7 +52,7 @@
     "build:sample:style-module-demo": "node -r source-map-support/register ./dist/bin/lib build --workflow=samples/style-module-demo/workflow.json --version=1.0.0",
     "build:sample:typescript-library-project-demo": "node -r source-map-support/register ./dist/bin/lib build --workflow=samples/typescript-library-project-demo/workflow.json --version=1.0.0",
     "build:sample:angular-library-project-demo": "node -r source-map-support/register ./dist/bin/lib build --workflow=samples/angular-library-project-demo/workflow.json",
-    "test:karma-cli-demo": "karma start samples/typescript-library-project-demo/karma.conf.js --single-run --code-coverage --browsers=ChromeHeadlessCI --reporters=junit,coverage-istanbul",
+    "test:karma-cli-demo": "karma start samples/typescript-library-project-demo/karma.conf.js --single-run --browsers=ChromeHeadlessCI --reporters=junit,coverage-istanbul",
     "test:sample:typescript-library-project-demo": "node ./dist/bin/lib test --workflow=samples/typescript-library-project-demo/workflow.json --env.ci=true",
     "test:sample:angular-library-project-demo": "node ./dist/bin/lib test --workflow=samples/angular-library-project-demo/workflow.json --env.ci=true"
   },
