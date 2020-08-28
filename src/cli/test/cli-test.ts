@@ -28,7 +28,7 @@ import { getWebpackTestConfig } from '../../webpack/configs';
 
 export interface KarmaConfigOptions extends karma.ConfigOptions {
     webpackConfig: WebpackConfiguration;
-    configFile: string | null;
+    configFile?: string | null;
     coverageIstanbulReporter?: CoverageIstanbulReporterOptions;
     junitReporter?: JunitReporterOptions;
 }
@@ -77,12 +77,52 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             testConfig.singleRun = argv.singleRun;
         }
 
-        let defaultKarmaOptions: Partial<KarmaConfigOptions> = {};
+        const defaultKarmaOptions: Partial<KarmaConfigOptions> = {
+            basePath: testConfig._workspaceRoot,
+            frameworks: ['jasmine', 'lib-tools'],
+            plugins: [
+                require('karma-jasmine'),
+                require('karma-chrome-launcher'),
+                require('karma-jasmine-html-reporter'),
+                require('karma-coverage-istanbul-reporter'),
+                require('karma-junit-reporter'),
+                require(path.resolve(__dirname, '../../karma-plugin'))
+            ],
+            client: {
+                clearContext: false
+            },
+            coverageIstanbulReporter: {
+                dir: path.resolve(testConfig._workspaceRoot, 'coverage', testConfig._projectName),
+                reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
+                fixWebpackSourcePaths: true
+            },
+            junitReporter: {
+                outputDir: normalizePath(
+                    path.relative(
+                        testConfig._workspaceRoot,
+                        path.resolve(testConfig._workspaceRoot, `junit/${testConfig._projectName}`)
+                    )
+                )
+            },
+            port: 9876,
+            colors: true,
+            logLevel: argv.logLevel ? argv.logLevel.toUpperCase() : 'INFO',
+            autoWatch: true,
+            customLaunchers: {
+                ChromeHeadlessCI: {
+                    base: 'ChromeHeadless',
+                    flags: ['--no-sandbox']
+                }
+            },
+            restartOnFileChange: true
+        };
+
         if (testConfig._karmaConfigPath) {
             const karmaConfig = (karma.config.parseConfig(
                 testConfig._karmaConfigPath,
                 {}
             ) as unknown) as KarmaConfigOptions;
+
             if (karmaConfig.reporters && karmaConfig.reporters.length > 0 && !testConfig.reporters) {
                 testConfig.reporters = karmaConfig.reporters;
             }
@@ -94,46 +134,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 testConfig.singleRun = karmaConfig.singleRun;
             }
         } else {
-            defaultKarmaOptions = {
-                basePath: testConfig._workspaceRoot,
-                frameworks: ['jasmine', 'lib-tools'],
-                plugins: [
-                    require('karma-jasmine'),
-                    require('karma-chrome-launcher'),
-                    require('karma-jasmine-html-reporter'),
-                    require('karma-coverage-istanbul-reporter'),
-                    require('karma-junit-reporter'),
-                    require(path.resolve(__dirname, '../../karma-plugin'))
-                ],
-                client: {
-                    clearContext: false
-                },
-                coverageIstanbulReporter: {
-                    dir: path.resolve(testConfig._workspaceRoot, 'coverage', testConfig._projectName),
-                    reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
-                    fixWebpackSourcePaths: true
-                },
-                junitReporter: {
-                    outputDir: normalizePath(
-                        path.relative(
-                            testConfig._workspaceRoot,
-                            path.resolve(testConfig._workspaceRoot, `junit/${testConfig._projectName}`)
-                        )
-                    )
-                },
-                port: 9876,
-                colors: true,
-                logLevel: argv.logLevel ? argv.logLevel : 'info',
-                autoWatch: true,
-                customLaunchers: {
-                    ChromeHeadlessCI: {
-                        base: 'ChromeHeadless',
-                        flags: ['--no-sandbox']
-                    }
-                },
-                restartOnFileChange: true
-            };
-
             if (testConfig.reporters) {
                 defaultKarmaOptions.reporters = testConfig.reporters;
             } else {
@@ -161,7 +161,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             ...defaultKarmaOptions,
             configFile: testConfig._karmaConfigPath,
             webpackConfig,
-            logLevel: argv.logLevel ? argv.logLevel : 'info'
+            logLevel: argv.logLevel ? argv.logLevel.toUpperCase() : 'INFO'
         };
 
         if (!karmaOptions.frameworks || !karmaOptions.frameworks.includes('lib-tools')) {
