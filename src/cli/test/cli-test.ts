@@ -49,7 +49,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         argv.filter && Array.isArray(argv.filter)
             ? argv.filter.filter((n) => n.trim().length > 0)
             : (argv.filter || '').split(',').filter((n) => n.trim().length > 0);
-    const filteredTestConfigs = await getFilteredTestConfigs(workflowConfig, filterNames, environment);
+    const filteredTestConfigs = await getFilteredTestConfigInternals(workflowConfig, filterNames, environment);
     if (!filteredTestConfigs.length) {
         throw new Error('No workflow test config is available.');
     }
@@ -214,7 +214,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
     return 0;
 }
 
-async function getFilteredTestConfigs(
+async function getFilteredTestConfigInternals(
     workflowConfig: WorkflowConfigInternal,
     filterNames: string[],
     environment: { [key: string]: boolean | string }
