@@ -55,20 +55,6 @@ const init = async (
     },
     customFileHandlers: { urlRegex: RegExp; handler: NextHandleFunction }[]
 ) => {
-    // let logLevel: LogLevelString = 'info';
-    // if (config.logLevel != null) {
-    //     if (
-    //         config.logLevel === 'debug' ||
-    //         config.logLevel === 'info' ||
-    //         config.logLevel === 'warn' ||
-    //         config.logLevel === 'error'
-    //     ) {
-    //         logLevel = config.logLevel;
-    //     } else {
-    //         logLevel = 'none';
-    //     }
-    // }
-
     const logger = new Logger({ logLevel: 'info' });
 
     config.customContextFile = `${__dirname}/karma-context.html`;
