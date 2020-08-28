@@ -80,6 +80,9 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         const defaultKarmaOptions: Partial<KarmaConfigOptions> = {
             basePath: testConfig._workspaceRoot,
             frameworks: ['jasmine', 'lib-tools'],
+            client: {
+                clearContext: false
+            },
             plugins: [
                 require('karma-jasmine'),
                 require('karma-chrome-launcher'),
@@ -88,9 +91,6 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 require('karma-junit-reporter'),
                 require(path.resolve(__dirname, '../../karma-plugin'))
             ],
-            client: {
-                clearContext: false
-            },
             coverageIstanbulReporter: {
                 dir: path.resolve(testConfig._workspaceRoot, 'coverage', testConfig._projectName),
                 reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
@@ -118,20 +118,57 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         };
 
         if (testConfig._karmaConfigPath) {
-            const karmaConfig = (karma.config.parseConfig(
+            const customKarmaOptions = (karma.config.parseConfig(
                 testConfig._karmaConfigPath,
                 {}
             ) as unknown) as KarmaConfigOptions;
 
-            if (karmaConfig.reporters && karmaConfig.reporters.length > 0 && !testConfig.reporters) {
-                testConfig.reporters = karmaConfig.reporters;
+            if (customKarmaOptions.reporters && customKarmaOptions.reporters.length > 0 && !testConfig.reporters) {
+                testConfig.reporters = customKarmaOptions.reporters;
             }
-            if (karmaConfig.browsers && karmaConfig.browsers.length > 0 && !testConfig.browsers) {
-                testConfig.browsers = karmaConfig.browsers;
+            if (customKarmaOptions.browsers && customKarmaOptions.browsers.length > 0 && !testConfig.browsers) {
+                testConfig.browsers = customKarmaOptions.browsers;
             }
 
-            if (karmaConfig.singleRun != null && testConfig.singleRun == null) {
-                testConfig.singleRun = karmaConfig.singleRun;
+            if (customKarmaOptions.singleRun != null && testConfig.singleRun == null) {
+                testConfig.singleRun = customKarmaOptions.singleRun;
+            }
+
+            if (customKarmaOptions.coverageIstanbulReporter && !testConfig.coverageIstanbulReporter) {
+                testConfig.coverageIstanbulReporter = customKarmaOptions.coverageIstanbulReporter;
+            }
+
+            if (customKarmaOptions.junitReporter && !testConfig.junitReporter) {
+                testConfig.junitReporter = customKarmaOptions.junitReporter;
+            }
+
+            if (customKarmaOptions.plugins && customKarmaOptions.plugins.length > 0) {
+                defaultKarmaOptions.plugins = defaultKarmaOptions.plugins || [];
+                defaultKarmaOptions.plugins.push(...customKarmaOptions.plugins);
+            }
+
+            if (customKarmaOptions.port) {
+                defaultKarmaOptions.port = customKarmaOptions.port;
+            }
+
+            if (customKarmaOptions.colors != null) {
+                defaultKarmaOptions.colors = customKarmaOptions.colors;
+            }
+
+            if (customKarmaOptions.logLevel != null) {
+                defaultKarmaOptions.logLevel = customKarmaOptions.logLevel;
+            }
+
+            if (customKarmaOptions.autoWatch != null) {
+                defaultKarmaOptions.autoWatch = customKarmaOptions.autoWatch;
+            }
+
+            if (customKarmaOptions.customLaunchers != null) {
+                defaultKarmaOptions.customLaunchers = customKarmaOptions.customLaunchers;
+            }
+
+            if (customKarmaOptions.restartOnFileChange != null) {
+                defaultKarmaOptions.restartOnFileChange = customKarmaOptions.restartOnFileChange;
             }
         } else {
             if (testConfig.reporters) {
@@ -170,10 +207,11 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
         }
 
         if (testConfig.coverageIstanbulReporter) {
-            karmaOptions.coverageIstanbulReporter = {
-                ...karmaOptions.coverageIstanbulReporter,
-                ...testConfig.coverageIstanbulReporter
-            };
+            karmaOptions.coverageIstanbulReporter = testConfig.coverageIstanbulReporter;
+        }
+
+        if (testConfig.junitReporter) {
+            karmaOptions.junitReporter = testConfig.junitReporter;
         }
 
         if (testConfig.singleRun != null) {
