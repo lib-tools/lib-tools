@@ -85,7 +85,7 @@
     "webpack": "^4.44.1",
     "webpack-dev-middleware": "^3.7.2",
     "yargs": "^15.4.1",
-    "karma": "^5.1.1",
+    "karma": "^5.2.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage-istanbul-reporter": "^3.0.3",
     "karma-jasmine": "^4.0.1",
