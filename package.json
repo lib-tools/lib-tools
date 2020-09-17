@@ -82,7 +82,7 @@
     "ts-loader": "^8.0.3",
     "typescript": "^3.9.7",
     "update-notifier": "^4.1.1",
-    "webpack": "^4.44.1",
+    "webpack": "^4.44.2",
     "webpack-dev-middleware": "^3.7.2",
     "yargs": "^16.0.3",
     "karma": "^5.2.2",
