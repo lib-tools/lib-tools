@@ -1,9 +1,14 @@
 import * as path from 'path';
 
 import { copy, ensureDir, readFile, writeFile } from 'fs-extra';
-import * as autoprefixer from 'autoprefixer';
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
+const autoprefixer = require('autoprefixer');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
+const postcss = require('postcss');
+
 import * as CleanCSS from 'clean-css';
-import * as postcss from 'postcss';
+
 import * as sass from 'sass';
 
 import { BuildConfigInternal } from '../../../models';
@@ -63,15 +68,22 @@ export async function processStyles(buildConfig: BuildConfigInternal, logger: Lo
                     typeof styleEntry._vendorPrefixes === 'object' ? styleEntry._vendorPrefixes : {};
 
                 const cssContent = await readFile(outFilePath, 'utf-8');
+
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
                 const postcssResult = await postcss([
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                     autoprefixer({
                         ...vendorPrefixesOptions
                     })
                 ]).process(cssContent, {
                     from: outFilePath
                 });
+
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 await writeFile(outFilePath, postcssResult.css);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 if (styleEntry._sourceMap && postcssResult.map) {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                     await writeFile(`${outFilePath}.map`, postcssResult.map.toString());
                 }
             }
