@@ -1,6 +1,6 @@
 {
   "name": "lib-tools",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The lib-tools helps you simplify the build/bundle, test and npm packaging workflows for Typescript/JavaScript library projects, Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!",
   "author": "Lib Tools Team",
   "license": "MIT",
