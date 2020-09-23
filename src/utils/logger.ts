@@ -1,5 +1,6 @@
 import { colorize } from './colorize';
 
+// eslint-disable-next-line no-shadow
 export enum LogLevel {
     None = 0,
     Fatal = 1,
