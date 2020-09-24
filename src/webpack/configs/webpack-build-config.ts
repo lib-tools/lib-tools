@@ -219,12 +219,14 @@ async function getWebpackBuildConfigInternal(
     }
 
     // package.json plugin
-    plugins.push(
-        new PackageJsonFileWebpackPlugin({
-            buildConfig,
-            logLevel: buildCommandOptions.logLevel
-        })
-    );
+    if (buildConfig.packageJson !== false) {
+        plugins.push(
+            new PackageJsonFileWebpackPlugin({
+                buildConfig,
+                logLevel: buildCommandOptions.logLevel
+            })
+        );
+    }
 
     const webpackConfig: Configuration = {
         name: buildConfig._projectName,

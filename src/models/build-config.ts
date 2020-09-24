@@ -516,6 +516,13 @@ export interface ScriptOptions {
 /**
  * @additionalProperties false
  */
+export interface PackageJsonOptions {
+    updateFields?: boolean;
+}
+
+/**
+ * @additionalProperties false
+ */
 export interface BuildConfigBase {
     /**
      * The output directory for build results. Default to `[WorkspaceRoot]/dist/packages/[PackageName]`.
@@ -541,6 +548,11 @@ export interface BuildConfigBase {
      * Script compilation and bundle options for javascript and typescript files.
      */
     script?: ScriptOptions;
+
+    /**
+     * Options for updating package.json file. Set `false` to disable package.json file copying.
+     */
+    packageJson?: PackageJsonOptions | boolean;
 
     /**
      * Banner text to add at the top of each generated files. It can be file path or raw text.
