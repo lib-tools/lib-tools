@@ -1,10 +1,9 @@
 import * as path from 'path';
 import { promisify } from 'util';
 
-import { AngularCompilerPlugin, NgToolsLoader } from '@ngtools/webpack';
 import { pathExists } from 'fs-extra';
 import * as glob from 'glob';
-import { Configuration, Plugin, Rule } from 'webpack';
+import { Configuration, Plugin, RuleSetRule } from 'webpack';
 
 import { isAngularProject } from '../../helpers';
 import { TestCommandOptions, TestConfigInternal } from '../../models';
@@ -23,7 +22,7 @@ export async function getWebpackTestConfig(
             logLevel: testCommandOptions.logLevel
         })
     ];
-    const rules: Rule[] = [];
+    const rules: RuleSetRule[] = [];
 
     if (testConfig.vendorSourceMap) {
         rules.push({
@@ -40,24 +39,13 @@ export async function getWebpackTestConfig(
             /\.tsx?$/i.test(testConfig._testIndexFilePath) &&
             (await isAngularProject(testConfig._workspaceRoot, testConfig._packageJson))
         ) {
-            rules.push({
-                test: /\.tsx?$/,
-                loader: NgToolsLoader,
-                options: {
-                    mainPath: testConfig._testIndexFilePath,
-                    configFile: tsConfigPath,
-                    skipCodeGeneration: true,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    contextElementDependencyConstructor: require('webpack/lib/dependencies/ContextElementDependency'),
-                    directTemplateLoading: true
-                }
-            });
-
-            plugins.push(
-                new AngularCompilerPlugin({
-                    tsConfigPath
-                })
+            const ngWebpackRulesAndPluginsModule = await import('../../helpers/ng-webpack-test-rules-and-plugins');
+            const ngRulesAndPlugins = ngWebpackRulesAndPluginsModule.getWebpackTestRulesAndPluginsForAngular(
+                testConfig
             );
+
+            rules.push(...ngRulesAndPlugins.rules);
+            plugins.push(...ngRulesAndPlugins.plugins);
         } else {
             rules.push({
                 test: /\.tsx?$/,
