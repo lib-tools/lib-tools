@@ -7,10 +7,6 @@
 
 The `lib-tools` helps you simplify the build/bundle, test and npm packaging workflows for Typescript/JavaScript library projects, Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
 
-## Features
-
-See [release-notes](https://github.com/lib-tools/lib-tools/release-notes).
-
 ## Getting Started
 
 ### Installation
@@ -158,6 +154,21 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 * [Angular Library Project Demo](https://github.com/lib-tools/lib-tools/tree/master/samples/angular-library-project-demo)
 
 * [Style Module Demo](https://github.com/lib-tools/lib-tools/tree/master/samples/style-module-demo)
+
+## Some Projects Using Lib Tools
+
+* Angular Projects
+  * [ng-config](https://github.com/DagonMetric/ng-config) - Configuration and options service for Angular
+  * [ng-log](https://github.com/DagonMetric/ng-log) - Vendor-agnostic logging, analytics and telemetry service abstractions and some implementations for Angular
+  * [ng-cache](https://github.com/DagonMetric/ng-cache) - Caching service for Angular
+  * [ng-zawgyi-detector](https://github.com/myanmartools/ng-zawgyi-detector) - Zawgyi-One and standard Myanmar Unicode detector library for Angular
+
+* Typescript/JavaScript Projects
+  * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
+
+* JSON Projects
+  * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript and JSON formats
+
 
 ## Feedback and Contributing
 
