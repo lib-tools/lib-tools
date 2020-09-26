@@ -47,6 +47,9 @@ export class PackageJsonFileWebpackPlugin {
         let packageJsonChanged = false;
 
         if (!disableFieldsUpate) {
+            const packageJsonOptions =
+                buildConfig.packageJson && typeof buildConfig.packageJson === 'object' ? buildConfig.packageJson : {};
+
             this.logger.debug('Updating package.json fields');
 
             // Update entry points
@@ -70,6 +73,12 @@ export class PackageJsonFileWebpackPlugin {
                 packageJsonChanged = true;
                 this.logger.debug(`Removing 'devDependencies' field from package.json`);
                 delete packageJson.devDependencies;
+            }
+
+            if (packageJson.scripts && packageJsonOptions.scriptsField === false) {
+                packageJsonChanged = true;
+                this.logger.debug(`Removing 'scripts' field from package.json`);
+                delete packageJson.scripts;
             }
 
             if (rootPackageJson && !packageJsonPathAreEqual) {

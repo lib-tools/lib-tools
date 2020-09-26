@@ -518,6 +518,7 @@ export interface ScriptOptions {
  */
 export interface PackageJsonOptions {
     updateFields?: boolean;
+    scriptsField?: boolean;
 }
 
 /**
