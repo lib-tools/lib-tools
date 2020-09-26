@@ -517,7 +517,14 @@ export interface ScriptOptions {
  * @additionalProperties false
  */
 export interface PackageJsonOptions {
+    /**
+     * Boolean value whether to update package.json file fields.
+     */
     updateFields?: boolean;
+
+    /**
+     * Boolean value whether to remove scripts field in package.json file.
+     */
     scriptsField?: boolean;
 }
 
