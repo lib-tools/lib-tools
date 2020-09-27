@@ -165,9 +165,7 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 
 * Typescript/JavaScript Projects
   * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
-
-* JSON Projects
-  * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript and JSON formats
+  * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript
 
 
 ## Feedback and Contributing
