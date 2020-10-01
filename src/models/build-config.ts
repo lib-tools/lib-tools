@@ -430,7 +430,7 @@ export interface ScriptCompilationOptions {
     /**
      * Custom output directory.
      */
-    outDir: string;
+    outDir?: string;
     /**
      * Override declaration option. Default `true` to first entry.
      */
@@ -448,7 +448,7 @@ export interface ScriptCompilationOptions {
      */
     cjsBundle?: boolean | ScriptBundleSharedOptions;
     /**
-     * If true, compilation output directory is deleted after flatten bundle file generated.
+     * If true, compilation output directory is deleted after flatten bundle file(s) generated.
      */
     deleteCompilationOutDirAfterBundle?: boolean;
 }
