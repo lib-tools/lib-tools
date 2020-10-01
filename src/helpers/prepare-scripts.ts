@@ -118,7 +118,6 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
                 const esmScriptCompilation = toScriptCompilationOptionsInternal(
                     {
                         target: scriptTargetStr,
-                        outDir: 'esm2015',
                         declaration: true,
                         esBundle: true,
                         umdBundle: true,
@@ -134,7 +133,6 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
                 const esm5ScriptCompilation = toScriptCompilationOptionsInternal(
                     {
                         target: 'es5',
-                        outDir: 'esm5',
                         declaration: false,
                         esBundle: true,
                         umdBundle: true,
@@ -236,7 +234,6 @@ function toScriptCompilationOptionsInternal(
         tsOutDir = path.resolve(tsOutDir, relSubDir);
     }
 
-    // const deleteCompilationOutDirAfterBundle = false;
     const bundles: ScriptBundleOptionsInternal[] = [];
     if (compilationOptions.esBundle || compilationOptions.umdBundle || compilationOptions.cjsBundle) {
         const sourceMap = compilerOptions.sourceMap ? true : false;
