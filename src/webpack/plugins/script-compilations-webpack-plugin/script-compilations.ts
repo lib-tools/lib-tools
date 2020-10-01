@@ -204,7 +204,7 @@ async function afterTsTranspileTask(
 
             const metadataJson = {
                 __symbolic: 'module',
-                version: 3,
+                version: 4,
                 metadata: {},
                 exports: [{ from: `./${relPath}/${compilation._entryName}` }],
                 flatModuleIndexRedirect: true,
@@ -248,7 +248,7 @@ async function afterTsTranspileTask(
             dirToClean = path.dirname(dirToClean);
         }
 
-        if (compilation.deleteCompilationOutDirAfterBundle && !isSamePaths(outputRootDir, dirToClean)) {
+        if (compilation.deleteNonBundleOutputs && !isSamePaths(outputRootDir, dirToClean)) {
             logger.info('Cleaning transpilation output directory');
             await remove(dirToClean);
         }
