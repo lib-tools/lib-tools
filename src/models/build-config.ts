@@ -448,9 +448,9 @@ export interface ScriptCompilationOptions {
      */
     cjsBundle?: boolean | ScriptBundleSharedOptions;
     /**
-     * If true, compilation output directory is deleted after flatten bundle file(s) generated.
+     * If true, compilation outputs (non-bundle outputs) are deleted after bundle(s) are generated.
      */
-    deleteCompilationOutDirAfterBundle?: boolean;
+    deleteNonBundleOutputs?: boolean;
 }
 
 /**
