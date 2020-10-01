@@ -376,7 +376,7 @@ function toScriptCompilationOptionsInternal(
             AddTypingsEntryPointToPackageJson(buildConfig, entryName);
         }
 
-        if (!compilationOptions.deleteCompilationOutDirAfterBundle) {
+        if (!compilationOptions.deleteNonBundleOutputs) {
             const jsEntryFile = normalizePath(
                 `${path.relative(buildConfig._packageJsonOutDir, path.resolve(tsOutDir, entryName))}.js`
             );
