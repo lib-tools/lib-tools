@@ -120,8 +120,7 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
                         target: scriptTargetStr,
                         declaration: true,
                         esBundle: true,
-                        umdBundle: true,
-                        deleteCompilationOutDirAfterBundle: true
+                        umdBundle: true
                     },
                     entryName,
                     tsConfigInfo,
@@ -135,8 +134,7 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
                         target: 'es5',
                         declaration: false,
                         esBundle: true,
-                        umdBundle: true,
-                        deleteCompilationOutDirAfterBundle: true
+                        umdBundle: true
                     },
                     entryName,
                     tsConfigInfo,
