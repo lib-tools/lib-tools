@@ -61,7 +61,7 @@
     "@ngtools/webpack": "^10.1.6",
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
-    "ajv": "^6.12.5",
+    "ajv": "^6.12.6",
     "autoprefixer": "^10.0.1",
     "builtins": "^3.0.1",
     "clean-css": "^4.2.3",
