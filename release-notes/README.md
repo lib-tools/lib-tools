@@ -2,7 +2,6 @@
 
 | Date (Asia/Yangon) | Version |  |  |
 | :-- | :-- | :--: | :-- |
-| 2020-10-13 | 1.4.0 | [release notes](1.4.0/README.md)/[npm](https://www.npmjs.com/package/lib-tools/v/1.4.0) | - |
 | 2020-10-01 | 1.3.0 | [release notes](1.3.0/README.md)/[npm](https://www.npmjs.com/package/lib-tools/v/1.3.0) | - |
 | 2020-09-27 | 1.2.3 | [release notes](1.2.3/README.md)/[npm](https://www.npmjs.com/package/lib-tools/v/1.2.3) | - |
 | 2020-09-26 | 1.2.2 | [release notes](1.2.2/README.md)/[npm](https://www.npmjs.com/package/lib-tools/v/1.2.2) | - |
