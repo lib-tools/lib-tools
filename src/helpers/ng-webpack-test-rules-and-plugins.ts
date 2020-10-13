@@ -1,14 +1,14 @@
 import { AngularCompilerPlugin, NgToolsLoader } from '@ngtools/webpack';
 
-import { Plugin, RuleSetRule } from 'webpack';
+import { RuleSetRule, WebpackPluginInstance } from 'webpack';
 
 import { TestConfigInternal } from '../models';
 
 export function getWebpackTestRulesAndPluginsForAngular(
     testConfig: TestConfigInternal
-): { rules: RuleSetRule[]; plugins: Plugin[] } {
+): { rules: RuleSetRule[]; plugins: WebpackPluginInstance[] } {
     const rules: RuleSetRule[] = [];
-    const plugins: Plugin[] = [];
+    const plugins: WebpackPluginInstance[] = [];
 
     rules.push({
         test: /\.tsx?$/,

@@ -1,4 +1,4 @@
-import { Configuration, Plugin } from 'webpack';
+import { Configuration, WebpackPluginInstance } from 'webpack';
 
 import {
     applyEnvOverrides,
@@ -149,7 +149,7 @@ async function getWebpackBuildConfigInternal(
     buildConfig: BuildConfigInternal,
     buildCommandOptions: BuildCommandOptions
 ): Promise<Configuration> {
-    const plugins: Plugin[] = [
+    const plugins: WebpackPluginInstance[] = [
         new BuildInfoWebpackPlugin({
             buildConfig,
             logLevel: buildCommandOptions.logLevel

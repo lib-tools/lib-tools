@@ -3,7 +3,7 @@ import { promisify } from 'util';
 
 import { pathExists } from 'fs-extra';
 import * as glob from 'glob';
-import { Configuration, Plugin, RuleSetRule } from 'webpack';
+import { Configuration, RuleSetRule, WebpackPluginInstance } from 'webpack';
 
 import { isAngularProject } from '../../helpers';
 import { TestCommandOptions, TestConfigInternal } from '../../models';
@@ -16,7 +16,7 @@ export async function getWebpackTestConfig(
     testConfig: TestConfigInternal,
     testCommandOptions: TestCommandOptions
 ): Promise<Configuration> {
-    const plugins: Plugin[] = [
+    const plugins: WebpackPluginInstance[] = [
         new TestInfoWebpackPlugin({
             testConfig,
             logLevel: testCommandOptions.logLevel
@@ -141,8 +141,12 @@ export async function getWebpackTestConfig(
         }
 
         if (testConfig.polyfills && testConfig.polyfills.length > 0) {
-            const polyfills = Array.isArray(testConfig.polyfills) ? testConfig.polyfills : [testConfig.polyfills];
-            webpackConfig.entry.polyfills = await resolvePolyfillPaths(polyfills, testConfig._projectRoot);
+            let resolvedPolyfillsPath = path.resolve(testConfig._projectRoot, testConfig.polyfills);
+            if (!(await pathExists(resolvedPolyfillsPath))) {
+                resolvedPolyfillsPath = testConfig.polyfills;
+            }
+
+            webpackConfig.entry.polyfills = resolvedPolyfillsPath;
         }
     } else {
         webpackConfig.entry = () => {
@@ -151,19 +155,4 @@ export async function getWebpackTestConfig(
     }
 
     return webpackConfig;
-}
-
-async function resolvePolyfillPaths(polyfills: string[], projectRoot: string): Promise<string[]> {
-    const resolvedPaths: string[] = [];
-
-    for (const p of polyfills) {
-        const tempPath = path.resolve(projectRoot, p);
-        if (await pathExists(tempPath)) {
-            resolvedPaths.push(tempPath);
-        } else {
-            resolvedPaths.push(p);
-        }
-    }
-
-    return resolvedPaths;
 }

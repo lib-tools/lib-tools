@@ -23,7 +23,7 @@ export async function runWebpack(
     const webpackCompiler = webpack(wpConfig as webpack.Configuration);
 
     return new Promise((resolve, reject) => {
-        const callback: webpack.Compiler.Handler = (err: Error, stats: webpack.Stats) => {
+        const cb = (err: Error | undefined, stats: webpack.Stats | undefined) => {
             if (err) {
                 reject(err);
 
@@ -34,14 +34,14 @@ export async function runWebpack(
                 return;
             }
 
-            if (stats.hasErrors()) {
+            if (stats && stats.hasErrors()) {
                 logger.error(stats.toString('errors-only'));
 
                 reject();
 
                 return;
             } else {
-                if (statsOptions) {
+                if (statsOptions && stats) {
                     const result = stats.toString(statsOptions);
                     if (result && result.trim()) {
                         logger.info(result);
@@ -52,10 +52,10 @@ export async function runWebpack(
         };
 
         if (watch) {
-            webpackCompiler.watch(watchOptions || {}, callback);
+            webpackCompiler.watch(watchOptions || {}, cb);
             logger.info('\nWebpack is watching the files…\n');
         } else {
-            webpackCompiler.run(callback);
+            webpackCompiler.run(cb);
         }
     });
 }
