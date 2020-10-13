@@ -119,13 +119,17 @@ export async function getWebpackTestConfig(
                     vendor: {
                         name: 'vendor',
                         chunks: 'initial',
-                        test: (module: { nameForCondition?: () => string }, chunks: { name: string }[]) => {
+                        test: (
+                            module: { nameForCondition?: () => string }
+                            // TODO: To review
+                            // chunk: { moduleGraph: unknown; chunkGraph: unknown }
+                        ) => {
                             const moduleName = module.nameForCondition ? module.nameForCondition() : '';
 
-                            return (
-                                /[\\/]node_modules[\\/]/.test(moduleName) &&
-                                !chunks.some(({ name }) => name === 'polyfills')
-                            );
+                            return /[\\/]node_modules[\\/]/.test(moduleName);
+                            // TODO: To review
+                            // &&
+                            // !chunks.some(({ name }) => name === 'polyfills')
                         }
                     }
                 }
