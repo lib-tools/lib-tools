@@ -77,7 +77,7 @@ export interface TestConfigBase {
     /**
      * Polyfill entries.
      */
-    polyfills?: string | string[];
+    polyfills?: string;
 
     /**
      * Typescript configuration file.
