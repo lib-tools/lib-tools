@@ -18,4 +18,3 @@ export * from './read-workflow-config';
 export * from './run-webpack';
 export * from './to-build-config-internal';
 export * from './to-workflow-config-internal';
-export * from './webpack-to-string-stats-options';
