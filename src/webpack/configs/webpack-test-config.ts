@@ -57,7 +57,7 @@ export async function getWebpackTestConfig(
         }
     }
 
-    const codeCoverage = testConfig.reporters && testConfig.reporters.includes('coverage-istanbul');
+    const codeCoverage = testConfig.reporters && testConfig.reporters.includes('coverage');
     if (codeCoverage) {
         const exclude: (string | RegExp)[] = [/\.(e2e|spec)\.tsx?$/, /node_modules/];
         if (testConfig.codeCoverageExclude) {
