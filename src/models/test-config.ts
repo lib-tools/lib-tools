@@ -3,31 +3,23 @@ import { OverridableConfig } from './overridable-config';
 /**
  * @additionalProperties false
  */
-export interface CoverageIstanbulReporterOptions {
+export interface CoverageReporterOptions {
     /**
-     * Reports can be any that are listed at: https://github.com/istanbuljs/istanbuljs/tree/73c25ce79f91010d1ff073aa6ff3fd01114f90db/packages/istanbul-reports/lib.
+     * You can use multiple reporters, by providing array of options.
      */
-    reports?: string[];
-
+    reporters?: { type: string; dir?: string }[];
     /**
-     * Output directory for coverage results.
+     * This will be used to output coverage reports.
      */
     dir?: string;
-
     /**
-     * Combines coverage information from multiple browsers into one report rather than outputting a report for each browser.
+     * This will be used in complement of the coverageReporter.dir option to generate the full output directory path.
      */
-    combineBrowserReports?: boolean;
-
+    subdir?: string;
     /**
-     * Ff using webpack and pre-loaders, work around webpack breaking the source path.
+     * If you use one of these reporters, cobertura, lcovonly, teamcity, text or text-summary,you may set the file option to specify the output file.
      */
-    fixWebpackSourcePaths?: boolean;
-
-    /**
-     * Omit files with no statements, no functions and no branches covered from the report.
-     */
-    skipFilesWithNoCoverage?: boolean;
+    file?: string;
 }
 
 /**
@@ -105,9 +97,9 @@ export interface TestConfigBase {
     codeCoverageExclude?: string[];
 
     /**
-     * Options for karma-coverage-istanbul-reporter.
+     * Options for karma-coverage reporter.
      */
-    coverageIstanbulReporter?: CoverageIstanbulReporterOptions;
+    coverageReporter?: CoverageReporterOptions;
 
     /**
      * Options for karma-junit-reporter.
