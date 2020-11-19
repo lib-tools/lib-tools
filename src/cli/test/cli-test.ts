@@ -15,7 +15,7 @@ import {
     readPackageJson
 } from '../../helpers';
 import {
-    CoverageIstanbulReporterOptions,
+    CoverageReporterOptions,
     JunitReporterOptions,
     PackageJsonLike,
     ProjectConfigInternal,
@@ -29,7 +29,7 @@ import { getWebpackTestConfig } from '../../webpack/configs';
 export interface KarmaConfigOptions extends karma.ConfigOptions {
     webpackConfig: WebpackConfiguration;
     configFile?: string | null;
-    coverageIstanbulReporter?: CoverageIstanbulReporterOptions;
+    coverageReporter?: CoverageReporterOptions;
     junitReporter?: JunitReporterOptions;
 }
 
@@ -65,14 +65,14 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 require('karma-jasmine'),
                 require('karma-chrome-launcher'),
                 require('karma-jasmine-html-reporter'),
-                require('karma-coverage-istanbul-reporter'),
+                require('karma-coverage'),
                 require('karma-junit-reporter'),
                 require(path.resolve(__dirname, '../../karma-plugin'))
             ],
-            coverageIstanbulReporter: {
+            coverageReporter: {
                 dir: path.resolve(testConfig._workspaceRoot, 'coverage', testConfig._projectName),
-                reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
-                fixWebpackSourcePaths: true
+                subdir: '.',
+                reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'text-summary' }, { type: 'cobertura' }]
             },
             junitReporter: {
                 outputDir: normalizePath(
@@ -117,10 +117,10 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
             testConfig.singleRun = argv.singleRun;
         }
 
-        if (testConfig.coverageIstanbulReporter) {
-            defaultKarmaOptions.coverageIstanbulReporter = {
-                ...defaultKarmaOptions.coverageIstanbulReporter,
-                ...testConfig.coverageIstanbulReporter
+        if (testConfig.coverageReporter) {
+            defaultKarmaOptions.coverageReporter = {
+                ...defaultKarmaOptions.coverageReporter,
+                ...testConfig.coverageReporter
             };
         }
 
@@ -151,20 +151,20 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
                 testConfig.singleRun = customKarmaOptions.singleRun;
             }
 
-            if (customKarmaOptions.coverageIstanbulReporter && !testConfig.coverageIstanbulReporter) {
+            if (customKarmaOptions.coverageReporter && !testConfig.coverageReporter) {
                 if (
-                    customKarmaOptions.coverageIstanbulReporter.dir &&
-                    !path.isAbsolute(customKarmaOptions.coverageIstanbulReporter.dir)
+                    customKarmaOptions.coverageReporter.dir &&
+                    !path.isAbsolute(customKarmaOptions.coverageReporter.dir)
                 ) {
-                    customKarmaOptions.coverageIstanbulReporter.dir = path.resolve(
+                    customKarmaOptions.coverageReporter.dir = path.resolve(
                         karmaRoot,
-                        customKarmaOptions.coverageIstanbulReporter.dir
+                        customKarmaOptions.coverageReporter.dir
                     );
                 }
 
-                defaultKarmaOptions.coverageIstanbulReporter = {
-                    ...defaultKarmaOptions.coverageIstanbulReporter,
-                    ...customKarmaOptions.coverageIstanbulReporter
+                defaultKarmaOptions.coverageReporter = {
+                    ...defaultKarmaOptions.coverageReporter,
+                    ...customKarmaOptions.coverageReporter
                 };
             }
 
@@ -213,7 +213,7 @@ export async function cliTest(argv: TestCommandOptions & { [key: string]: unknow
 
         if (!testConfig.reporters) {
             if (environment.ci) {
-                testConfig.reporters = ['junit', 'coverage-istanbul'];
+                testConfig.reporters = ['junit', 'coverage'];
             } else {
                 testConfig.reporters = ['progress', 'kjhtml'];
             }
@@ -336,14 +336,11 @@ async function getFilteredTestConfigInternals(
         }
 
         if (
-            testConfig.coverageIstanbulReporter &&
-            testConfig.coverageIstanbulReporter.dir &&
-            !path.isAbsolute(testConfig.coverageIstanbulReporter.dir)
+            testConfig.coverageReporter &&
+            testConfig.coverageReporter.dir &&
+            !path.isAbsolute(testConfig.coverageReporter.dir)
         ) {
-            testConfig.coverageIstanbulReporter.dir = path.resolve(
-                projectRoot,
-                testConfig.coverageIstanbulReporter.dir
-            );
+            testConfig.coverageReporter.dir = path.resolve(projectRoot, testConfig.coverageReporter.dir);
         }
 
         if (testConfig.junitReporter && testConfig.junitReporter.outputDir) {
