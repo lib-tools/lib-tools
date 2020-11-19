@@ -115,7 +115,7 @@ The following is an example `workflow.json` configuration for building and testi
             "ci": {
               "reporters": [
                 "junit",
-                "coverage-istanbul"
+                "coverage"
               ],
               "codeCoverageExclude": [
                 "**/test.ts",
