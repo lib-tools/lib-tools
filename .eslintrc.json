@@ -1,7 +1,7 @@
 {
-  "env": {
+  "env": {    
     "node": true,
-    "es2017": true
+    "es2017": true    
   },
   "parserOptions": {
     "sourceType": "module"
@@ -105,12 +105,10 @@
     "no-new-func": "error",
     "no-new-wrappers": "error",
     "no-return-await": "error",
-    "no-shadow": [
-      "error",
-      {
-        "hoist": "all"
-      }
-    ],
+    
+    // note you must disable the base rule as it can report incorrect errors
+    "no-shadow": "off",
+
     "no-sparse-arrays": "error",
     "no-template-curly-in-string": "error",
     "no-throw-literal": "error",
@@ -220,6 +218,7 @@
 
         "@typescript-eslint/member-ordering": "error",
         "@typescript-eslint/no-non-null-assertion": "error",
+        "@typescript-eslint/no-shadow": ["error"],
         "@typescript-eslint/no-unused-expressions": ["error"],
         "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/prefer-function-type": "error",
