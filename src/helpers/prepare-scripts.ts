@@ -172,7 +172,7 @@ export async function prepareScripts(buildConfig: BuildConfigInternal): Promise<
     let typescriptModulePath: string | null = null;
     if (
         buildConfig._nodeModulesPath &&
-        pathExists(path.resolve(buildConfig._nodeModulesPath, 'typescript', 'package.json'))
+        (await pathExists(path.resolve(buildConfig._nodeModulesPath, 'typescript', 'package.json')))
     ) {
         typescriptModulePath = path.resolve(buildConfig._nodeModulesPath, 'typescript');
     }
