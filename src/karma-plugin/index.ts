@@ -66,10 +66,6 @@ const init = async (
     config.middleware.push('lib-tools--fallback');
 
     const webpackMiddlewareConfig: webpackDevMiddleware.Options = {
-        logLevel: 'error',
-        stats: {
-            colors: config.colors
-        },
         publicPath: '/_karma_webpack_/'
     };
 
