@@ -13,18 +13,17 @@ module.exports = (config) => {
             require('karma-jasmine'),
             require('karma-chrome-launcher'),
             require('karma-jasmine-html-reporter'),
-            require('karma-coverage-istanbul-reporter'),
+            require('karma-coverage'),
             require('karma-junit-reporter'),
-            // require('lib-tools/karma-plugin'),
             require(path.resolve(__dirname, '../../dist/karma-plugin'))
         ],
         client: {
             clearContext: false
         },
-        coverageIstanbulReporter: {
+        coverageReporter: {
             dir: path.join(__dirname, 'coverage'),
-            reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
-            fixWebpackSourcePaths: true
+            subdir: '.',
+            reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'text-summary' }, { type: 'cobertura' }]
         },
         reporters: ['progress', 'kjhtml'],
         junitReporter: {
