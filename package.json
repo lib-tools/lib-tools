@@ -62,7 +62,7 @@
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
     "ajv": "^6.12.6",
-    "autoprefixer": "^10.0.3",
+    "autoprefixer": "^10.0.4",
     "builtins": "^3.0.1",
     "clean-css": "^4.2.3",
     "cross-spawn": "^7.0.3",
