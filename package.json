@@ -60,7 +60,7 @@
     "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
     "@ngtools/webpack": "^11.0.2",
     "@rollup/plugin-commonjs": "^17.0.0",
-    "@rollup/plugin-node-resolve": "^10.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.0",
     "ajv": "^6.12.6",
     "autoprefixer": "^10.0.4",
     "builtins": "^3.0.1",
