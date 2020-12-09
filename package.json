@@ -100,7 +100,7 @@
     "@angular/core": "^11.0.4",
     "@angular/platform-browser": "^11.0.4",
     "@angular/platform-browser-dynamic": "^11.0.4",
-    "@types/clean-css": "^4.2.2",
+    "@types/clean-css": "^4.2.3",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.4",
     "@types/glob": "^7.1.3",
