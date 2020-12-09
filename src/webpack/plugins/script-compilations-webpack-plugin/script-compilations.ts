@@ -75,7 +75,7 @@ export async function performScriptCompilations(buildConfig: BuildConfigInternal
                 if (exitCode === 0) {
                     afterTsTranspileTask(compilation, scriptOptions, buildConfig, tscCommand, logger)
                         .then(() => {
-                            res();
+                            res(null);
                         })
                         .catch((err) => {
                             rej(err);

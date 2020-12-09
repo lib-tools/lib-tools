@@ -56,7 +56,8 @@ export default async function (): Promise<number> {
     const yargsInstance = initYargs();
     yargsInstance.parse();
 
-    const command = yargsInstance.argv._[0] ? yargsInstance.argv._[0].toLowerCase() : undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const command = yargsInstance.argv._[0] ? (yargsInstance.argv._[0] as string).toLowerCase() : undefined;
     const argv = yargsInstance.argv;
 
     if (command === 'build') {

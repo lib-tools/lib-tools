@@ -47,7 +47,7 @@ export async function runWebpack(
                         logger.info(result);
                     }
                 }
-                resolve();
+                resolve(null);
             }
         };
 
