@@ -3,9 +3,8 @@
 [![GitHub Actions Status](https://github.com/lib-tools/lib-tools/workflows/Main%20Workflow/badge.svg)](https://github.com/lib-tools/lib-tools/actions)
 [![Azure Pipelines Status](https://dev.azure.com/lib-tools/lib-tools/_apis/build/status/lib-tools.lib-tools?branchName=master)](https://dev.azure.com/lib-tools/lib-tools/_build/latest?definitionId=1&branchName=master)
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
-[![Gitter](https://badges.gitter.im/lib-tools/community.svg)](https://gitter.im/lib-tools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-The `lib-tools` help you simplify the build/bundle, test and npm packaging workflows for Typescript/JavaScript/Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
+The `lib-tools` helps you simplify the build/bundle, test and npm packaging workflows for Typescript/JavaScript/Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
 
 ## Getting Started
 
@@ -167,6 +166,13 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
   * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
   * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript
 
+
+## General Discussions
+
+We’re using the following discussion channels as a place to connect with other members of our community.
+
+* [GitHub Discussions Channel](https://github.com/lib-tools/lib-tools/discussions)
+* [Gitter Discussions Channel](https://gitter.im/lib-tools/community)
 
 ## Feedback and Contributing
 
