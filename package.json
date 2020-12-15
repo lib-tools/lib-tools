@@ -114,7 +114,7 @@
     "@types/sass": "^1.16.0",
     "@types/supports-color": "^7.2.0",
     "@types/webpack-dev-middleware": "^3.7.2",
-    "@types/yargs": "^15.0.11",
+    "@types/yargs": "^15.0.12",
     "@typescript-eslint/eslint-plugin": "^4.10.0",
     "@typescript-eslint/parser": "^4.10.0",
     "eslint": "^7.15.0",
