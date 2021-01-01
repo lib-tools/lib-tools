@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import * as Ajv from 'ajv';
+import Ajv from 'ajv';
 import { readJson } from 'fs-extra';
 
 import { WorkflowConfig } from '../models';
