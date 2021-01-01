@@ -61,7 +61,7 @@
     "@ngtools/webpack": "^11.0.5",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.1",
-    "ajv": "^6.12.6",
+    "ajv": "^7.0.2",
     "autoprefixer": "^10.1.0",
     "builtins": "^3.0.1",
     "clean-css": "^4.2.3",
@@ -125,7 +125,7 @@
     "prettier": "^2.2.1",
     "rxjs": "^6.6.3",
     "tsickle": "^0.39.1",
-    "typescript-json-schema": "^0.46.0",
+    "typescript-json-schema": "^0.47.0",
     "zone.js": "^0.11.3"
   }
 }
