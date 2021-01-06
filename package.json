@@ -94,12 +94,12 @@
     "karma-junit-reporter": "^2.0.1"
   },
   "devDependencies": {
-    "@angular/common": "^11.0.5",
-    "@angular/compiler": "^11.0.5",
-    "@angular/compiler-cli": "^11.0.5",
-    "@angular/core": "^11.0.5",
-    "@angular/platform-browser": "^11.0.5",
-    "@angular/platform-browser-dynamic": "^11.0.5",
+    "@angular/common": "^11.0.6",
+    "@angular/compiler": "^11.0.6",
+    "@angular/compiler-cli": "^11.0.6",
+    "@angular/core": "^11.0.6",
+    "@angular/platform-browser": "^11.0.6",
+    "@angular/platform-browser-dynamic": "^11.0.6",
     "@types/clean-css": "^4.2.3",
     "@types/cross-spawn": "^6.0.2",
     "@types/fs-extra": "^9.0.6",
