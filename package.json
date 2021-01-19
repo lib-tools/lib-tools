@@ -105,7 +105,7 @@
     "@types/fs-extra": "^9.0.6",
     "@types/glob": "^7.1.3",
     "@types/html-minifier": "^4.0.0",
-    "@types/jasmine": "^3.6.2",
+    "@types/jasmine": "^3.6.3",
     "@types/jasminewd2": "~2.0.8",
     "@types/karma": "^5.0.1",
     "@types/minimatch": "^3.0.3",
