@@ -1,4 +1,7 @@
 {
+  "extends": [
+    "config:base"
+  ],
   "timezone": "Asia/Yangon",
   "schedule": [
     "after 1am and before 7am every weekday",
