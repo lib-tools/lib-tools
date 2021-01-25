@@ -157,6 +157,7 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 ## Some Projects Using Lib Tools
 
 * Angular Projects
+  * [ng-entity-change-checker][https://github.com/DagonMetric/ng-entity-change-checker] - Object dirty checker and modified properties detector for Angular
   * [ng-config](https://github.com/DagonMetric/ng-config) - Configuration and options service for Angular
   * [ng-log](https://github.com/DagonMetric/ng-log) - Vendor-agnostic logging, analytics and telemetry service abstractions and some implementations for Angular
   * [ng-cache](https://github.com/DagonMetric/ng-cache) - Caching service for Angular
@@ -164,6 +165,7 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 
 * Typescript/JavaScript Projects
   * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
+  * [myanmar-text-extractor-js](https://github.com/myanmartools/myanmar-text-extractor-js) - Burmese language (Myanmar text) extractor JavaScript library for word segmentation, text extraction or syllable break
   * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript
 
 
@@ -172,7 +174,6 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 We’re using the following discussion channels as a place to connect with other members of our community.
 
 * [GitHub Discussions Channel](https://github.com/lib-tools/lib-tools/discussions)
-* [Gitter Discussions Channel](https://gitter.im/lib-tools/community)
 
 ## Feedback and Contributing
 
