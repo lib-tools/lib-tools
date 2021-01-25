@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/lib-tools/lib-tools",
   "devDependencies": {
-    "lib-tools": "^0.0.1-alpha.9"
+    "lib-tools": "^2.0.2"
   }
 }

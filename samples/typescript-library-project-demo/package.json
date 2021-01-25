@@ -12,10 +12,10 @@
   },
   "homepage": "https://github.com/lib-tools/lib-tools",
   "dependencies": {
-    "tslib": "^2.0.0"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
-    "lib-tools": "0.0.1-alpha.9"
+    "lib-tools": "^2.0.2"
 
   }
 }
