@@ -13,7 +13,7 @@
   },
   "homepage": "https://github.com/lib-tools/lib-tools",
   "dependencies": {
-    "tslib": "^2.0.0"
+    "tslib": "^2.1.0"
   },
   "peerDependencies": {
     "@angular/core": "^8.0.0-beta.0 || ^9.0.0-rc.0 || ^10.0.0-rc.0 || || ^11.0.0-rc.0",
