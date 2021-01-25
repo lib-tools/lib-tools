@@ -8,7 +8,7 @@ We use [Github issues](https://github.com/lib-tools/lib-tools/issues) to track p
 
 ## General Discussions
 
-We use [Gitter Channel](https://gitter.im/lib-tools/general) for general lib-tools's open source products discussion.
+We use [GitHub Discussions Channel](https://github.com/lib-tools/lib-tools/discussions) for general lib-tools discussion.
 
 ## Contributing code and content
 
