@@ -15,7 +15,7 @@
     "tslib": "^2.1.0"
   },
   "devDependencies": {
-    "lib-tools": "^2.0.2"
+    "lib-tools": "^2.0.3"
 
   }
 }
