@@ -22,7 +22,7 @@ This is a rough outline of what a contributor's workflow looks like:
 
 4. Make sure your code lints by running `npm run lint` command if present.
 
-5. Run the build with `npm run build` and test with `npm run test` command if present, and ensure that all builds and tests succeed.
+5. Run the build with `npm run build` and test with `npm run build:samples` command if present, and ensure that all builds succeed.
 
 6. Commit your changes using a descriptive commit message that follows our [commit message conventions](https://gist.github.com/mmzliveid/5d1ca6579da5ee60f5f4dee8d6201045).
 
