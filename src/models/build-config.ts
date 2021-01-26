@@ -344,9 +344,6 @@ export interface CommonJsOptions {
     dynamicRequireTargets?: string[];
 }
 
-/**
- * @additionalProperties false
- */
 export type ScriptTargetString =
     | 'es5'
     | 'ES5'
