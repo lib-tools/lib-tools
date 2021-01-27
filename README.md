@@ -4,7 +4,7 @@
 [![Azure Pipelines Status](https://dev.azure.com/lib-tools/lib-tools/_apis/build/status/lib-tools.lib-tools?branchName=master)](https://dev.azure.com/lib-tools/lib-tools/_build/latest?definitionId=1&branchName=master)
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
 
-The `lib-tools` helps you simplify the build/bundle, test and npm packaging workflows for Typescript/JavaScript/Angular library projects and Assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
+The `lib-tools` helps you simplify the build, bundle, test and npm packaging workflows for Typescript, JavaScript, Angular library projects and assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
 
 ## Getting Started
 
@@ -24,9 +24,9 @@ npm install -g lib-tools
 
 Latest npm package is [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
 
-### Build the Project(s)
+### Build/Bundle the Project(s)
 
-To build the project(s) using `workflow.json` configuration file
+To build/bundle the project(s) using `workflow.json` configuration file
 
 ```bash
 lib build
@@ -38,7 +38,7 @@ Or, to automatically detect and build the project(s) without  `workflow.json` co
 lib build --workflow=auto
 ```
 
-To learn more about build command options, see [Build Command Usage](https://github.com/lib-tools/lib-tools/wiki/Build-Command-Usage) wiki, or run
+To learn more about the build command options, see [Build Command Usage](https://github.com/lib-tools/lib-tools/wiki/Build-Command-Usage) wiki, or run
 
 ```bash
 lib build --help
@@ -58,7 +58,7 @@ Or, to automatically detect and run the test(s) without  `workflow.json` configu
 lib test --workflow=auto
 ```
 
-To learn more about build command options, see [Test Command Usage](https://github.com/lib-tools/lib-tools/wiki/Test-Command-Usage) wiki, or run
+To learn more about the test command options, see [Test Command Usage](https://github.com/lib-tools/lib-tools/wiki/Test-Command-Usage) wiki, or run
 
 ```bash
 lib test --help
@@ -156,18 +156,17 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 
 ## Some Projects Using Lib Tools
 
+* Typescript/JavaScript Projects
+  * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
+  * [myanmar-text-extractor-js](https://github.com/myanmartools/myanmar-text-extractor-js) - Burmese language (Myanmar text) extractor JavaScript library for word segmentation, text extraction or syllable break
+  * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript
+
 * Angular Projects
   * [ng-entity-change-checker][https://github.com/DagonMetric/ng-entity-change-checker] - Object dirty checker and modified properties detector for Angular
   * [ng-config](https://github.com/DagonMetric/ng-config) - Configuration and options service for Angular
   * [ng-log](https://github.com/DagonMetric/ng-log) - Vendor-agnostic logging, analytics and telemetry service abstractions and some implementations for Angular
   * [ng-cache](https://github.com/DagonMetric/ng-cache) - Caching service for Angular
   * [ng-zawgyi-detector](https://github.com/myanmartools/ng-zawgyi-detector) - Zawgyi-One and standard Myanmar Unicode detector library for Angular
-
-* Typescript/JavaScript Projects
-  * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
-  * [myanmar-text-extractor-js](https://github.com/myanmartools/myanmar-text-extractor-js) - Burmese language (Myanmar text) extractor JavaScript library for word segmentation, text extraction or syllable break
-  * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript
-
 
 ## General Discussions
 
