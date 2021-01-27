@@ -787,7 +787,7 @@ export function translit(
     userOptions?: { [option: string]: boolean | string },
     trace?: boolean
 ): TranslitResult {
-    if (!sourceText || !sourceText.trim().length) {
+    if (!sourceText || !sourceText.trimStart().trimEnd().length) {
         return {
             outputText: sourceText,
             replaced: false
