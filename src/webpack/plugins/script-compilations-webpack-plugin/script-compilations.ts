@@ -59,7 +59,7 @@ export async function performScriptCompilations(buildConfig: BuildConfigInternal
 
         await new Promise((res, rej) => {
             const errors: string[] = [];
-            const child = spawn(tscCommand, commandArgs, {});
+            const child = spawn(tscCommand, commandArgs, { stdio: 'inherit' });
             if (child.stdout) {
                 child.stdout.on('data', (data: string | Buffer) => {
                     logger.debug(`${data}`);
@@ -67,7 +67,9 @@ export async function performScriptCompilations(buildConfig: BuildConfigInternal
             }
 
             if (child.stderr) {
-                child.stderr.on('data', (data: string | Buffer) => errors.push(data.toString().trim()));
+                child.stderr.on('data', (data: string | Buffer) => {
+                    errors.push(data.toString().trim());
+                });
             }
 
             child.on('error', rej);
