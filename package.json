@@ -75,7 +75,7 @@
     "resolve": "^1.19.0",
     "rollup": "^2.38.3",
     "rollup-plugin-typescript2": "^0.29.0",
-    "sass": "^1.32.5",
+    "sass": "^1.32.6",
     "source-map-loader": "^2.0.0",
     "supports-color": "^8.1.1",
     "terser": "^5.5.1",
