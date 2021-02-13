@@ -32,7 +32,7 @@
     "karma"
   ],
   "engines": {
-    "node": ">=10.9.0"
+    "node": ">=v10.23.3"
   },
   "bin": {
     "lib": "./bin/lib"
