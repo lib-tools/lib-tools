@@ -71,7 +71,7 @@
     "html-minifier": "^4.0.0",
     "magic-string": "^0.25.7",
     "minimatch": "^3.0.4",
-    "postcss": "^8.2.10",
+    "postcss": "^8.2.12",
     "resolve": "^1.20.0",
     "rollup": "^2.45.2",
     "rollup-plugin-typescript2": "^0.30.0",
