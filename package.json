@@ -73,7 +73,7 @@
     "minimatch": "^3.0.4",
     "postcss": "^8.2.13",
     "resolve": "^1.20.0",
-    "rollup": "^2.45.2",
+    "rollup": "^2.46.0",
     "rollup-plugin-typescript2": "^0.30.0",
     "sass": "^1.32.12",
     "source-map-loader": "^2.0.1",
