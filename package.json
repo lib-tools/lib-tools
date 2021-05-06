@@ -67,7 +67,7 @@
     "clean-css": "^5.1.2",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^10.0.0",
-    "glob": "^7.1.6",
+    "glob": "^7.1.7",
     "html-minifier": "^4.0.0",
     "magic-string": "^0.25.7",
     "minimatch": "^3.0.4",
