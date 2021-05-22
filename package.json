@@ -76,7 +76,7 @@
     "rollup": "^2.48.0",
     "rollup-plugin-typescript2": "^0.30.0",
     "sass": "^1.33.0",
-    "source-map-loader": "^2.0.2",
+    "source-map-loader": "^3.0.0",
     "supports-color": "^8.1.1",
     "terser": "^5.7.0",
     "ts-loader": "^9.2.1",
