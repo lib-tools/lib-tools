@@ -59,7 +59,7 @@
   "dependencies": {
     "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
     "@ngtools/webpack": "^11.1.2",
-    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-commonjs": "^19.0.1",
     "@rollup/plugin-node-resolve": "^13.0.0",
     "ajv": "^7.0.4",
     "autoprefixer": "^10.3.1",
