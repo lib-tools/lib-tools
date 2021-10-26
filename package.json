@@ -121,7 +121,7 @@
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-jsdoc": "^37.0.1",
     "eslint-plugin-prettier": "^4.0.0",
-    "jasmine-core": "^3.10.0",
+    "jasmine-core": "^3.10.1",
     "prettier": "^2.2.1",
     "rxjs": "^6.6.7",
     "tsickle": "^0.39.1",
