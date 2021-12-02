@@ -87,7 +87,7 @@
     "yargs": "^17.0.0",
     "karma": "^6.3.2",
     "karma-chrome-launcher": "^3.1.0",
-    "karma-coverage": "^2.0.3",
+    "karma-coverage": "^2.1.0",
     "karma-jasmine": "^4.0.1",
     "karma-jasmine-html-reporter": "^1.7.0",
     "jasmine-spec-reporter": "^7.0.0",
