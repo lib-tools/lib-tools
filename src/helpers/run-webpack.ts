@@ -23,14 +23,10 @@ export async function runWebpack(
     const webpackCompiler = webpack(wpConfig as webpack.Configuration);
 
     return new Promise((resolve, reject) => {
-        const cb = (err: Error | undefined, stats: webpack.Stats | undefined) => {
+        const cb = (err?: Error | null, stats?: webpack.Stats) => {
             if (err) {
                 reject(err);
 
-                return;
-            }
-
-            if (watch) {
                 return;
             }
 
@@ -40,15 +36,22 @@ export async function runWebpack(
                 reject();
 
                 return;
-            } else {
-                if (statsOptions && stats) {
-                    const result = stats.toString(statsOptions);
-                    if (result && result.trim()) {
-                        logger.info(result);
-                    }
-                }
-                resolve(null);
             }
+
+            if (statsOptions && stats) {
+                const result = stats.toString(statsOptions);
+                if (result && result.trim()) {
+                    logger.info(result);
+                }
+            }
+
+            if (watch) {
+                return;
+            }
+
+            webpackCompiler.close(() => {
+                resolve(null);
+            });
         };
 
         if (watch) {
