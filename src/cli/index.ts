@@ -53,12 +53,8 @@ function initYargs(): yargs.Argv {
 }
 
 export default async function (): Promise<number> {
-    const yargsInstance = initYargs();
-    yargsInstance.parse();
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const command = yargsInstance.argv._[0] ? (yargsInstance.argv._[0] as string).toLowerCase() : undefined;
-    const argv = yargsInstance.argv;
+    const argv = await initYargs().parse();
+    const command = argv._[0] ? (argv._[0] as string).toLowerCase() : undefined;
 
     if (command === 'build') {
         // eslint-disable-next-line no-console
