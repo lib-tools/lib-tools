@@ -4,7 +4,7 @@
 [![Azure Pipelines Status](https://dev.azure.com/lib-tools/lib-tools/_apis/build/status/lib-tools.lib-tools?branchName=master)](https://dev.azure.com/lib-tools/lib-tools/_build/latest?definitionId=1&branchName=master)
 [![npm version](https://badge.fury.io/js/lib-tools.svg)](https://www.npmjs.com/package/lib-tools)
 
-The `lib-tools` helps you simplify the build, bundle, test and npm packaging workflows for Typescript, JavaScript, Angular library projects and assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
+The `lib-tools` helps you simplify the build, bundle, test and npm packaging workflows for Typescript / JavaScript library projects and assets module projects (e.g. sass, scss, css or icons). This tool can automatically set up for your projects without the time spent with webpack, rollup, karma, postcss, autoprefixer or clean-css configuration files. You can start from zero-configuration to fully customizable options!
 
 ## Getting Started
 
@@ -150,8 +150,6 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
 
 * [Typescript Library Project Demo](https://github.com/lib-tools/lib-tools/tree/master/samples/typescript-library-project-demo)
 
-* [Angular Library Project Demo](https://github.com/lib-tools/lib-tools/tree/master/samples/angular-library-project-demo)
-
 * [Style Module Demo](https://github.com/lib-tools/lib-tools/tree/master/samples/style-module-demo)
 
 ## Some Projects Using Lib Tools
@@ -160,13 +158,6 @@ To learn more about workflow configuration, see [Build Workflow Configuration](h
   * [translit-js](https://github.com/DagonMetric/translit-js) - General purpose transliterate service for JavaScript applications
   * [myanmar-text-extractor-js](https://github.com/myanmartools/myanmar-text-extractor-js) - Burmese language (Myanmar text) extractor JavaScript library for word segmentation, text extraction or syllable break
   * [zawgyi-unicode-translit-rules](https://github.com/myanmartools/zawgyi-unicode-translit-rules) - Zawgyi Unicode transliterate / convert regular expression rules in JavaScript
-
-* Angular Projects
-  * [ng-entity-change-checker][https://github.com/DagonMetric/ng-entity-change-checker] - Object dirty checker and modified properties detector for Angular
-  * [ng-config](https://github.com/DagonMetric/ng-config) - Configuration and options service for Angular
-  * [ng-log](https://github.com/DagonMetric/ng-log) - Vendor-agnostic logging, analytics and telemetry service abstractions and some implementations for Angular
-  * [ng-cache](https://github.com/DagonMetric/ng-cache) - Caching service for Angular
-  * [ng-zawgyi-detector](https://github.com/myanmartools/ng-zawgyi-detector) - Zawgyi-One and standard Myanmar Unicode detector library for Angular
 
 ## General Discussions
 
