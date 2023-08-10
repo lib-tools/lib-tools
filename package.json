@@ -1,7 +1,7 @@
 {
   "name": "lib-tools",
   "version": "2.0.4",
-  "description": "The lib-tools helps you simplify the build, bundle, test and npm packaging workflows for Typescript, JavaScript library projects and assets module projects.",
+  "description": "The lib-tools helps you simplify the build, bundle, test and npm packaging workflows for Typescript / JavaScript library projects and assets module projects.",
   "author": "Lib Tools Team",
   "license": "MIT",
   "repository": {
