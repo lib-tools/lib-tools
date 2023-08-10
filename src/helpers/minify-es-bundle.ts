@@ -46,8 +46,11 @@ export async function minifyESBundle(
     //     });
     // }
 
-    await writeFile(outputPath, result.code);
+    if (result.code) {
+        await writeFile(outputPath, result.code);
+    }
+
     if (sourceMap && result.map) {
-        await writeFile(sourcemapOutputPth, result.map);
+        await writeFile(sourcemapOutputPth, result.map.toString());
     }
 }
