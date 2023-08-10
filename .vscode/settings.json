@@ -1,7 +1,4 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll": true
-  },
   "search.exclude": {
     "**/dist": true
   },
@@ -22,22 +19,21 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
     },
-    "editor.formatOnSave": false
+    "editor.formatOnSave": true
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
     },
-    "editor.formatOnSave": false
+    "editor.formatOnSave": true
   },
   "[html]": {
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
     },
-    "editor.formatOnSave": false
+    "editor.formatOnSave": true
   },
   "html.format.extraLiners": "",
-  "html.format.endWithNewline": true,
   "html.format.indentInnerHtml": true
 }
