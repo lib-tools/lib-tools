@@ -1,10 +1,7 @@
 import * as path from 'path';
-import { promisify } from 'util';
 
 import { pathExists } from 'fs-extra';
-import * as glob from 'glob';
-
-const globAsync = promisify(glob);
+import { glob } from 'glob';
 
 import { BuildConfig, ProjectConfigInternal, TestConfig, TsConfigInfo, WorkflowConfigInternal } from '../models';
 import { normalizePath } from '../utils';
@@ -20,7 +17,7 @@ import { readPackageJson } from './read-package-json';
 import { readWorkflowConfig } from './read-workflow-config';
 
 export async function detectWorkflowConfig(taskName: 'build' | 'test'): Promise<WorkflowConfigInternal | null> {
-    const foundPackageJsonPaths = await globAsync(
+    const foundPackageJsonPaths = await glob(
         '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
         {
             cwd: process.cwd(),
