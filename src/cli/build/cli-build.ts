@@ -7,7 +7,7 @@ import { Logger } from '../../utils';
 import { getWebpackBuildConfig } from '../../webpack/configs';
 
 export async function cliBuild(argv: BuildCommandOptions & { [key: string]: unknown }): Promise<number> {
-    const startTime = global.libCli && global.libCli.startTime > 0 ? global.libCli.startTime : Date.now();
+    const startTime = Date.now();
     let env: { [key: string]: boolean | string } | undefined;
 
     if (argv.environment) {
