@@ -1,7 +1,5 @@
 'use strict';
 
-const startTime = Date.now();
-
 const path = require('path');
 const fs = require('fs-extra');
 const resolve = require('resolve');
@@ -77,8 +75,7 @@ async function main() {
         version,
         isGlobal,
         isLink,
-        location,
-        startTime
+        location
     };
 
     const cli = require(cliPath);
