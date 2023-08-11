@@ -1,15 +1,11 @@
 import * as path from 'path';
-import { promisify } from 'util';
-
 import { pathExists, remove, stat } from 'fs-extra';
-import * as glob from 'glob';
-import * as minimatch from 'minimatch';
+import { glob } from 'glob';
+import { minimatch } from 'minimatch';
 import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, BuildConfigInternal, CleanOptions } from '../../../models';
 import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils';
-
-const globAsync = promisify(glob);
 
 export interface CleanWebpackPluginOptions {
     buildConfig: BuildConfigInternal;
@@ -172,7 +168,7 @@ export class CleanWebpackPlugin {
         if (patternsToExclude.length > 0) {
             await Promise.all(
                 patternsToExclude.map(async (excludePattern: string) => {
-                    const foundExcludePaths = await globAsync(excludePattern, {
+                    const foundExcludePaths = await glob(excludePattern, {
                         cwd: outputPath,
                         dot: true,
                         absolute: true
@@ -207,7 +203,7 @@ export class CleanWebpackPlugin {
                         pathsToClean.push(absolutePath);
                     }
                 } else {
-                    const foundPaths = await globAsync(cleanPattern, { cwd: outputPath, dot: true });
+                    const foundPaths = await glob(cleanPattern, { cwd: outputPath, dot: true });
                     foundPaths.forEach((p) => {
                         const absolutePath = path.isAbsolute(p) ? path.resolve(p) : path.resolve(outputPath, p);
                         if (!pathsToClean.includes(absolutePath)) {
