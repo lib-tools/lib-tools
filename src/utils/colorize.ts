@@ -1,4 +1,4 @@
-import * as supportsColor from 'supports-color';
+import supportsColor from 'supports-color';
 
 const defaultColors: { [key: string]: string } = {
     reset: '\u001b[0m',
