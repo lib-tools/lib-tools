@@ -1,15 +1,12 @@
 import * as path from 'path';
-import { promisify } from 'util';
 
 import { copy, pathExists, stat } from 'fs-extra';
-import * as glob from 'glob';
-import * as minimatch from 'minimatch';
+import { glob } from 'glob';
+import { minimatch } from 'minimatch';
 import * as webpack from 'webpack';
 
 import { BuildConfigInternal } from '../../..//models';
 import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils';
-
-const globAsync = promisify(glob);
 
 function excludeMatch(filePathRel: string, excludes: string[]): boolean {
     let il = excludes.length;
@@ -65,7 +62,7 @@ export class CopyWebpackPlugin {
             const hasMagic = glob.hasMagic(assetEntry.from);
 
             if (hasMagic) {
-                let foundPaths = await globAsync(assetEntry.from, {
+                let foundPaths = await glob(assetEntry.from, {
                     cwd: projectRoot,
                     nodir: true,
                     dot: true
@@ -142,7 +139,7 @@ export class CopyWebpackPlugin {
 
                     await copy(fromPath, toFilePath);
                 } else {
-                    let foundPaths = await globAsync('**/*', {
+                    let foundPaths = await glob('**/*', {
                         cwd: fromPath,
                         nodir: true,
                         dot: true
