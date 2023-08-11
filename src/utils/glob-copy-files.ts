@@ -1,10 +1,7 @@
 import * as path from 'path';
-import { promisify } from 'util';
 
 import { copy, move } from 'fs-extra';
-import * as glob from 'glob';
-
-const globAsync = promisify(glob);
+import { glob } from 'glob';
 
 export async function globCopyFiles(
     fromPath: string,
@@ -12,7 +9,7 @@ export async function globCopyFiles(
     toPath: string,
     forMove?: boolean
 ): Promise<void> {
-    const files = await globAsync(pattern, { cwd: fromPath });
+    const files = await glob(pattern, { cwd: fromPath });
     for (const relFileName of files) {
         const sourceFilePath = path.join(fromPath, relFileName);
         const destFilePath = path.join(toPath, relFileName);
