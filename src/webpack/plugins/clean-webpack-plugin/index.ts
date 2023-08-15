@@ -4,27 +4,16 @@ import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { Compiler } from 'webpack';
 
-import {
-    AfterEmitCleanOptions,
-    BeforeBuildCleanOptions,
-    BuildConfigInternal,
-    CleanOptions
-} from '../../../models/index.js';
+import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models/index.js';
 import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils/index.js';
 
-export interface CleanWebpackPluginOptions {
-    buildConfig: BuildConfigInternal;
-    logLevel?: LogLevelString;
-}
-
-interface CleanOptionsInternal extends CleanOptions {
+export interface CleanWebpackPluginOptions extends CleanOptions {
     workspaceRoot: string;
     outputPath: string;
     logLevel?: LogLevelString;
 }
 
 export class CleanWebpackPlugin {
-    private readonly options: CleanOptionsInternal;
     private readonly logger: Logger;
     private beforeRunCleaned = false;
     private afterEmitCleaned = false;
@@ -33,9 +22,7 @@ export class CleanWebpackPlugin {
         return 'clean-webpack-plugin';
     }
 
-    constructor(options: CleanWebpackPluginOptions) {
-        this.options = this.prepareCleanOptions(options);
-
+    constructor(private readonly options: CleanWebpackPluginOptions) {
         this.logger = new Logger({
             logLevel: this.options.logLevel || 'info'
         });
@@ -297,44 +284,5 @@ export class CleanWebpackPlugin {
                 await remove(pathToClean);
             }
         }
-    }
-
-    private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
-        const buildConfig = options.buildConfig;
-        const workspaceRoot = buildConfig._workspaceRoot;
-        let outputPath = buildConfig._outputPath;
-        if (buildConfig._nestedPackage) {
-            const nestedPackageStartIndex = buildConfig._packageNameWithoutScope.indexOf('/') + 1;
-            const nestedPackageSuffix = buildConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
-            outputPath = path.resolve(outputPath, nestedPackageSuffix);
-        }
-
-        const cleanConfigOptions = typeof buildConfig.clean === 'object' ? buildConfig.clean : {};
-
-        const cleanOptions: CleanOptionsInternal = {
-            ...cleanConfigOptions,
-            workspaceRoot,
-            outputPath,
-            logLevel: options.logLevel
-        };
-
-        cleanOptions.beforeBuild = cleanOptions.beforeBuild || {};
-        const beforeBuildOption = cleanOptions.beforeBuild;
-
-        let skipCleanOutDir = false;
-
-        if (buildConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
-            skipCleanOutDir = true;
-        }
-
-        if (skipCleanOutDir) {
-            beforeBuildOption.cleanOutDir = false;
-        } else if (beforeBuildOption.cleanOutDir == null) {
-            beforeBuildOption.cleanOutDir = true;
-        }
-
-        cleanOptions.beforeBuild = beforeBuildOption;
-
-        return cleanOptions;
     }
 }

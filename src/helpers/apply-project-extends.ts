@@ -12,7 +12,7 @@ export async function applyProjectExtends(
     projects: { [key: string]: ProjectConfigInternal } | ProjectConfigInternal[] = {},
     configPath: string
 ): Promise<void> {
-    if (!projectConfig.extends || !projectConfig.extends.trim().length) {
+    if (configPath === 'auto' || !projectConfig.extends || !projectConfig.extends.trim().length) {
         return;
     }
 

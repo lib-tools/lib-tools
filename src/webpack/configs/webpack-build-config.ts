@@ -11,11 +11,13 @@ import {
     getWorkflowConfig,
     toBuildActionInternal
 } from '../../helpers/index.js';
-import { BuildCommandOptions, BuildConfigInternal, ProjectConfigInternal } from '../../models/index.js';
-import { normalizePath } from '../../utils/index.js';
+import { BuildCommandOptions, BuildConfigInternal, CleanOptions, ProjectConfigInternal } from '../../models/index.js';
+import { LogLevelString, normalizePath } from '../../utils/index.js';
 
-import { BuildInfoWebpackPlugin } from '../plugins/build-info-webpack-plugin/index.js';
+import { ProjectBuildInfoWebpackPlugin } from '../plugins/project-build-info-webpack-plugin/index.js';
+import { CleanWebpackPlugin, CleanWebpackPluginOptions } from '../plugins/clean-webpack-plugin/index.js';
 import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin/index.js';
+import { StyleBuildInfoWebpackPlugin } from '../plugins/style-build-info-webpack-plugin/index.js';
 
 export async function getWebpackBuildConfig(
     env?: { [key: string]: boolean | string },
@@ -30,76 +32,24 @@ export async function getWebpackBuildConfig(
 
     const filteredProjectNames: string[] = [];
 
-    if (isFromWebpackCli()) {
-        if (argv && (argv.projectName || argv['project-name'])) {
-            const projectName = (argv.projectName || argv['project-name']) as string;
-            filteredProjectNames.push(projectName);
-        }
+    if (argv) {
+        buildCommandOptions = { ...(argv as BuildCommandOptions), ...buildCommandOptions };
+    }
 
-        if (!env && process.env.WEBPACK_ENV) {
-            const rawEnvStr = process.env.WEBPACK_ENV;
-            const rawEnv =
-                typeof rawEnvStr === 'string'
-                    ? (JSON.parse(rawEnvStr) as { [key: string]: unknown })
-                    : (rawEnvStr as { [key: string]: unknown });
-
-            if (rawEnv.buildCommandOptions) {
-                if (typeof rawEnv.buildCommandOptions === 'object') {
-                    buildCommandOptions = { ...buildCommandOptions, ...rawEnv.buildCommandOptions };
-                }
-
-                delete rawEnv.buildCommandOptions;
-            }
-
-            environment = {
-                ...environment,
-                ...getEnvironment(rawEnv as { [key: string]: boolean | string }, null)
-            };
-        }
-
-        if (argv && argv.mode) {
-            if (argv.mode === 'production') {
-                environment.prod = true;
-                environment.production = true;
-
-                if (environment.dev) {
-                    environment.dev = false;
-                }
-                if (environment.development) {
-                    environment.development = false;
-                }
-            } else if (argv.mode === 'development') {
-                environment.dev = true;
-                environment.development = true;
-
-                if (environment.prod) {
-                    environment.prod = false;
-                }
-                if (environment.production) {
-                    environment.production = false;
-                }
-            }
-        }
-    } else {
-        if (argv) {
-            buildCommandOptions = { ...(argv as BuildCommandOptions), ...buildCommandOptions };
-        }
-
-        if (buildCommandOptions.filter) {
-            if (Array.isArray(buildCommandOptions.filter)) {
-                buildCommandOptions.filter
-                    .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
-                    .forEach((projectName) => {
-                        filteredProjectNames.push(projectName);
-                    });
-            } else {
-                buildCommandOptions.filter
-                    .split(',')
-                    .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
-                    .forEach((projectName) => {
-                        filteredProjectNames.push(projectName);
-                    });
-            }
+    if (buildCommandOptions.filter) {
+        if (Array.isArray(buildCommandOptions.filter)) {
+            buildCommandOptions.filter
+                .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
+                .forEach((projectName) => {
+                    filteredProjectNames.push(projectName);
+                });
+        } else {
+            buildCommandOptions.filter
+                .split(',')
+                .filter((projectName) => projectName && !filteredProjectNames.includes(projectName))
+                .forEach((projectName) => {
+                    filteredProjectNames.push(projectName);
+                });
         }
     }
 
@@ -107,21 +57,15 @@ export async function getWebpackBuildConfig(
 
     const workflowConfig = await getWorkflowConfig(buildCommandOptions, 'build');
 
-    const filteredProjectConfigs = Object.keys(workflowConfig.projects)
+    const projectConfigInternals = Object.keys(workflowConfig.projects)
         .filter((projectName) => !filteredProjectNames.length || filteredProjectNames.includes(projectName))
-        .map((projectName) => workflowConfig.projects[projectName]);
+        .map((projectName) => workflowConfig.projects[projectName])
+        .map((projectConfig) => JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal);
 
-    if (!filteredProjectConfigs.length) {
-        throw new Error('No project config to build.');
-    }
+    const selectedProjectConfigInternals: ProjectConfigInternal[] = [];
 
-    const webpackConfigs: Configuration[] = [];
-
-    for (const projectConfig of filteredProjectConfigs) {
-        const projectConfigInternal = JSON.parse(JSON.stringify(projectConfig)) as ProjectConfigInternal;
-        if (projectConfigInternal._config !== 'auto') {
-            await applyProjectExtends(projectConfigInternal, workflowConfig.projects, projectConfig._config);
-        }
+    for (const projectConfigInternal of projectConfigInternals) {
+        await applyProjectExtends(projectConfigInternal, workflowConfig.projects, projectConfigInternal._config);
 
         if (!projectConfigInternal.tasks || !projectConfigInternal.tasks.build) {
             continue;
@@ -135,16 +79,30 @@ export async function getWebpackBuildConfig(
             continue;
         }
 
+        selectedProjectConfigInternals.push(projectConfigInternal);
+    }
+
+    if (!selectedProjectConfigInternals.length) {
+        throw new Error('No project config to build.');
+    }
+
+    const webpackConfigs: Configuration[] = [];
+
+    let currentProjectNumber = 0;
+    let totalProjectsCount = selectedProjectConfigInternals.length;
+
+    for (const projectConfigInternal of selectedProjectConfigInternals) {
+        ++currentProjectNumber;
+
         const buildConfigInternal = await toBuildActionInternal(projectConfigInternal, buildCommandOptions);
-
-        const wpConfig = (await getWebpackBuildConfigInternal(
+        const webpackBuildConfigs = await getWebpackBuildConfigInternal(
             buildConfigInternal,
-            buildCommandOptions
-        )) as Configuration | null;
+            buildCommandOptions,
+            currentProjectNumber,
+            totalProjectsCount
+        );
 
-        if (wpConfig) {
-            webpackConfigs.push(wpConfig);
-        }
+        webpackConfigs.push(...webpackBuildConfigs);
     }
 
     return webpackConfigs;
@@ -152,12 +110,14 @@ export async function getWebpackBuildConfig(
 
 async function getWebpackBuildConfigInternal(
     buildConfig: BuildConfigInternal,
-    buildCommandOptions: BuildCommandOptions
+    buildCommandOptions: BuildCommandOptions,
+    currentProjectNumber: number,
+    totalProjectCount: number
 ): Promise<Configuration[]> {
     const webpackConfigs: Configuration[] = [];
 
-    const rootWebpackConfig: Configuration = {
-        name: buildConfig._projectName,
+    const firstWebpackConfig: Configuration = {
+        name: `${buildConfig._projectName}`,
         entry: () => ({}),
         output: {
             path: buildConfig._outputPath,
@@ -165,33 +125,31 @@ async function getWebpackBuildConfigInternal(
         },
         context: buildConfig._projectRoot,
         plugins: [
-            new BuildInfoWebpackPlugin({
+            new ProjectBuildInfoWebpackPlugin({
                 buildConfig,
+                currentProjectNumber,
+                totalProjectCount,
                 logLevel: buildCommandOptions.logLevel
             })
         ],
         stats: 'errors-only'
     };
 
-    webpackConfigs.push(rootWebpackConfig);
+    webpackConfigs.push(firstWebpackConfig);
 
-    // Clean plugin
-    if (buildConfig.clean !== false) {
-        const pluginModule = await import('../plugins/clean-webpack-plugin/index.js');
-        const CleanWebpackPlugin = pluginModule.CleanWebpackPlugin;
-        rootWebpackConfig.plugins?.push(
-            new CleanWebpackPlugin({
-                buildConfig,
-                logLevel: buildCommandOptions.logLevel
-            })
-        );
+    // Clean plugin for before build
+    if (buildConfig.clean) {
+        const cleanPlugin = getCleanWebpackPlugin(buildConfig, 'beforeBuild', buildCommandOptions.logLevel);
+        if (cleanPlugin != null) {
+            firstWebpackConfig.plugins?.push(cleanPlugin);
+        }
     }
 
     // Copy plugin
     if (buildConfig._assetEntries.length > 0) {
         const pluginModule = await import('../plugins/copy-webpack-plugin/index.js');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
-        rootWebpackConfig.plugins?.push(
+        firstWebpackConfig.plugins?.push(
             new CopyWebpackPlugin({
                 buildConfig,
                 logLevel: buildCommandOptions.logLevel
@@ -199,19 +157,10 @@ async function getWebpackBuildConfigInternal(
         );
     }
 
-    // package.json plugin
-    if (buildConfig._packageJson) {
-        rootWebpackConfig.plugins?.push(
-            new PackageJsonFileWebpackPlugin({
-                buildConfig,
-                logLevel: buildCommandOptions.logLevel
-            })
-        );
-    }
-
     // styles
-    if (buildConfig._styleEntries && buildConfig._styleEntries.length > 0) {
+    if (buildConfig._styleEntries && buildConfig._styleEntries.length) {
         let styleCounter = 0;
+
         for (let styleEntry of buildConfig._styleEntries) {
             ++styleCounter;
             const inputFilePath = styleEntry._inputFilePath;
@@ -253,7 +202,7 @@ async function getWebpackBuildConfigInternal(
                     sourceMap: styleEntry._sourceMap,
 
                     // Prefer Dart Sass
-                    implementation: require('sass'),
+                    // implementation: require('sass'),
 
                     // See https://github.com/webpack-contrib/sass-loader/issues/804
                     webpackImporter: false,
@@ -291,6 +240,11 @@ async function getWebpackBuildConfigInternal(
                         }
                     ]
                 },
+                plugins: [
+                    new StyleBuildInfoWebpackPlugin({
+                        styleEntryName: normalizePath(path.relative(buildConfig._workspaceRoot, inputFilePath))
+                    })
+                ],
                 stats: 'errors-only'
             };
 
@@ -323,9 +277,109 @@ async function getWebpackBuildConfigInternal(
         // TODO:
     }
 
+    // package.json plugin
+    if (buildConfig._packageJson) {
+        firstWebpackConfig.plugins?.push(
+            new PackageJsonFileWebpackPlugin({
+                buildConfig,
+                logLevel: buildCommandOptions.logLevel
+            })
+        );
+    }
+
+    // Clean plugin for after emits
+    if (buildConfig.clean && typeof buildConfig.clean === 'object' && buildConfig.clean.afterEmit) {
+        const cleanPlugin = getCleanWebpackPlugin(buildConfig, 'afterEmit', buildCommandOptions.logLevel);
+        if (cleanPlugin != null) {
+            if (webpackConfigs.length === 1) {
+                firstWebpackConfig.plugins?.push(cleanPlugin);
+            } else {
+                const dependencies = webpackConfigs
+                    .filter((wpConfig) => wpConfig.name)
+                    .map((wpConfig) => wpConfig.name as string);
+
+                const lastWebpackConfig: Configuration = {
+                    name: `${buildConfig._projectName}-last`,
+                    dependencies,
+                    entry: () => ({}),
+                    output: {
+                        path: buildConfig._outputPath,
+                        filename: '[name].js'
+                    },
+                    context: buildConfig._projectRoot,
+                    plugins: [cleanPlugin],
+                    stats: 'errors-only'
+                };
+
+                webpackConfigs.push(lastWebpackConfig);
+            }
+        }
+    }
+
     return Promise.resolve(webpackConfigs);
 }
 
-function isFromWebpackCli(): boolean {
-    return process.argv.length >= 2 && /(\\|\/)?webpack(\.js)?$/i.test(process.argv[1]);
+function getCleanWebpackPlugin(
+    buildConfig: BuildConfigInternal,
+    cleanFor: 'beforeBuild' | 'afterEmit',
+    logLevel?: LogLevelString
+): CleanWebpackPlugin | null {
+    const cleanConfigOptions =
+        typeof buildConfig.clean === 'object' ? (JSON.parse(JSON.stringify(buildConfig.clean)) as CleanOptions) : {};
+
+    if (
+        cleanFor === 'afterEmit' &&
+        (!cleanConfigOptions.afterEmit ||
+            (cleanConfigOptions.afterEmit &&
+                (!cleanConfigOptions.afterEmit.paths || !cleanConfigOptions.afterEmit.paths.length)))
+    ) {
+        return null;
+    }
+
+    let skipCleanOutDir = false;
+    if (buildConfig._nestedPackage && cleanConfigOptions.beforeBuild && cleanConfigOptions.beforeBuild.cleanOutDir) {
+        skipCleanOutDir = true;
+    }
+
+    if (cleanFor === 'beforeBuild') {
+        if (
+            skipCleanOutDir &&
+            (!cleanConfigOptions.beforeBuild ||
+                !Object.keys(cleanConfigOptions.beforeBuild).length ||
+                !cleanConfigOptions.beforeBuild.paths ||
+                !cleanConfigOptions.beforeBuild.paths.length)
+        ) {
+            return null;
+        }
+    }
+
+    const workspaceRoot = buildConfig._workspaceRoot;
+    let outputPath = buildConfig._outputPath;
+    if (buildConfig._nestedPackage) {
+        const nestedPackageStartIndex = buildConfig._packageNameWithoutScope.indexOf('/') + 1;
+        const nestedPackageSuffix = buildConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
+        outputPath = path.resolve(outputPath, nestedPackageSuffix);
+    }
+
+    const cleanOptions: CleanWebpackPluginOptions = {
+        ...cleanConfigOptions,
+        workspaceRoot,
+        outputPath,
+        logLevel
+    };
+
+    if (cleanFor === 'beforeBuild') {
+        cleanOptions.beforeBuild = cleanOptions.beforeBuild || {};
+        const beforeBuildOption = cleanOptions.beforeBuild;
+
+        if (skipCleanOutDir) {
+            beforeBuildOption.cleanOutDir = false;
+        } else if (beforeBuildOption.cleanOutDir == null) {
+            beforeBuildOption.cleanOutDir = true;
+        }
+
+        cleanOptions.beforeBuild = beforeBuildOption;
+    }
+
+    return new CleanWebpackPlugin(cleanOptions);
 }

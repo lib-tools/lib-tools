@@ -45,7 +45,7 @@ export interface CleanOptions {
      */
     afterEmit?: AfterEmitCleanOptions;
     /**
-     * If trye, allow cleaning outside of the output directory.
+     * If true, allow cleaning outside of the output directory.
      */
     allowOutsideOutDir?: boolean;
     /**
