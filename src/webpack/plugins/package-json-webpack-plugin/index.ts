@@ -232,7 +232,10 @@ export class PackageJsonFileWebpackPlugin {
             }
 
             if (!(await pathExists(buildConfig._packageJsonOutDir))) {
-                await fs.mkdir(buildConfig._packageJsonOutDir);
+                await fs.mkdir(buildConfig._packageJsonOutDir, {
+                    mode: 0o777,
+                    recursive: true
+                });
             }
 
             await fs.writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));

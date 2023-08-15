@@ -12,7 +12,10 @@ const destDir = path.resolve(__dirname, '../dist');
 const distStartRegExp = /^\.?\/?dist\//;
 
 if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
+    fs.mkdirSync(destDir, {
+        mode: 0o777,
+        recursive: true
+    });
 }
 
 // copy package.json

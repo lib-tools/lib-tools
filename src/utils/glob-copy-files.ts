@@ -16,7 +16,10 @@ export async function globCopyFiles(
         const destFilePath = path.join(toPath, relFileName);
 
         if (!(await pathExists(path.dirname(destFilePath)))) {
-            await fs.mkdir(path.dirname(destFilePath));
+            await fs.mkdir(path.dirname(destFilePath), {
+                mode: 0o777,
+                recursive: true
+            });
         }
 
         if (forMove) {

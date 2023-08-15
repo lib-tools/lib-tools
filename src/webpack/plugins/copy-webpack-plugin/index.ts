@@ -99,7 +99,10 @@ export class CopyWebpackPlugin {
                         this.logger.debug(`Copying ${normalizePath(foundFileRel)} file`);
 
                         if (!(await pathExists(path.dirname(toFilePath)))) {
-                            await fs.mkdir(path.dirname(toFilePath));
+                            await fs.mkdir(path.dirname(toFilePath), {
+                                mode: 0o777,
+                                recursive: true
+                            });
                         }
 
                         await fs.copyFile(fromFilePath, toFilePath);

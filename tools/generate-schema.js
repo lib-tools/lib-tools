@@ -25,7 +25,10 @@ function generateSchemaJsonFile() {
     const schemaOutputFilePath = path.resolve(schemaOutDir, 'schema.json');
 
     if (!fs.existsSync(schemaOutDir)) {
-        fs.mkdirSync(schemaOutDir);
+        fs.mkdirSync(schemaOutDir, {
+            mode: 0o777,
+            recursive: true
+        });
     }
 
     spawn.sync(
