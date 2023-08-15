@@ -1,8 +1,8 @@
+import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 import Ajv from 'ajv';
-import * as fs from 'fs-extra';
 
 import { WorkflowConfig } from '../models/index.js';
 import { readJsonWithComments } from '../utils/index.js';
@@ -43,7 +43,8 @@ export async function getWorkflowConfigSchema(): Promise<{ [key: string]: unknow
     }
 
     const schemaRootPath = path.resolve(__dirname, '../schemas');
-    const schema = (await fs.readJSON(path.resolve(schemaRootPath, 'schema.json'))) as { [key: string]: unknown };
+    const content = await fs.readFile(path.resolve(schemaRootPath, 'schema.json'), { encoding: 'utf8' });
+    const schema = JSON.parse(content) as { [key: string]: unknown };
 
     if (schema.$schema) {
         delete schema.$schema;

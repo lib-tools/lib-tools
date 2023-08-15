@@ -1,8 +1,7 @@
 import * as path from 'path';
 
-import * as fs from 'fs-extra';
-
 import { ProjectConfigInternal } from '../models/index.js';
+import { pathExists } from '../utils/index.js';
 
 import { readWorkflowConfig } from './read-workflow-config.js';
 import { toWorkflowConfigInternal } from './to-workflow-config-internal.js';
@@ -126,7 +125,7 @@ async function getBaseProjectConfigFromFile(
         ? path.resolve(parts[1])
         : path.resolve(path.dirname(projectConfig._config || rootConfigPath), parts[1]);
 
-    if (!(await fs.pathExists(extendsFilePath))) {
+    if (!(await pathExists(extendsFilePath))) {
         throw new Error(
             `Error in extending project config. No file exists at ${extendsFilePath}, config location ${currentConfigFile} -> ${configErrorLocation}.`
         );

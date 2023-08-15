@@ -1,12 +1,12 @@
 import * as path from 'path';
 
-import { copy, pathExists, stat } from 'fs-extra';
+import * as fs from 'fs/promises';
 import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import * as webpack from 'webpack';
 
 import { BuildConfigInternal } from '../../..//models/index.js';
-import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils/index.js';
+import { LogLevelString, Logger, isSamePaths, normalizePath, pathExists } from '../../../utils/index.js';
 
 function excludeMatch(filePathRel: string, excludes: string[]): boolean {
     let il = excludes.length;
@@ -98,7 +98,7 @@ export class CopyWebpackPlugin {
 
                         this.logger.debug(`Copying ${normalizePath(foundFileRel)} file`);
 
-                        await copy(fromFilePath, toFilePath);
+                        await fs.copyFile(fromFilePath, toFilePath);
                     })
                 );
             } else {
@@ -110,7 +110,7 @@ export class CopyWebpackPlugin {
                     continue;
                 }
 
-                const stats = await stat(fromPath);
+                const stats = await fs.stat(fromPath);
                 if (stats.isFile()) {
                     const fromPathRel = normalizePath(path.relative(projectRoot, fromPath));
                     if (excludeMatch(fromPathRel, excludes)) {
@@ -137,7 +137,7 @@ export class CopyWebpackPlugin {
 
                     this.logger.debug(`Copying ${fromPathRel} file`);
 
-                    await copy(fromPath, toFilePath);
+                    await fs.copyFile(fromPath, toFilePath);
                 } else {
                     let foundPaths = await glob('**/*', {
                         cwd: fromPath,
@@ -170,7 +170,7 @@ export class CopyWebpackPlugin {
                                 `Copying ${normalizePath(path.relative(projectRoot, foundFromFilePath))} file`
                             );
 
-                            await copy(foundFromFilePath, toFilePath);
+                            await fs.copyFile(foundFromFilePath, toFilePath);
                         })
                     );
                 }

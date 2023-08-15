@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import fs from 'fs-extra';
 import spawn from 'cross-spawn';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function modifySchemaJsonFile(schemaFilePath) {
-    const schemaJson = fs.readJSONSync(schemaFilePath);
+    const schemaContent = fs.readFileSync(schemaFilePath, { encoding: 'utf-8' });
+    const schemaJson = JSON.parse(schemaContent);
     if (schemaJson.$schema) {
         delete schemaJson.$schema;
     }
@@ -23,7 +24,9 @@ function generateSchemaJsonFile() {
     const tsConfigFile = path.resolve(__dirname, '../tsconfig.schema.json');
     const schemaOutputFilePath = path.resolve(schemaOutDir, 'schema.json');
 
-    fs.ensureDirSync(schemaOutDir);
+    if (!fs.existsSync(schemaOutDir)) {
+        fs.mkdirSync(schemaOutDir);
+    }
 
     spawn.sync(
         path.join(process.cwd(), 'node_modules/.bin/typescript-json-schema'),

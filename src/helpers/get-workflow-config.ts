@@ -1,9 +1,7 @@
 import * as path from 'path';
 
-import { pathExists } from 'fs-extra';
-
 import { SharedCommandOptions, WorkflowConfigInternal } from '../models/index.js';
-import { findUp } from '../utils/index.js';
+import { findUp, pathExists } from '../utils/index.js';
 
 import { detectWorkflowConfig } from './detect-workflow-config.js';
 import { readWorkflowConfig } from './read-workflow-config.js';

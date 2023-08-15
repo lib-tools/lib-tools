@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import * as fs from 'fs-extra';
+import * as fs from 'fs/promises';
 
 import { BuildConfigInternal } from '../models/index.js';
 import { findUp } from '../utils/index.js';

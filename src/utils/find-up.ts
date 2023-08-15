@@ -1,8 +1,7 @@
 import * as path from 'path';
 
-import { pathExists } from 'fs-extra';
-
 import { isInFolder, isSamePaths } from './path-helpers.js';
+import { pathExists } from './path-exists.js';
 
 export async function findUp(
     pathName: string | string[],

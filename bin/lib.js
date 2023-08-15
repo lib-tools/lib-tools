@@ -2,11 +2,10 @@
 
 'use strict';
 
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-
-import fs from 'fs-extra';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +29,8 @@ const getCliInfo = async () => {
         packageJsonPath = path.resolve(__dirname, '../package.json');
     }
 
-    const packageJson = await fs.readJSON(packageJsonPath);
+    const content = await fs.readFile(packageJsonPath, { encoding: 'utf-8' });
+    const packageJson = JSON.parse(content);
     const version = packageJson.version;
     const cliPath = path.resolve(
         path.dirname(packageJsonPath),

@@ -1,11 +1,11 @@
 import * as path from 'path';
-import * as fs from 'fs-extra';
+import * as fs from 'fs/promises';
 import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { Compiler } from 'webpack';
 
 import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models/index.js';
-import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils/index.js';
+import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath, pathExists } from '../../../utils/index.js';
 
 export interface CleanWebpackPluginOptions extends CleanOptions {
     workspaceRoot: string;
@@ -140,7 +140,7 @@ export class CleanWebpackPlugin {
         if (pathsToExclude.length > 0) {
             await Promise.all(
                 pathsToExclude.map(async (excludePath: string) => {
-                    const isExists = await fs.pathExists(excludePath);
+                    const isExists = await pathExists(excludePath);
                     if (isExists) {
                         const statInfo = await fs.stat(excludePath);
                         if (statInfo.isDirectory()) {
@@ -271,7 +271,7 @@ export class CleanWebpackPlugin {
                 }
             }
 
-            const exists = await fs.pathExists(pathToClean);
+            const exists = await pathExists(pathToClean);
             if (exists) {
                 const relToWorkspace = normalizePath(path.relative(workspaceRoot, pathToClean));
 
@@ -281,7 +281,7 @@ export class CleanWebpackPlugin {
                     this.logger.info(`${msgPrefix} ${relToWorkspace}`);
                 }
 
-                await fs.remove(pathToClean);
+                await fs.unlink(pathToClean);
             }
         }
     }

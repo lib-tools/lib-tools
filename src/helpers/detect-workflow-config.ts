@@ -1,9 +1,9 @@
 import * as path from 'path';
 
-import { pathExists } from 'fs-extra';
 import { glob } from 'glob';
 
 import { ProjectConfigInternal, WorkflowConfigInternal } from '../models/index.js';
+import { pathExists } from '../utils/index.js';
 
 // import { detectTsEntryName } from './detect-ts-entry-name';
 // import { findBuildTsconfigFile } from './find-build-tsconfig-file';

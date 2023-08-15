@@ -1,10 +1,10 @@
 import * as path from 'path';
 
-import * as fs from 'fs-extra';
+import * as fs from 'fs/promises';
 import * as webpack from 'webpack';
 
 import { BuildConfigInternal, PackageJsonLike } from '../../../models/index.js';
-import { LogLevelString, Logger } from '../../../utils/index.js';
+import { LogLevelString, Logger, pathExists } from '../../../utils/index.js';
 
 const placeholderRegExp = /\[PLACEHOLDER\]/;
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER');
@@ -56,7 +56,7 @@ export class PackageJsonFileWebpackPlugin {
             const entryPointKeys = Object.keys(buildConfig._packageJsonEntryPoint);
             for (const entryPointKey of entryPointKeys) {
                 const entryPointValue = buildConfig._packageJsonEntryPoint[entryPointKey];
-                if (!(await fs.pathExists(path.resolve(buildConfig._packageJsonOutDir, entryPointValue)))) {
+                if (!(await pathExists(path.resolve(buildConfig._packageJsonOutDir, entryPointValue)))) {
                     throw new Error(`Internal error, entry point: ${entryPointValue} doesn't exists.`);
                 }
 
@@ -222,7 +222,7 @@ export class PackageJsonFileWebpackPlugin {
 
         // write package config
         const packageJsonOutFilePath = path.resolve(buildConfig._packageJsonOutDir, 'package.json');
-        const packageJsonOutFileExists = await fs.pathExists(packageJsonOutFilePath);
+        const packageJsonOutFileExists = await pathExists(packageJsonOutFilePath);
 
         if (!packageJsonOutFileExists || packageJsonChanged) {
             if (!packageJsonOutFileExists) {
@@ -231,7 +231,10 @@ export class PackageJsonFileWebpackPlugin {
                 this.logger.info(`Updating package.json file`);
             }
 
-            await fs.ensureDir(buildConfig._packageJsonOutDir);
+            if (!(await pathExists(buildConfig._packageJsonOutDir))) {
+                await fs.mkdir(buildConfig._packageJsonOutDir);
+            }
+
             await fs.writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
         }
     }
