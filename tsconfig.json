@@ -28,10 +28,6 @@
     "types": [
       "node"
     ],
-    "typeRoots": [
-      "./node_modules/@types",
-      "src/typings"
-    ],
     "baseUrl": ".",
     "rootDir": ".",
     "outDir": "./dist"
