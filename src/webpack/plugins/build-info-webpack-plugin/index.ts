@@ -1,5 +1,7 @@
-import { BuildConfigInternal } from '../../../models';
-import { LogLevelString, Logger, colorize } from '../../../utils';
+import chalk from 'chalk';
+
+import { BuildConfigInternal } from '../../../models/index.js';
+import { LogLevelString, Logger } from '../../../utils/index.js';
 
 if (!global.buildCounter) {
     global.buildCounter = { count: 0 };
@@ -30,6 +32,6 @@ export class BuildInfoWebpackPlugin {
             this.logger.info('\n');
         }
         ++buildCounter.count;
-        this.logger.info(`Running build for ${colorize(this.options.buildConfig._projectName, 'cyan')}`);
+        this.logger.info(`Running build for ${chalk.cyan(this.options.buildConfig._projectName)}`);
     }
 }

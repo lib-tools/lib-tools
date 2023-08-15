@@ -1,7 +1,7 @@
 import * as path from 'path';
 
-import { BuildConfigInternal } from '../models';
-import { findUp } from '../utils';
+import { BuildConfigInternal } from '../models/index.js';
+import { findUp } from '../utils/index.js';
 
 export async function prepareAssetEntries(buildConfig: BuildConfigInternal): Promise<void> {
     if (buildConfig.copy) {

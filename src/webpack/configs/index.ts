@@ -1,2 +1,1 @@
-export * from './webpack-build-config';
-export * from './webpack-test-config';
+export * from './webpack-build-config.js';

@@ -2,13 +2,13 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-import { AutoPrefixerOptions, BuildConfigInternal, CleanCSSOptions } from '../models';
-import { normalizePath } from '../utils';
+import { AutoPrefixerOptions, BuildConfigInternal, CssMinimizerPresetOptions } from '../models/index.js';
+import { normalizePath } from '../utils/index.js';
 
 const inputExtRegExp = /\.(sass|scss|css)$/i;
 const outputExtRegExp = /\.css$/i;
 
-export async function prepareStyles(buildConfig: BuildConfigInternal): Promise<void> {
+export async function prepareForStyleModule(buildConfig: BuildConfigInternal): Promise<void> {
     if (!buildConfig.style) {
         return;
     }
@@ -67,13 +67,12 @@ export async function prepareStyles(buildConfig: BuildConfigInternal): Promise<v
             outputFilePath = path.resolve(buildConfig._outputPath, outputFileName);
         }
 
-        let includePaths: string[] = [];
-        if (styleEntry.includePaths) {
-            includePaths = styleEntry.includePaths.map((includePath: string) => path.resolve(projectRoot, includePath));
-        } else if (styleOptions.includePaths) {
-            includePaths = styleOptions.includePaths.map((includePath: string) =>
-                path.resolve(projectRoot, includePath)
-            );
+        // TODO: To review
+        let loadPaths: string[] = [];
+        if (styleEntry.loadPaths) {
+            loadPaths = styleEntry.loadPaths.map((includePath: string) => path.resolve(projectRoot, includePath));
+        } else if (styleOptions.loadPaths) {
+            loadPaths = styleOptions.loadPaths.map((includePath: string) => path.resolve(projectRoot, includePath));
         }
 
         let sourceMap = true;
@@ -83,11 +82,11 @@ export async function prepareStyles(buildConfig: BuildConfigInternal): Promise<v
             sourceMap = styleOptions.sourceMap;
         }
 
-        let sourceMapContents = true;
-        if (styleEntry.sourceMapContents != null) {
-            sourceMapContents = styleEntry.sourceMapContents;
-        } else if (styleOptions.sourceMapContents != null) {
-            sourceMapContents = styleOptions.sourceMapContents;
+        let sourceMapIncludeSources = true;
+        if (styleEntry.sourceMapIncludeSources != null) {
+            sourceMapIncludeSources = styleEntry.sourceMapIncludeSources;
+        } else if (styleOptions.sourceMapIncludeSources != null) {
+            sourceMapIncludeSources = styleOptions.sourceMapIncludeSources;
         }
 
         let vendorPrefixes: boolean | AutoPrefixerOptions = true;
@@ -97,7 +96,7 @@ export async function prepareStyles(buildConfig: BuildConfigInternal): Promise<v
             vendorPrefixes = styleOptions.vendorPrefixes;
         }
 
-        let minify: boolean | CleanCSSOptions = true;
+        let minify: boolean | CssMinimizerPresetOptions = true;
         if (styleEntry.minify != null) {
             minify = styleEntry.minify;
         } else if (styleOptions.minify != null) {
@@ -117,9 +116,9 @@ export async function prepareStyles(buildConfig: BuildConfigInternal): Promise<v
             ...styleEntry,
             _inputFilePath: inputFilePath,
             _outputFilePath: outputFilePath,
-            _includePaths: includePaths,
+            _loadPaths: loadPaths,
             _sourceMap: sourceMap,
-            _sourceMapContents: sourceMapContents,
+            _sourceMapIncludeSources: sourceMapIncludeSources,
             _vendorPrefixes: vendorPrefixes,
             _minify: minify,
             _minOutputFilePath: minOutputFilePath

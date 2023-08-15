@@ -4,8 +4,13 @@ import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { Compiler } from 'webpack';
 
-import { AfterEmitCleanOptions, BeforeBuildCleanOptions, BuildConfigInternal, CleanOptions } from '../../../models';
-import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils';
+import {
+    AfterEmitCleanOptions,
+    BeforeBuildCleanOptions,
+    BuildConfigInternal,
+    CleanOptions
+} from '../../../models/index.js';
+import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils/index.js';
 
 export interface CleanWebpackPluginOptions {
     buildConfig: BuildConfigInternal;

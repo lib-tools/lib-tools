@@ -2,7 +2,7 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-import { findUp } from '../utils';
+import { findUp } from '../utils/index.js';
 
 const cache = new Map<string, string>();
 

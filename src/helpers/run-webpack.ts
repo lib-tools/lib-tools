@@ -1,6 +1,6 @@
-import * as webpack from 'webpack';
+import webpack from 'webpack';
 
-import { LoggerBase } from '../utils/logger';
+import { LoggerBase } from '../utils/logger.js';
 
 export async function runWebpack(
     wpConfig: webpack.Configuration | webpack.Configuration[],

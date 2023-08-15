@@ -4,22 +4,22 @@ import {
     AssetEntry,
     AutoPrefixerOptions,
     BuildConfig,
-    CleanCSSOptions,
+    CssMinimizerPresetOptions,
     ScriptBundleOptions,
     ScriptCompilationOptions,
     ScriptOptions,
     StyleEntry
-} from './build-config';
-import { PackageJsonLike } from './package-jon-like';
+} from './build-config.js';
+import { PackageJsonLike } from './package-json-like.js';
 
 export interface StyleEntryInternal extends StyleEntry {
     _inputFilePath: string;
     _outputFilePath: string;
-    _includePaths: string[];
+    _loadPaths: string[];
     _sourceMap: boolean;
-    _sourceMapContents: boolean;
+    _sourceMapIncludeSources: boolean;
     _vendorPrefixes: boolean | AutoPrefixerOptions;
-    _minify: boolean | CleanCSSOptions;
+    _minify: boolean | CssMinimizerPresetOptions;
     _minOutputFilePath: string;
 }
 

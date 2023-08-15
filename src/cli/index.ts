@@ -1,27 +1,20 @@
+import chalk from 'chalk';
 import * as yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
-import { colorize } from '../utils/colorize';
+import { CliInfo } from './cli-info.js';
+import { getBuildCommand } from './build/build-command.js';
+// import { getTestCommand } from './test/test-command';
 
-import { getBuildCommand } from './build/build-command';
-import { getTestCommand } from './test/test-command';
-
-const cliPackageName = global.libCli ? global.libCli.packageName : '';
-const cliVersion = global.libCli ? global.libCli.version : '';
-const cliIsGlobal = global.libCli ? global.libCli.isGlobal : false;
-const cliIsLink = global.libCli ? global.libCli.isLink : false;
-
-function initYargs(): yargs.Argv {
-    const cliUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
-                        Usage:
-                        lib [command] [options...]`;
-
+function initYargs(cliInfo: CliInfo): yargs.Argv {
     const yargsInstance = yargs
-        .usage(cliUsage)
+        .default(hideBin(process.argv))
+        .usage(chalk.bold(`${cliInfo.packageName} v${cliInfo.version}\nUsage:\nlib [command] [options...]`))
         .example('lib build', 'Build the project(s) using workflow.json configuration file.')
         .example('lib build --workflow=auto', 'Analyze project structure and build automatically.')
         .example('lib --help', 'Show help')
-        .command(getBuildCommand(cliPackageName, cliVersion))
-        .command(getTestCommand(cliPackageName, cliVersion))
+        .command(getBuildCommand(cliInfo.packageName, cliInfo.version))
+        // .command(getTestCommand(cliPackageName, cliVersion))
         .version(false)
         .help('help')
         .showHelpOnFail(false)
@@ -43,7 +36,7 @@ function initYargs(): yargs.Argv {
             }
 
             yi.showHelp();
-            console.error(`\n${colorize(msg, 'red')}`);
+            console.error(`\n${chalk.red(msg)}`);
 
             process.exit(1);
         })
@@ -52,43 +45,38 @@ function initYargs(): yargs.Argv {
     return yargsInstance;
 }
 
-export default async function (): Promise<number> {
-    const argv = await initYargs().parse();
+export default async function (cliInfo: CliInfo): Promise<number> {
+    const argv = await initYargs(cliInfo).parse();
     const command = argv._[0] ? (argv._[0] as string).toLowerCase() : undefined;
 
     if (command === 'build') {
         // eslint-disable-next-line no-console
-        console.log(
-            `${colorize(
-                `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
-                'white'
-            )}\n`
-        );
+        console.log(`${chalk.bold(`${cliInfo.packageName} v${cliInfo.version}`)}\n`);
 
-        const cliBuildModule = await import('./build/cli-build');
+        const cliBuildModule = await import('./build/cli-build.js');
         const cliBuild = cliBuildModule.cliBuild;
 
         return cliBuild(argv);
     }
 
-    if (command === 'test') {
-        // eslint-disable-next-line no-console
-        console.log(
-            `${colorize(
-                `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
-                'white'
-            )}\n`
-        );
+    // if (command === 'test') {
+    //     // eslint-disable-next-line no-console
+    //     console.log(
+    //         `${colorize(
+    //             `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
+    //             'white'
+    //         )}\n`
+    //     );
 
-        const cliTestModule = await import('./test/cli-test');
-        const cliTest = cliTestModule.cliTest;
+    //     const cliTestModule = await import('./test/cli-test');
+    //     const cliTest = cliTestModule.cliTest;
 
-        return cliTest(argv);
-    }
+    //     return cliTest(argv);
+    // }
 
     if (argv.version) {
         // eslint-disable-next-line no-console
-        console.log(cliVersion);
+        console.log(cliInfo.version);
 
         return 0;
     }

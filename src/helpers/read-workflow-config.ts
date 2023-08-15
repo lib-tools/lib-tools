@@ -3,10 +3,11 @@ import * as path from 'path';
 import Ajv from 'ajv';
 import { readJson } from 'fs-extra';
 
-import { WorkflowConfig } from '../models';
-import { readJsonWithComments } from '../utils';
+import { WorkflowConfig } from '../models/index.js';
+import { readJsonWithComments } from '../utils/index.js';
 
-const ajv = new Ajv();
+// TODO: To review
+const ajv = new Ajv.default();
 
 let workflowConfig: WorkflowConfig | null = null;
 

@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { ProjectConfigInternal, WorkflowConfig, WorkflowConfigInternal } from '../models';
+import { ProjectConfigInternal, WorkflowConfig, WorkflowConfigInternal } from '../models/index.js';
 
 export function toWorkflowConfigInternal(
     workflowConfig: WorkflowConfig,

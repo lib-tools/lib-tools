@@ -5,8 +5,8 @@ import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import * as webpack from 'webpack';
 
-import { BuildConfigInternal } from '../../..//models';
-import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils';
+import { BuildConfigInternal } from '../../..//models/index.js';
+import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils/index.js';
 
 function excludeMatch(filePathRel: string, excludes: string[]): boolean {
     let il = excludes.length;

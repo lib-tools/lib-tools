@@ -1,4 +1,8 @@
-import { Configuration, WebpackPluginInstance } from 'webpack';
+import * as path from 'path';
+
+import autoprefixer from 'autoprefixer';
+import { Configuration } from 'webpack';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 
 import {
     applyEnvOverrides,
@@ -6,11 +10,12 @@ import {
     getEnvironment,
     getWorkflowConfig,
     toBuildActionInternal
-} from '../../helpers';
-import { BuildCommandOptions, BuildConfigInternal, ProjectConfigInternal } from '../../models';
+} from '../../helpers/index.js';
+import { BuildCommandOptions, BuildConfigInternal, ProjectConfigInternal } from '../../models/index.js';
+import { normalizePath } from '../../utils/index.js';
 
-import { BuildInfoWebpackPlugin } from '../plugins/build-info-webpack-plugin';
-import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin';
+import { BuildInfoWebpackPlugin } from '../plugins/build-info-webpack-plugin/index.js';
+import { PackageJsonFileWebpackPlugin } from '../plugins/package-json-webpack-plugin/index.js';
 
 export async function getWebpackBuildConfig(
     env?: { [key: string]: boolean | string },
@@ -148,19 +153,33 @@ export async function getWebpackBuildConfig(
 async function getWebpackBuildConfigInternal(
     buildConfig: BuildConfigInternal,
     buildCommandOptions: BuildCommandOptions
-): Promise<Configuration> {
-    const plugins: WebpackPluginInstance[] = [
-        new BuildInfoWebpackPlugin({
-            buildConfig,
-            logLevel: buildCommandOptions.logLevel
-        })
-    ];
+): Promise<Configuration[]> {
+    const webpackConfigs: Configuration[] = [];
+
+    const rootWebpackConfig: Configuration = {
+        name: buildConfig._projectName,
+        entry: () => ({}),
+        output: {
+            path: buildConfig._outputPath,
+            filename: '[name].js'
+        },
+        context: buildConfig._projectRoot,
+        plugins: [
+            new BuildInfoWebpackPlugin({
+                buildConfig,
+                logLevel: buildCommandOptions.logLevel
+            })
+        ],
+        stats: 'errors-only'
+    };
+
+    webpackConfigs.push(rootWebpackConfig);
 
     // Clean plugin
     if (buildConfig.clean !== false) {
-        const pluginModule = await import('../plugins/clean-webpack-plugin');
+        const pluginModule = await import('../plugins/clean-webpack-plugin/index.js');
         const CleanWebpackPlugin = pluginModule.CleanWebpackPlugin;
-        plugins.push(
+        rootWebpackConfig.plugins?.push(
             new CleanWebpackPlugin({
                 buildConfig,
                 logLevel: buildCommandOptions.logLevel
@@ -168,49 +187,11 @@ async function getWebpackBuildConfigInternal(
         );
     }
 
-    // styles
-    if (buildConfig._styleEntries && buildConfig._styleEntries.length > 0) {
-        const pluginModule = await import('../plugins/styles-webpack-plugin');
-        const StylesWebpackPlugin = pluginModule.StylesWebpackPlugin;
-        plugins.push(
-            new StylesWebpackPlugin({
-                buildConfig,
-                logLevel: buildCommandOptions.logLevel
-            })
-        );
-    }
-
-    if (buildConfig._script) {
-        // Script compilations plugin
-        if (buildConfig._script._compilations.length > 0) {
-            const pluginModule = await import('../plugins/script-compilations-webpack-plugin');
-            const ScriptCompilationsWebpackPlugin = pluginModule.ScriptCompilationsWebpackPlugin;
-            plugins.push(
-                new ScriptCompilationsWebpackPlugin({
-                    buildConfig,
-                    logLevel: buildCommandOptions.logLevel
-                })
-            );
-        }
-
-        // Script bundles plugin
-        if (buildConfig._script._bundles.length > 0) {
-            const pluginModule = await import('../plugins/script-bundles-webpack-plugin');
-            const ScriptBundlesWebpackPlugin = pluginModule.ScriptBundlesWebpackPlugin;
-            plugins.push(
-                new ScriptBundlesWebpackPlugin({
-                    buildConfig,
-                    logLevel: buildCommandOptions.logLevel
-                })
-            );
-        }
-    }
-
     // Copy plugin
     if (buildConfig._assetEntries.length > 0) {
-        const pluginModule = await import('../plugins/copy-webpack-plugin');
+        const pluginModule = await import('../plugins/copy-webpack-plugin/index.js');
         const CopyWebpackPlugin = pluginModule.CopyWebpackPlugin;
-        plugins.push(
+        rootWebpackConfig.plugins?.push(
             new CopyWebpackPlugin({
                 buildConfig,
                 logLevel: buildCommandOptions.logLevel
@@ -219,8 +200,8 @@ async function getWebpackBuildConfigInternal(
     }
 
     // package.json plugin
-    if (buildConfig.packageJson !== false) {
-        plugins.push(
+    if (buildConfig._packageJson) {
+        rootWebpackConfig.plugins?.push(
             new PackageJsonFileWebpackPlugin({
                 buildConfig,
                 logLevel: buildCommandOptions.logLevel
@@ -228,19 +209,121 @@ async function getWebpackBuildConfigInternal(
         );
     }
 
-    const webpackConfig: Configuration = {
-        name: buildConfig._projectName,
-        entry: () => ({}),
-        output: {
-            path: buildConfig._outputPath,
-            filename: '[name].js'
-        },
-        context: buildConfig._projectRoot,
-        plugins,
-        stats: 'errors-only'
-    };
+    // styles
+    if (buildConfig._styleEntries && buildConfig._styleEntries.length > 0) {
+        let styleCounter = 0;
+        for (let styleEntry of buildConfig._styleEntries) {
+            ++styleCounter;
+            const inputFilePath = styleEntry._inputFilePath;
+            const outFilePath = styleEntry._outputFilePath;
+            const outputFileRelToOutputPath = normalizePath(path.relative(outFilePath, outFilePath));
 
-    return Promise.resolve(webpackConfig);
+            const vendorPrefixesOptions =
+                typeof styleEntry._vendorPrefixes === 'object' ? styleEntry._vendorPrefixes : {};
+
+            const scssRuleUses: {
+                ident?: string;
+                loader?: string;
+                options?: string | { [index: string]: any };
+            }[] = [];
+
+            scssRuleUses.push({
+                loader: 'css-loader',
+                options: {
+                    sourceMap: styleEntry._sourceMap
+                }
+            });
+            if (styleEntry._vendorPrefixes !== false) {
+                scssRuleUses.push({
+                    loader: 'postcss-loader',
+                    options: {
+                        postcssOptions: {
+                            plugins: [
+                                autoprefixer({
+                                    ...vendorPrefixesOptions
+                                })
+                            ]
+                        }
+                    }
+                });
+            }
+            scssRuleUses.push({
+                loader: 'sass-loader',
+                options: {
+                    sourceMap: styleEntry._sourceMap,
+
+                    // Prefer Dart Sass
+                    implementation: require('sass'),
+
+                    // See https://github.com/webpack-contrib/sass-loader/issues/804
+                    webpackImporter: false,
+
+                    // api: 'modern',
+                    sassOptions: {
+                        outputStyle: 'compressed',
+                        includePaths: styleEntry._loadPaths
+                    }
+                }
+            });
+
+            const styleWebpackConfig: Configuration = {
+                name: `${buildConfig._projectName}-style-${styleCounter}`,
+                devtool: styleEntry._sourceMap ? 'source-map' : false,
+                entry: inputFilePath,
+                output: {
+                    path: buildConfig._outputPath
+                },
+                context: buildConfig._projectRoot,
+                module: {
+                    rules: [
+                        // {
+                        //     test: /\.js$/,
+                        //     exclude: /node_modules/,
+                        //     use: []
+                        // },
+                        {
+                            test: /\.(s[ac]|c)ss$/i,
+                            type: 'asset/resource',
+                            generator: {
+                                filename: outputFileRelToOutputPath
+                            },
+                            use: [...scssRuleUses]
+                        }
+                    ]
+                },
+                stats: 'errors-only'
+            };
+
+            if (styleEntry._minify !== false) {
+                const minimizerPresetOptions = typeof styleEntry._minify === 'object' ? styleEntry._minify : {};
+
+                styleWebpackConfig.optimization = {
+                    // For development mode.
+                    minimize: true,
+                    minimizer: [
+                        new CssMinimizerPlugin({
+                            minimizerOptions: {
+                                preset: [
+                                    'default',
+                                    {
+                                        ...minimizerPresetOptions
+                                    }
+                                ]
+                            }
+                        })
+                    ]
+                };
+            }
+
+            webpackConfigs.push(styleWebpackConfig);
+        }
+    }
+
+    if (buildConfig._script) {
+        // TODO:
+    }
+
+    return Promise.resolve(webpackConfigs);
 }
 
 function isFromWebpackCli(): boolean {

@@ -3,8 +3,8 @@ import * as path from 'path';
 import { ensureDir, pathExists, writeFile } from 'fs-extra';
 import * as webpack from 'webpack';
 
-import { BuildConfigInternal, PackageJsonLike } from '../../../models';
-import { LogLevelString, Logger } from '../../../utils';
+import { BuildConfigInternal, PackageJsonLike } from '../../../models/index.js';
+import { LogLevelString, Logger } from '../../../utils/index.js';
 
 const placeholderRegExp = /\[PLACEHOLDER\]/;
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER');

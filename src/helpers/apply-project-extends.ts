@@ -2,10 +2,10 @@ import * as path from 'path';
 
 import { pathExists } from 'fs-extra';
 
-import { ProjectConfigInternal } from '../models';
+import { ProjectConfigInternal } from '../models/index.js';
 
-import { readWorkflowConfig } from './read-workflow-config';
-import { toWorkflowConfigInternal } from './to-workflow-config-internal';
+import { readWorkflowConfig } from './read-workflow-config.js';
+import { toWorkflowConfigInternal } from './to-workflow-config-internal.js';
 
 export async function applyProjectExtends(
     projectConfig: ProjectConfigInternal,

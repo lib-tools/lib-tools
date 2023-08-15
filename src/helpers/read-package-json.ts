@@ -1,6 +1,6 @@
-import { PackageJsonLike } from '../models';
-
 import { readJson } from 'fs-extra';
+
+import { PackageJsonLike } from '../models/index.js';
 
 const cache = new Map<string, PackageJsonLike>();
 

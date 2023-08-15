@@ -1,4 +1,4 @@
-import { OverridableConfig } from './overridable-config';
+import { OverridableConfig } from './overridable-config.js';
 
 /**
  * @additionalProperties false

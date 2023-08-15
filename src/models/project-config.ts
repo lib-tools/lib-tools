@@ -1,5 +1,5 @@
-import { BuildConfig } from './build-config';
-import { TestConfig } from './test-config';
+import { BuildConfig } from './build-config.js';
+import { TestConfig } from './test-config.js';
 
 /**
  * @additionalProperties false

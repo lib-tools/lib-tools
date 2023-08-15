@@ -2,8 +2,8 @@ import * as path from 'path';
 
 import { readFile } from 'fs-extra';
 
-import { BuildConfigInternal } from '../models';
-import { findUp } from '../utils';
+import { BuildConfigInternal } from '../models/index.js';
+import { findUp } from '../utils/index.js';
 
 export async function prepareBannerText(buildConfig: BuildConfigInternal): Promise<void> {
     if (!buildConfig.banner) {

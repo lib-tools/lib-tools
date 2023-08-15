@@ -1,4 +1,4 @@
-import { ProjectConfig } from './project-config';
+import { ProjectConfig } from './project-config.js';
 
 export interface ProjectConfigInternal extends ProjectConfig {
     _config: 'auto' | string;
