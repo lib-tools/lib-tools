@@ -1,10 +1,14 @@
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 import Ajv from 'ajv';
 import * as fs from 'fs-extra';
 
 import { WorkflowConfig } from '../models/index.js';
 import { readJsonWithComments } from '../utils/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // TODO: To review
 const ajv = new Ajv.default();
