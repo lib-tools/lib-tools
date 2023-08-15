@@ -13,7 +13,12 @@ const distStartRegExp = /^\.?\/?dist\//;
 
 if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir, {
-        mode: 0o777,
+        recursive: true
+    });
+}
+
+if (!fs.existsSync(path.resolve(destDir, 'bin'))) {
+    fs.mkdirSync(path.resolve(destDir, 'bin'), {
         recursive: true
     });
 }

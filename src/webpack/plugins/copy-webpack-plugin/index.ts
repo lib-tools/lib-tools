@@ -144,6 +144,13 @@ export class CopyWebpackPlugin {
 
                     this.logger.debug(`Copying ${fromPathRel} file`);
 
+                    if (!(await pathExists(path.dirname(toFilePath)))) {
+                        await fs.mkdir(path.dirname(toFilePath), {
+                            mode: 0o777,
+                            recursive: true
+                        });
+                    }
+
                     await fs.copyFile(fromPath, toFilePath);
                 } else {
                     let foundPaths = await glob('**/*', {
@@ -176,6 +183,13 @@ export class CopyWebpackPlugin {
                             this.logger.debug(
                                 `Copying ${normalizePath(path.relative(projectRoot, foundFromFilePath))} file`
                             );
+
+                            if (!(await pathExists(path.dirname(toFilePath)))) {
+                                await fs.mkdir(path.dirname(toFilePath), {
+                                    mode: 0o777,
+                                    recursive: true
+                                });
+                            }
 
                             await fs.copyFile(foundFromFilePath, toFilePath);
                         })
