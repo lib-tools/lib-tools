@@ -1,4 +1,4 @@
-import { readJson } from 'fs-extra';
+import * as fs from 'fs-extra';
 
 import { PackageJsonLike } from '../models/index.js';
 
@@ -10,7 +10,7 @@ export async function readPackageJson(packageJsonPath: string): Promise<PackageJ
         return cachedPackageJson;
     }
 
-    const packageJson = (await readJson(packageJsonPath)) as PackageJsonLike;
+    const packageJson = (await fs.readJSON(packageJsonPath)) as PackageJsonLike;
     cache.set(packageJsonPath, packageJson);
 
     return packageJson;

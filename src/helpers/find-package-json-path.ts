@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { pathExists } from 'fs-extra';
+import * as fs from 'fs-extra';
 
 import { findUp } from '../utils/index.js';
 
@@ -26,7 +26,7 @@ export async function findPackageJsonPath(projectRoot: string | null, workspaceR
         }
 
         const rootPackageJsonPath = path.resolve(workspaceRoot, 'package.json');
-        if (await pathExists(rootPackageJsonPath)) {
+        if (await fs.pathExists(rootPackageJsonPath)) {
             cache.set(workspaceRoot, rootPackageJsonPath);
         }
 

@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { pathExists } from 'fs-extra';
+import * as fs from 'fs-extra';
 
 import { ProjectConfigInternal } from '../models/index.js';
 
@@ -126,7 +126,7 @@ async function getBaseProjectConfigFromFile(
         ? path.resolve(parts[1])
         : path.resolve(path.dirname(projectConfig._config || rootConfigPath), parts[1]);
 
-    if (!(await pathExists(extendsFilePath))) {
+    if (!(await fs.pathExists(extendsFilePath))) {
         throw new Error(
             `Error in extending project config. No file exists at ${extendsFilePath}, config location ${currentConfigFile} -> ${configErrorLocation}.`
         );

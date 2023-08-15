@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { pathExists } from 'fs-extra';
+import * as fs from 'fs-extra';
 
 import { AutoPrefixerOptions, BuildConfigInternal, CssMinimizerPresetOptions } from '../models/index.js';
 import { normalizePath } from '../utils/index.js';
@@ -38,7 +38,7 @@ export async function prepareForStyleModule(buildConfig: BuildConfigInternal): P
         }
 
         const inputFilePath = path.resolve(projectRoot, styleEntry.input);
-        const inputFileExists = await pathExists(inputFilePath);
+        const inputFileExists = await fs.pathExists(inputFilePath);
         if (!inputFileExists) {
             throw new Error(
                 `Style input file '${inputFilePath}' doesn't exist, please correct value in 'projects[${projectName}].tasks.build.style.compilations[${i}].input'.`

@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { ensureDir, pathExists, writeFile } from 'fs-extra';
+import * as fs from 'fs-extra';
 import * as webpack from 'webpack';
 
 import { BuildConfigInternal, PackageJsonLike } from '../../../models/index.js';
@@ -56,7 +56,7 @@ export class PackageJsonFileWebpackPlugin {
             const entryPointKeys = Object.keys(buildConfig._packageJsonEntryPoint);
             for (const entryPointKey of entryPointKeys) {
                 const entryPointValue = buildConfig._packageJsonEntryPoint[entryPointKey];
-                if (!(await pathExists(path.resolve(buildConfig._packageJsonOutDir, entryPointValue)))) {
+                if (!(await fs.pathExists(path.resolve(buildConfig._packageJsonOutDir, entryPointValue)))) {
                     throw new Error(`Internal error, entry point: ${entryPointValue} doesn't exists.`);
                 }
 
@@ -222,7 +222,7 @@ export class PackageJsonFileWebpackPlugin {
 
         // write package config
         const packageJsonOutFilePath = path.resolve(buildConfig._packageJsonOutDir, 'package.json');
-        const packageJsonOutFileExists = await pathExists(packageJsonOutFilePath);
+        const packageJsonOutFileExists = await fs.pathExists(packageJsonOutFilePath);
 
         if (!packageJsonOutFileExists || packageJsonChanged) {
             if (!packageJsonOutFileExists) {
@@ -231,8 +231,8 @@ export class PackageJsonFileWebpackPlugin {
                 this.logger.info(`Updating package.json file`);
             }
 
-            await ensureDir(buildConfig._packageJsonOutDir);
-            await writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
+            await fs.ensureDir(buildConfig._packageJsonOutDir);
+            await fs.writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
         }
     }
 }

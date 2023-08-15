@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { copy, move } from 'fs-extra';
+import * as fs from 'fs-extra';
 import { glob } from 'glob';
 
 export async function globCopyFiles(
@@ -15,9 +15,9 @@ export async function globCopyFiles(
         const destFilePath = path.join(toPath, relFileName);
 
         if (forMove) {
-            await move(sourceFilePath, destFilePath);
+            await fs.move(sourceFilePath, destFilePath);
         } else {
-            await copy(sourceFilePath, destFilePath);
+            await fs.copy(sourceFilePath, destFilePath);
         }
     }
 }

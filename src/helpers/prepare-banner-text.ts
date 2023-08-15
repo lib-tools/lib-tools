@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { readFile } from 'fs-extra';
+import * as fs from 'fs-extra';
 
 import { BuildConfigInternal } from '../models/index.js';
 import { findUp } from '../utils/index.js';
@@ -15,7 +15,7 @@ export async function prepareBannerText(buildConfig: BuildConfigInternal): Promi
     if (/\.txt$/i.test(bannerText)) {
         const bannerFilePath = await findUp(bannerText, buildConfig._projectRoot, buildConfig._workspaceRoot);
         if (bannerFilePath) {
-            bannerText = await readFile(bannerFilePath, 'utf-8');
+            bannerText = await fs.readFile(bannerFilePath, 'utf-8');
         } else {
             throw new Error(
                 `The banner text file: ${path.resolve(

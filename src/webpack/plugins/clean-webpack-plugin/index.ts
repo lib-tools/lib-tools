@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { pathExists, remove, stat } from 'fs-extra';
+import * as fs from 'fs-extra';
 import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { Compiler } from 'webpack';
@@ -140,9 +140,9 @@ export class CleanWebpackPlugin {
         if (pathsToExclude.length > 0) {
             await Promise.all(
                 pathsToExclude.map(async (excludePath: string) => {
-                    const isExists = await pathExists(excludePath);
+                    const isExists = await fs.pathExists(excludePath);
                     if (isExists) {
-                        const statInfo = await stat(excludePath);
+                        const statInfo = await fs.stat(excludePath);
                         if (statInfo.isDirectory()) {
                             if (!existedDirsToExclude.includes(excludePath)) {
                                 existedDirsToExclude.push(excludePath);
@@ -167,7 +167,7 @@ export class CleanWebpackPlugin {
                     });
                     for (const p of foundExcludePaths) {
                         const absPath = path.isAbsolute(p) ? path.resolve(p) : path.resolve(outputPath, p);
-                        const statInfo = await stat(absPath);
+                        const statInfo = await fs.stat(absPath);
                         if (statInfo.isDirectory()) {
                             if (!existedDirsToExclude.includes(absPath)) {
                                 existedDirsToExclude.push(absPath);
@@ -271,7 +271,7 @@ export class CleanWebpackPlugin {
                 }
             }
 
-            const exists = await pathExists(pathToClean);
+            const exists = await fs.pathExists(pathToClean);
             if (exists) {
                 const relToWorkspace = normalizePath(path.relative(workspaceRoot, pathToClean));
 
@@ -281,7 +281,7 @@ export class CleanWebpackPlugin {
                     this.logger.info(`${msgPrefix} ${relToWorkspace}`);
                 }
 
-                await remove(pathToClean);
+                await fs.remove(pathToClean);
             }
         }
     }
