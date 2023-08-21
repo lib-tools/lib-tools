@@ -1,17 +1,18 @@
 import * as path from 'path';
 
-import { ProjectConfigInternal } from '../models/index.js';
-import { pathExists } from '../utils/index.js';
+import { pathExists } from 'fs-extra';
 
-import { readWorkflowConfig } from './read-workflow-config.js';
-import { toWorkflowConfigInternal } from './to-workflow-config-internal.js';
+import { ProjectConfigInternal } from '../models';
+
+import { readWorkflowConfig } from './read-workflow-config';
+import { toWorkflowConfigInternal } from './to-workflow-config-internal';
 
 export async function applyProjectExtends(
     projectConfig: ProjectConfigInternal,
     projects: { [key: string]: ProjectConfigInternal } | ProjectConfigInternal[] = {},
     configPath: string
 ): Promise<void> {
-    if (configPath === 'auto' || !projectConfig.extends || !projectConfig.extends.trim().length) {
+    if (!projectConfig.extends || !projectConfig.extends.trim().length) {
         return;
     }
 

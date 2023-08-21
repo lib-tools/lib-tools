@@ -1,4 +1,4 @@
-import { SharedCommandOptions } from './shared-command-options.js';
+import { SharedCommandOptions } from './shared-command-options';
 
 export interface TestCommandOptions extends SharedCommandOptions {
     /**

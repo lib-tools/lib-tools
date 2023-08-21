@@ -1,19 +1,29 @@
 import * as path from 'path';
-import * as fs from 'fs/promises';
-import { glob } from 'glob';
-import { minimatch } from 'minimatch';
+import { promisify } from 'util';
+
+import { pathExists, remove, stat } from 'fs-extra';
+import * as glob from 'glob';
+import * as minimatch from 'minimatch';
 import { Compiler } from 'webpack';
 
-import { AfterEmitCleanOptions, BeforeBuildCleanOptions, CleanOptions } from '../../../models/index.js';
-import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath, pathExists } from '../../../utils/index.js';
+import { AfterEmitCleanOptions, BeforeBuildCleanOptions, BuildConfigInternal, CleanOptions } from '../../../models';
+import { LogLevelString, Logger, isInFolder, isSamePaths, normalizePath } from '../../../utils';
 
-export interface CleanWebpackPluginOptions extends CleanOptions {
+const globAsync = promisify(glob);
+
+export interface CleanWebpackPluginOptions {
+    buildConfig: BuildConfigInternal;
+    logLevel?: LogLevelString;
+}
+
+interface CleanOptionsInternal extends CleanOptions {
     workspaceRoot: string;
     outputPath: string;
     logLevel?: LogLevelString;
 }
 
 export class CleanWebpackPlugin {
+    private readonly options: CleanOptionsInternal;
     private readonly logger: Logger;
     private beforeRunCleaned = false;
     private afterEmitCleaned = false;
@@ -22,7 +32,9 @@ export class CleanWebpackPlugin {
         return 'clean-webpack-plugin';
     }
 
-    constructor(private readonly options: CleanWebpackPluginOptions) {
+    constructor(options: CleanWebpackPluginOptions) {
+        this.options = this.prepareCleanOptions(options);
+
         this.logger = new Logger({
             logLevel: this.options.logLevel || 'info'
         });
@@ -142,7 +154,7 @@ export class CleanWebpackPlugin {
                 pathsToExclude.map(async (excludePath: string) => {
                     const isExists = await pathExists(excludePath);
                     if (isExists) {
-                        const statInfo = await fs.stat(excludePath);
+                        const statInfo = await stat(excludePath);
                         if (statInfo.isDirectory()) {
                             if (!existedDirsToExclude.includes(excludePath)) {
                                 existedDirsToExclude.push(excludePath);
@@ -160,14 +172,14 @@ export class CleanWebpackPlugin {
         if (patternsToExclude.length > 0) {
             await Promise.all(
                 patternsToExclude.map(async (excludePattern: string) => {
-                    const foundExcludePaths = await glob(excludePattern, {
+                    const foundExcludePaths = await globAsync(excludePattern, {
                         cwd: outputPath,
                         dot: true,
                         absolute: true
                     });
                     for (const p of foundExcludePaths) {
                         const absPath = path.isAbsolute(p) ? path.resolve(p) : path.resolve(outputPath, p);
-                        const statInfo = await fs.stat(absPath);
+                        const statInfo = await stat(absPath);
                         if (statInfo.isDirectory()) {
                             if (!existedDirsToExclude.includes(absPath)) {
                                 existedDirsToExclude.push(absPath);
@@ -195,7 +207,7 @@ export class CleanWebpackPlugin {
                         pathsToClean.push(absolutePath);
                     }
                 } else {
-                    const foundPaths = await glob(cleanPattern, { cwd: outputPath, dot: true });
+                    const foundPaths = await globAsync(cleanPattern, { cwd: outputPath, dot: true });
                     foundPaths.forEach((p) => {
                         const absolutePath = path.isAbsolute(p) ? path.resolve(p) : path.resolve(outputPath, p);
                         if (!pathsToClean.includes(absolutePath)) {
@@ -281,8 +293,47 @@ export class CleanWebpackPlugin {
                     this.logger.info(`${msgPrefix} ${relToWorkspace}`);
                 }
 
-                await fs.unlink(pathToClean);
+                await remove(pathToClean);
             }
         }
+    }
+
+    private prepareCleanOptions(options: CleanWebpackPluginOptions): CleanOptionsInternal {
+        const buildConfig = options.buildConfig;
+        const workspaceRoot = buildConfig._workspaceRoot;
+        let outputPath = buildConfig._outputPath;
+        if (buildConfig._nestedPackage) {
+            const nestedPackageStartIndex = buildConfig._packageNameWithoutScope.indexOf('/') + 1;
+            const nestedPackageSuffix = buildConfig._packageNameWithoutScope.substr(nestedPackageStartIndex);
+            outputPath = path.resolve(outputPath, nestedPackageSuffix);
+        }
+
+        const cleanConfigOptions = typeof buildConfig.clean === 'object' ? buildConfig.clean : {};
+
+        const cleanOptions: CleanOptionsInternal = {
+            ...cleanConfigOptions,
+            workspaceRoot,
+            outputPath,
+            logLevel: options.logLevel
+        };
+
+        cleanOptions.beforeBuild = cleanOptions.beforeBuild || {};
+        const beforeBuildOption = cleanOptions.beforeBuild;
+
+        let skipCleanOutDir = false;
+
+        if (buildConfig._nestedPackage && beforeBuildOption.cleanOutDir) {
+            skipCleanOutDir = true;
+        }
+
+        if (skipCleanOutDir) {
+            beforeBuildOption.cleanOutDir = false;
+        } else if (beforeBuildOption.cleanOutDir == null) {
+            beforeBuildOption.cleanOutDir = true;
+        }
+
+        cleanOptions.beforeBuild = beforeBuildOption;
+
+        return cleanOptions;
     }
 }

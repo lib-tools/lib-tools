@@ -6,22 +6,18 @@ import {
     BuildConfigInternal,
     PackageJsonLike,
     ProjectConfigInternal
-} from '../models/index.js';
-import { isInFolder, isSamePaths } from '../utils/index.js';
+} from '../models';
+import { isInFolder, isSamePaths } from '../utils';
 
-import { findNodeModulesPath } from './find-node-modules-path.js';
-import { findPackageJsonPath } from './find-package-json-path.js';
-import { prepareBannerText } from './prepare-banner-text.js';
-import { readPackageJson } from './read-package-json.js';
-
-// TODO: To reivew
-import { prepareAssetEntries } from './prepare-asset-entries.js';
-
-// import { findBuildTsconfigFile } from './find-build-tsconfig-file';
-// import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
-// import { prepareScripts } from './prepare-scripts';
-
-import { prepareForStyleModule } from './prepare-for-style-module.js';
+import { findBuildTsconfigFile } from './find-build-tsconfig-file';
+import { findNodeModulesPath } from './find-node-modules-path';
+import { findPackageJsonPath } from './find-package-json-path';
+import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
+import { prepareAssetEntries } from './prepare-asset-entries';
+import { prepareBannerText } from './prepare-banner-text';
+import { prepareScripts } from './prepare-scripts';
+import { prepareStyles } from './prepare-styles';
+import { readPackageJson } from './read-package-json';
 
 const versionPlaceholderRegex = /0\.0\.0-PLACEHOLDER/i;
 
@@ -124,32 +120,31 @@ export async function toBuildActionInternal(
                 `The project root folder must not be inside output directory. Change outputPath in 'projects[${projectName}].outputPath'.`
             );
         }
+    } else {
+        let tsConfigPath: string | null = null;
+        if (buildConfig.script && buildConfig.script.tsConfig) {
+            tsConfigPath = path.resolve(projectRoot, buildConfig.script.tsConfig);
+        } else if (buildConfig.script) {
+            tsConfigPath = await findBuildTsconfigFile(projectRoot, workspaceRoot);
+        }
+
+        let outputPath: string | null = null;
+        if (tsConfigPath) {
+            const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
+            const compilerOptions = tsCompilerConfig.options;
+            if (compilerOptions.outDir) {
+                outputPath = path.isAbsolute(compilerOptions.outDir)
+                    ? path.resolve(compilerOptions.outDir)
+                    : path.resolve(path.dirname(tsConfigPath), compilerOptions.outDir);
+            }
+        } else {
+            outputPath = path.resolve(workspaceRoot, `dist/packages/${packageNameWithoutScope}`);
+        }
+
+        if (outputPath && !isSamePaths(projectRoot, outputPath) && !isInFolder(outputPath, projectRoot)) {
+            outputPathAbs = outputPath;
+        }
     }
-    // else {
-    //     let tsConfigPath: string | null = null;
-    //     if (buildConfig.script && buildConfig.script.tsConfig) {
-    //         tsConfigPath = path.resolve(projectRoot, buildConfig.script.tsConfig);
-    //     } else if (buildConfig.script) {
-    //         tsConfigPath = await findBuildTsconfigFile(projectRoot, workspaceRoot);
-    //     }
-
-    //     let outputPath: string | null = null;
-    //     if (tsConfigPath) {
-    //         const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
-    //         const compilerOptions = tsCompilerConfig.options;
-    //         if (compilerOptions.outDir) {
-    //             outputPath = path.isAbsolute(compilerOptions.outDir)
-    //                 ? path.resolve(compilerOptions.outDir)
-    //                 : path.resolve(path.dirname(tsConfigPath), compilerOptions.outDir);
-    //         }
-    //     } else {
-    //         outputPath = path.resolve(workspaceRoot, `dist/packages/${packageNameWithoutScope}`);
-    //     }
-
-    //     if (outputPath && !isSamePaths(projectRoot, outputPath) && !isInFolder(outputPath, projectRoot)) {
-    //         outputPathAbs = outputPath;
-    //     }
-    // }
 
     if (!outputPathAbs) {
         throw new Error(
@@ -197,10 +192,10 @@ export async function toBuildActionInternal(
     await prepareAssetEntries(buildConfigInternal);
 
     // Styles
-    await prepareForStyleModule(buildConfigInternal);
+    await prepareStyles(buildConfigInternal);
 
     // Scripts
-    // await prepareScripts(buildConfigInternal);
+    await prepareScripts(buildConfigInternal);
 
     return buildConfigInternal;
 }

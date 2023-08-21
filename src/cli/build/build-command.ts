@@ -1,14 +1,18 @@
 import * as yargs from 'yargs';
 
-import chalk from 'chalk';
+import { colorize } from '../../utils/colorize';
 
 export function getBuildCommand(cliPackageName: string, cliVersion: string): yargs.CommandModule {
+    const buildCommandUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
+                        Usage:
+                            lib build [options...]`;
+
     return {
         command: 'build',
         describe: 'Build the project(s)',
         builder: (childYargs) =>
             childYargs
-                .usage(`${chalk.bold(`${cliPackageName} v${cliVersion}`)}\nUsage:\nlib build [options...]`)
+                .usage(buildCommandUsage)
                 .example('lib build', 'Build the project(s).')
                 .option('version', {
                     describe: 'Set the version to override the version field of the package.json file.',

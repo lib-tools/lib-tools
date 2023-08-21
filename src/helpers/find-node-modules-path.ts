@@ -1,6 +1,5 @@
 import * as path from 'path';
-
-import { findUp } from '../utils/index.js';
+import { findUp } from '../utils';
 
 const cache: { nodeModulesPath: string | null } = {
     nodeModulesPath: null

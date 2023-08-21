@@ -1,10 +1,10 @@
 import * as path from 'path';
 
-import * as fs from 'fs/promises';
+import { ensureDir, pathExists, writeFile } from 'fs-extra';
 import * as webpack from 'webpack';
 
-import { BuildConfigInternal, PackageJsonLike } from '../../../models/index.js';
-import { LogLevelString, Logger, pathExists } from '../../../utils/index.js';
+import { BuildConfigInternal, PackageJsonLike } from '../../../models';
+import { LogLevelString, Logger } from '../../../utils';
 
 const placeholderRegExp = /\[PLACEHOLDER\]/;
 const versionPlaceholderRegex = new RegExp('0.0.0-PLACEHOLDER');
@@ -231,14 +231,8 @@ export class PackageJsonFileWebpackPlugin {
                 this.logger.info(`Updating package.json file`);
             }
 
-            if (!(await pathExists(buildConfig._packageJsonOutDir))) {
-                await fs.mkdir(buildConfig._packageJsonOutDir, {
-                    mode: 0o777,
-                    recursive: true
-                });
-            }
-
-            await fs.writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
+            await ensureDir(buildConfig._packageJsonOutDir);
+            await writeFile(packageJsonOutFilePath, JSON.stringify(packageJson, null, 2));
         }
     }
 }

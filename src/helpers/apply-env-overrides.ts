@@ -1,4 +1,4 @@
-import { OverridableConfig } from '../models/index.js';
+import { OverridableConfig } from '../models';
 
 export function applyEnvOverrides<TConfigBase>(
     overridableConfig: OverridableConfig<TConfigBase>,

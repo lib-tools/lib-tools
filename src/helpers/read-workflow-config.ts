@@ -1,17 +1,12 @@
-import * as fs from 'fs/promises';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 
 import Ajv from 'ajv';
+import { readJson } from 'fs-extra';
 
-import { WorkflowConfig } from '../models/index.js';
-import { readJsonWithComments } from '../utils/index.js';
+import { WorkflowConfig } from '../models';
+import { readJsonWithComments } from '../utils';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// TODO: To review
-const ajv = new Ajv.default();
+const ajv = new Ajv();
 
 let workflowConfig: WorkflowConfig | null = null;
 
@@ -43,8 +38,7 @@ export async function getWorkflowConfigSchema(): Promise<{ [key: string]: unknow
     }
 
     const schemaRootPath = path.resolve(__dirname, '../schemas');
-    const content = await fs.readFile(path.resolve(schemaRootPath, 'schema.json'), { encoding: 'utf8' });
-    const schema = JSON.parse(content) as { [key: string]: unknown };
+    const schema = (await readJson(path.resolve(schemaRootPath, 'schema.json'))) as { [key: string]: unknown };
 
     if (schema.$schema) {
         delete schema.$schema;

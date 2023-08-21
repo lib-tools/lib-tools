@@ -1,4 +1,4 @@
-import { ProjectConfig } from './project-config.js';
+import { ProjectConfig } from './project-config';
 
 /**
  * Workflow configuration.

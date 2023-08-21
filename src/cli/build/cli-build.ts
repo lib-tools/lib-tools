@@ -1,13 +1,13 @@
-import webpack from 'webpack';
+import * as webpack from 'webpack';
 
-import { BuildCommandOptions } from '../../models/index.js';
-import { runWebpack } from '../../helpers/index.js';
-import { Logger } from '../../utils/index.js';
+import { BuildCommandOptions } from '../../models';
+import { runWebpack } from '../../helpers';
+import { Logger } from '../../utils';
 
-import { getWebpackBuildConfig } from '../../webpack/configs/index.js';
+import { getWebpackBuildConfig } from '../../webpack/configs';
 
 export async function cliBuild(argv: BuildCommandOptions & { [key: string]: unknown }): Promise<number> {
-    const startTime = Date.now();
+    const startTime = global.libCli && global.libCli.startTime > 0 ? global.libCli.startTime : Date.now();
     let env: { [key: string]: boolean | string } | undefined;
 
     if (argv.environment) {

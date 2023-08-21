@@ -1,6 +1,6 @@
-import * as fs from 'fs/promises';
+import { PackageJsonLike } from '../models';
 
-import { PackageJsonLike } from '../models/index.js';
+import { readJson } from 'fs-extra';
 
 const cache = new Map<string, PackageJsonLike>();
 
@@ -10,9 +10,7 @@ export async function readPackageJson(packageJsonPath: string): Promise<PackageJ
         return cachedPackageJson;
     }
 
-    const content = await fs.readFile(packageJsonPath, { encoding: 'utf8' });
-
-    const packageJson = JSON.parse(content) as PackageJsonLike;
+    const packageJson = (await readJson(packageJsonPath)) as PackageJsonLike;
     cache.set(packageJsonPath, packageJson);
 
     return packageJson;

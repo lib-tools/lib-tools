@@ -1,12 +1,15 @@
 import * as path from 'path';
+import { promisify } from 'util';
 
-import * as fs from 'fs/promises';
-import { glob } from 'glob';
-import { minimatch } from 'minimatch';
+import { copy, pathExists, stat } from 'fs-extra';
+import * as glob from 'glob';
+import * as minimatch from 'minimatch';
 import * as webpack from 'webpack';
 
-import { BuildConfigInternal } from '../../..//models/index.js';
-import { LogLevelString, Logger, isSamePaths, normalizePath, pathExists } from '../../../utils/index.js';
+import { BuildConfigInternal } from '../../..//models';
+import { LogLevelString, Logger, isSamePaths, normalizePath } from '../../../utils';
+
+const globAsync = promisify(glob);
 
 function excludeMatch(filePathRel: string, excludes: string[]): boolean {
     let il = excludes.length;
@@ -62,7 +65,7 @@ export class CopyWebpackPlugin {
             const hasMagic = glob.hasMagic(assetEntry.from);
 
             if (hasMagic) {
-                let foundPaths = await glob(assetEntry.from, {
+                let foundPaths = await globAsync(assetEntry.from, {
                     cwd: projectRoot,
                     nodir: true,
                     dot: true
@@ -98,14 +101,7 @@ export class CopyWebpackPlugin {
 
                         this.logger.debug(`Copying ${normalizePath(foundFileRel)} file`);
 
-                        if (!(await pathExists(path.dirname(toFilePath)))) {
-                            await fs.mkdir(path.dirname(toFilePath), {
-                                mode: 0o777,
-                                recursive: true
-                            });
-                        }
-
-                        await fs.copyFile(fromFilePath, toFilePath);
+                        await copy(fromFilePath, toFilePath);
                     })
                 );
             } else {
@@ -117,7 +113,7 @@ export class CopyWebpackPlugin {
                     continue;
                 }
 
-                const stats = await fs.stat(fromPath);
+                const stats = await stat(fromPath);
                 if (stats.isFile()) {
                     const fromPathRel = normalizePath(path.relative(projectRoot, fromPath));
                     if (excludeMatch(fromPathRel, excludes)) {
@@ -144,16 +140,9 @@ export class CopyWebpackPlugin {
 
                     this.logger.debug(`Copying ${fromPathRel} file`);
 
-                    if (!(await pathExists(path.dirname(toFilePath)))) {
-                        await fs.mkdir(path.dirname(toFilePath), {
-                            mode: 0o777,
-                            recursive: true
-                        });
-                    }
-
-                    await fs.copyFile(fromPath, toFilePath);
+                    await copy(fromPath, toFilePath);
                 } else {
-                    let foundPaths = await glob('**/*', {
+                    let foundPaths = await globAsync('**/*', {
                         cwd: fromPath,
                         nodir: true,
                         dot: true
@@ -184,14 +173,7 @@ export class CopyWebpackPlugin {
                                 `Copying ${normalizePath(path.relative(projectRoot, foundFromFilePath))} file`
                             );
 
-                            if (!(await pathExists(path.dirname(toFilePath)))) {
-                                await fs.mkdir(path.dirname(toFilePath), {
-                                    mode: 0o777,
-                                    recursive: true
-                                });
-                            }
-
-                            await fs.copyFile(foundFromFilePath, toFilePath);
+                            await copy(foundFromFilePath, toFilePath);
                         })
                     );
                 }

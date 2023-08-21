@@ -1,4 +1,4 @@
-import { SharedCommandOptions } from './shared-command-options.js';
+import { SharedCommandOptions } from './shared-command-options';
 
 /**
  * @additionalProperties true

@@ -1,0 +1,12 @@
+{
+  "name": "@lib-tools-demo/ng-config/http-config",
+  "version": "0.0.0-PLACEHOLDER",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@angular/common": "^8.0.0-beta.0 || ^9.0.0-rc.0 || ^10.0.0-rc.0 || || ^11.0.0-rc.0",
+    "@angular/core": "^8.0.0-beta.0 || ^9.0.0-rc.0 || ^10.0.0-rc.0 || || ^11.0.0-rc.0",
+    "@lib-tools-demo/ng-config": "^0.0.0-PLACEHOLDER",
+    "rxjs": "^6.5.0",
+    "tslib": "^2.1.0"
+  }
+}

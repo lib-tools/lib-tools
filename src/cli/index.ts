@@ -1,20 +1,27 @@
-import chalk from 'chalk';
 import * as yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
 
-import { CliInfo } from './cli-info.js';
-import { getBuildCommand } from './build/build-command.js';
-// import { getTestCommand } from './test/test-command';
+import { colorize } from '../utils/colorize';
 
-function initYargs(cliInfo: CliInfo): yargs.Argv {
+import { getBuildCommand } from './build/build-command';
+import { getTestCommand } from './test/test-command';
+
+const cliPackageName = global.libCli ? global.libCli.packageName : '';
+const cliVersion = global.libCli ? global.libCli.version : '';
+const cliIsGlobal = global.libCli ? global.libCli.isGlobal : false;
+const cliIsLink = global.libCli ? global.libCli.isLink : false;
+
+function initYargs(): yargs.Argv {
+    const cliUsage = `${colorize(`${cliPackageName} v${cliVersion}`, 'white')}\n
+                        Usage:
+                        lib [command] [options...]`;
+
     const yargsInstance = yargs
-        .default(hideBin(process.argv))
-        .usage(chalk.bold(`${cliInfo.packageName} v${cliInfo.version}\nUsage:\nlib [command] [options...]`))
+        .usage(cliUsage)
         .example('lib build', 'Build the project(s) using workflow.json configuration file.')
         .example('lib build --workflow=auto', 'Analyze project structure and build automatically.')
         .example('lib --help', 'Show help')
-        .command(getBuildCommand(cliInfo.packageName, cliInfo.version))
-        // .command(getTestCommand(cliPackageName, cliVersion))
+        .command(getBuildCommand(cliPackageName, cliVersion))
+        .command(getTestCommand(cliPackageName, cliVersion))
         .version(false)
         .help('help')
         .showHelpOnFail(false)
@@ -36,7 +43,7 @@ function initYargs(cliInfo: CliInfo): yargs.Argv {
             }
 
             yi.showHelp();
-            console.error(`\n${chalk.red(msg)}`);
+            console.error(`\n${colorize(msg, 'red')}`);
 
             process.exit(1);
         })
@@ -45,38 +52,47 @@ function initYargs(cliInfo: CliInfo): yargs.Argv {
     return yargsInstance;
 }
 
-export default async function (cliInfo: CliInfo): Promise<number> {
-    const argv = await initYargs(cliInfo).parse();
-    const command = argv._[0] ? (argv._[0] as string).toLowerCase() : undefined;
+export default async function (): Promise<number> {
+    const yargsInstance = initYargs();
+    yargsInstance.parse();
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const command = yargsInstance.argv._[0] ? (yargsInstance.argv._[0] as string).toLowerCase() : undefined;
+    const argv = yargsInstance.argv;
 
     if (command === 'build') {
         // eslint-disable-next-line no-console
-        console.log(`${chalk.bold(`${cliInfo.packageName} v${cliInfo.version}`)}\n`);
+        console.log(
+            `${colorize(
+                `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
+                'white'
+            )}\n`
+        );
 
-        const cliBuildModule = await import('./build/cli-build.js');
+        const cliBuildModule = await import('./build/cli-build');
         const cliBuild = cliBuildModule.cliBuild;
 
         return cliBuild(argv);
     }
 
-    // if (command === 'test') {
-    //     // eslint-disable-next-line no-console
-    //     console.log(
-    //         `${colorize(
-    //             `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
-    //             'white'
-    //         )}\n`
-    //     );
+    if (command === 'test') {
+        // eslint-disable-next-line no-console
+        console.log(
+            `${colorize(
+                `${cliPackageName} v${cliVersion} [${cliIsGlobal ? 'Global' : cliIsLink ? 'Local - link' : 'Local'}]`,
+                'white'
+            )}\n`
+        );
 
-    //     const cliTestModule = await import('./test/cli-test');
-    //     const cliTest = cliTestModule.cliTest;
+        const cliTestModule = await import('./test/cli-test');
+        const cliTest = cliTestModule.cliTest;
 
-    //     return cliTest(argv);
-    // }
+        return cliTest(argv);
+    }
 
     if (argv.version) {
         // eslint-disable-next-line no-console
-        console.log(cliInfo.version);
+        console.log(cliVersion);
 
         return 0;
     }

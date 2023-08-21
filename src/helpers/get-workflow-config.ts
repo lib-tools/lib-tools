@@ -1,11 +1,13 @@
 import * as path from 'path';
 
-import { SharedCommandOptions, WorkflowConfigInternal } from '../models/index.js';
-import { findUp, pathExists } from '../utils/index.js';
+import { pathExists } from 'fs-extra';
 
-import { detectWorkflowConfig } from './detect-workflow-config.js';
-import { readWorkflowConfig } from './read-workflow-config.js';
-import { toWorkflowConfigInternal } from './to-workflow-config-internal.js';
+import { SharedCommandOptions, WorkflowConfigInternal } from '../models';
+import { findUp } from '../utils';
+
+import { detectWorkflowConfig } from './detect-workflow-config';
+import { readWorkflowConfig } from './read-workflow-config';
+import { toWorkflowConfigInternal } from './to-workflow-config-internal';
 
 export async function getWorkflowConfig(
     commandOptions: SharedCommandOptions,

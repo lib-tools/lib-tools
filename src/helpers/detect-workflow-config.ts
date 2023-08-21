@@ -1,22 +1,26 @@
 import * as path from 'path';
+import { promisify } from 'util';
 
-import { glob } from 'glob';
+import { pathExists } from 'fs-extra';
+import * as glob from 'glob';
 
-import { ProjectConfigInternal, WorkflowConfigInternal } from '../models/index.js';
-import { pathExists } from '../utils/index.js';
+const globAsync = promisify(glob);
 
-// import { detectTsEntryName } from './detect-ts-entry-name';
-// import { findBuildTsconfigFile } from './find-build-tsconfig-file';
-// import { findTestIndexFile } from './find-test-index-file';
-// import { findTestTsconfigFile } from './find-test-tsconfig-file';
-// import { findKarmaConfigFile } from './find-karma-config-file';
-// import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
-// import { readTsconfigJson } from './read-tsconfig-json';
+import { BuildConfig, ProjectConfigInternal, TestConfig, TsConfigInfo, WorkflowConfigInternal } from '../models';
+import { normalizePath } from '../utils';
 
-import { readWorkflowConfig } from './read-workflow-config.js';
+import { detectTsEntryName } from './detect-ts-entry-name';
+import { findBuildTsconfigFile } from './find-build-tsconfig-file';
+import { findTestIndexFile } from './find-test-index-file';
+import { findTestTsconfigFile } from './find-test-tsconfig-file';
+import { findKarmaConfigFile } from './find-karma-config-file';
+import { parseTsJsonConfigFileContent } from './parse-ts-json-config-file-content';
+import { readTsconfigJson } from './read-tsconfig-json';
+import { readPackageJson } from './read-package-json';
+import { readWorkflowConfig } from './read-workflow-config';
 
 export async function detectWorkflowConfig(taskName: 'build' | 'test'): Promise<WorkflowConfigInternal | null> {
-    const foundPackageJsonPaths = await glob(
+    const foundPackageJsonPaths = await globAsync(
         '*(src|modules|packages|projects|libs|samples|examples|demos)/**/package.json',
         {
             cwd: process.cwd(),
@@ -57,52 +61,54 @@ export async function detectWorkflowConfig(taskName: 'build' | 'test'): Promise<
                 projects.push(projectInternal);
             }
         } else {
-            // const packageJson = await readPackageJson(packageJsonPath);
-            // const packageName = packageJson.name;
-            // if (!packageName) {
-            //     continue;
-            // }
+            const packageJson = await readPackageJson(packageJsonPath);
+            const packageName = packageJson.name;
+            if (!packageName) {
+                continue;
+            }
 
-            // let packageNameWithoutScope = packageName;
-            // const slashIndex = packageName.indexOf('/');
-            // if (slashIndex > -1 && packageName.startsWith('@')) {
-            //     packageNameWithoutScope = packageName.substr(slashIndex + 1);
-            // }
-            // const projectName = packageNameWithoutScope.replace(/\//g, '-');
+            let packageNameWithoutScope = packageName;
+            const slashIndex = packageName.indexOf('/');
+            if (slashIndex > -1 && packageName.startsWith('@')) {
+                packageNameWithoutScope = packageName.substr(slashIndex + 1);
+            }
+            const projectName = packageNameWithoutScope.replace(/\//g, '-');
 
-            // const workspaceRoot = process.cwd();
-            // const projectRoot = path.dirname(packageJsonPath);
+            const workspaceRoot = process.cwd();
+            const projectRoot = path.dirname(packageJsonPath);
 
             if (taskName === 'build') {
-                // const buildConfig = await detectBuildConfig(workspaceRoot, projectRoot, packageNameWithoutScope);
-                // if (buildConfig != null) {
-                //     const projectInternal: ProjectConfigInternal = {
-                //         _config: 'auto',
-                //         _workspaceRoot: workspaceRoot,
-                //         _projectRoot: projectRoot,
-                //         _projectName: projectName,
-                //         root: normalizePath(path.relative(workspaceRoot, projectRoot)),
-                //         tasks: {
-                //             build: buildConfig
-                //         }
-                //     };
-                //     projects.push(projectInternal);
-                // }
+                const buildConfig = await detectBuildConfig(workspaceRoot, projectRoot, packageNameWithoutScope);
+                if (buildConfig != null) {
+                    const projectInternal: ProjectConfigInternal = {
+                        _config: 'auto',
+                        _workspaceRoot: workspaceRoot,
+                        _projectRoot: projectRoot,
+                        _projectName: projectName,
+                        root: normalizePath(path.relative(workspaceRoot, projectRoot)),
+                        tasks: {
+                            build: buildConfig
+                        }
+                    };
+
+                    projects.push(projectInternal);
+                }
             } else if (taskName === 'test') {
-                // const testConfig = await detectTestConfig(workspaceRoot, projectRoot);
-                // if (testConfig != null) {
-                //     const projectInternal: ProjectConfigInternal = {
-                //         _config: 'auto',
-                //         _workspaceRoot: workspaceRoot,
-                //         _projectRoot: projectRoot,
-                //         _projectName: projectName,
-                //         root: normalizePath(path.relative(workspaceRoot, projectRoot)),
-                //         tasks: {
-                //             test: testConfig
-                //         }
-                //     };
-                //     projects.push(projectInternal);
-                // }
+                const testConfig = await detectTestConfig(workspaceRoot, projectRoot);
+                if (testConfig != null) {
+                    const projectInternal: ProjectConfigInternal = {
+                        _config: 'auto',
+                        _workspaceRoot: workspaceRoot,
+                        _projectRoot: projectRoot,
+                        _projectName: projectName,
+                        root: normalizePath(path.relative(workspaceRoot, projectRoot)),
+                        tasks: {
+                            test: testConfig
+                        }
+                    };
+
+                    projects.push(projectInternal);
+                }
             }
         }
     }
@@ -121,56 +127,56 @@ export async function detectWorkflowConfig(taskName: 'build' | 'test'): Promise<
     };
 }
 
-// async function detectBuildConfig(
-//     workspaceRoot: string,
-//     projectRoot: string,
-//     packageNameWithoutScope: string
-// ): Promise<BuildConfig | null> {
-//     const tsConfigPath = await findBuildTsconfigFile(projectRoot, workspaceRoot);
-//     if (!tsConfigPath) {
-//         return null;
-//     }
+async function detectBuildConfig(
+    workspaceRoot: string,
+    projectRoot: string,
+    packageNameWithoutScope: string
+): Promise<BuildConfig | null> {
+    const tsConfigPath = await findBuildTsconfigFile(projectRoot, workspaceRoot);
+    if (!tsConfigPath) {
+        return null;
+    }
 
-//     const tsConfigJson = readTsconfigJson(tsConfigPath);
-//     const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
-//     const tsConfigInfo: TsConfigInfo = {
-//         tsConfigPath,
-//         tsConfigJson,
-//         tsCompilerConfig
-//     };
+    const tsConfigJson = readTsconfigJson(tsConfigPath);
+    const tsCompilerConfig = parseTsJsonConfigFileContent(tsConfigPath);
+    const tsConfigInfo: TsConfigInfo = {
+        tsConfigPath,
+        tsConfigJson,
+        tsCompilerConfig
+    };
 
-//     const entryName = await detectTsEntryName(tsConfigInfo, packageNameWithoutScope);
-//     if (!entryName) {
-//         return null;
-//     }
+    const entryName = await detectTsEntryName(tsConfigInfo, packageNameWithoutScope);
+    if (!entryName) {
+        return null;
+    }
 
-//     return {
-//         script: {
-//             compilations: 'auto'
-//         }
-//     };
-// }
+    return {
+        script: {
+            compilations: 'auto'
+        }
+    };
+}
 
-// async function detectTestConfig(workspaceRoot: string, projectRoot: string): Promise<TestConfig | null> {
-//     const tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
-//     const testIndexFile = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
+async function detectTestConfig(workspaceRoot: string, projectRoot: string): Promise<TestConfig | null> {
+    const tsConfigPath = await findTestTsconfigFile(projectRoot, workspaceRoot);
+    const testIndexFile = await findTestIndexFile(projectRoot, workspaceRoot, tsConfigPath);
 
-//     const karmaConfigFilePath = await findKarmaConfigFile(projectRoot, workspaceRoot);
+    const karmaConfigFilePath = await findKarmaConfigFile(projectRoot, workspaceRoot);
 
-//     if (!karmaConfigFilePath && !testIndexFile) {
-//         return null;
-//     }
+    if (!karmaConfigFilePath && !testIndexFile) {
+        return null;
+    }
 
-//     return {
-//         tsConfig: tsConfigPath ? path.relative(projectRoot, tsConfigPath) : undefined,
-//         testIndexFile: testIndexFile ? path.relative(projectRoot, testIndexFile) : undefined,
-//         karmaConfig: karmaConfigFilePath ? path.relative(projectRoot, karmaConfigFilePath) : undefined,
-//         codeCoverageExclude: ['**/test.ts', '**/index.ts', '**/public_api.ts'],
-//         envOverrides: {
-//             ci: {
-//                 browsers: ['ChromeHeadlessCI'],
-//                 reporters: ['junit', 'coverage']
-//             }
-//         }
-//     };
-// }
+    return {
+        tsConfig: tsConfigPath ? path.relative(projectRoot, tsConfigPath) : undefined,
+        testIndexFile: testIndexFile ? path.relative(projectRoot, testIndexFile) : undefined,
+        karmaConfig: karmaConfigFilePath ? path.relative(projectRoot, karmaConfigFilePath) : undefined,
+        codeCoverageExclude: ['**/test.ts', '**/index.ts', '**/public_api.ts'],
+        envOverrides: {
+            ci: {
+                browsers: ['ChromeHeadlessCI'],
+                reporters: ['junit', 'coverage']
+            }
+        }
+    };
+}

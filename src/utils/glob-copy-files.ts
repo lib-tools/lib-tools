@@ -1,31 +1,26 @@
-import * as fs from 'fs/promises';
 import * as path from 'path';
+import { promisify } from 'util';
 
-import { glob } from 'glob';
+import { copy, move } from 'fs-extra';
+import * as glob from 'glob';
 
-import { pathExists } from './path-exists.js';
+const globAsync = promisify(glob);
+
 export async function globCopyFiles(
     fromPath: string,
     pattern: string,
     toPath: string,
     forMove?: boolean
 ): Promise<void> {
-    const files = await glob(pattern, { cwd: fromPath });
+    const files = await globAsync(pattern, { cwd: fromPath });
     for (const relFileName of files) {
         const sourceFilePath = path.join(fromPath, relFileName);
         const destFilePath = path.join(toPath, relFileName);
 
-        if (!(await pathExists(path.dirname(destFilePath)))) {
-            await fs.mkdir(path.dirname(destFilePath), {
-                mode: 0o777,
-                recursive: true
-            });
-        }
-
         if (forMove) {
-            await fs.rename(sourceFilePath, destFilePath);
+            await move(sourceFilePath, destFilePath);
         } else {
-            await fs.copyFile(sourceFilePath, destFilePath);
+            await copy(sourceFilePath, destFilePath);
         }
     }
 }

@@ -1,12 +1,8 @@
 ﻿{
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "forceConsistentCasingInFileNames": true,
+    "target": "ES2017",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
@@ -14,8 +10,8 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "strict": true,
     "strictNullChecks": true,
+    "strict": true,
     "inlineSourceMap": true,
     "inlineSources": true,
     "sourceRoot": ".",
@@ -23,7 +19,7 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "lib": [
-      "ES2022"
+      "ES2020"
     ],
     "types": [
       "node"

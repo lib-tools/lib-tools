@@ -1,4 +1,4 @@
-import { OverridableConfig } from './overridable-config.js';
+import { OverridableConfig } from './overridable-config';
 
 /**
  * @additionalProperties false
@@ -45,7 +45,7 @@ export interface CleanOptions {
      */
     afterEmit?: AfterEmitCleanOptions;
     /**
-     * If true, allow cleaning outside of the output directory.
+     * If trye, allow cleaning outside of the output directory.
      */
     allowOutsideOutDir?: boolean;
     /**
@@ -211,8 +211,31 @@ export interface CleanCSSFormatOptions {
 /**
  * @additionalProperties false
  */
-export interface CssMinimizerPresetOptions {
-    preset?: { [key: string]: { [key: string]: boolean } | boolean };
+export interface CleanCSSOptions {
+    /**
+     * Controls compatibility mode used.
+     */
+    compatibility?: '*' | 'ie9' | 'ie8' | 'ie7';
+
+    /**
+     * Controls output CSS formatting.
+     */
+    format?: 'beautify' | 'keep-breaks' | CleanCSSFormatOptions | false;
+
+    /**
+     * Controls optimization level used.
+     */
+    level?: 1 | 2;
+
+    /**
+     *  Controls whether an output source map is built.
+     */
+    sourceMap?: boolean;
+
+    /**
+     *  Controls embedding sources inside a source map's `sourcesContent` field.
+     */
+    sourceMapInlineSources?: boolean;
 }
 
 /**
@@ -232,21 +255,21 @@ export interface StyleEntry {
      */
     sourceMap?: boolean;
     /**
-     * If true, enable the outputing of sources in the generated source map. Default is `true`.
+     * Includes the contents in the source map information. Default is `true`.
      */
-    sourceMapIncludeSources?: boolean;
-    /**
-     * Paths in which to look for stylesheets loaded by rules like @use and @import.
-     */
-    loadPaths?: string[];
+    sourceMapContents?: boolean;
     /**
      * Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
      */
     vendorPrefixes?: boolean | AutoPrefixerOptions;
     /**
-     * Set cssnano preset options or boolean value to generate minify file. Default is `true`.
+     * Set clean-css options or boolean value to generate minify file. Default is `true`.
      */
-    minify?: boolean | CssMinimizerPresetOptions;
+    minify?: boolean | CleanCSSOptions;
+    /**
+     * An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths?: string[];
 }
 
 /**
@@ -262,23 +285,21 @@ export interface StyleOptions {
      */
     sourceMap?: boolean;
     /**
-     * Default sourceMapIncludeSources option to all entries. If true, enable the outputing of sources in the generated source map. Default is `true`.
+     * Default sourceMapContents option to all entries. Includes the contents in the source map information. Default is `true`.
      */
-    sourceMapIncludeSources?: boolean;
-    /**
-     * Default loadPaths option to all entries. Paths in which to look for stylesheets loaded by rules like @use and @import.
-     */
-    loadPaths?: string[];
-
-    /**
-     * Default minify option to all entries. Set cssnano preset options or boolean value to generate minify file. Default is `true`.
-     */
-    minify?: boolean | CssMinimizerPresetOptions;
+    sourceMapContents?: boolean;
     /**
      * Default vendorPrefixes option to all entries. Set autoprefixer options or boolean value to add vendor prefixes to css rules. Default is `true`.
      */
     vendorPrefixes?: boolean | AutoPrefixerOptions;
-
+    /**
+     * Default minify option to all entries. Set clean-css options or boolean value to generate minify file. Default is `true`.
+     */
+    minify?: boolean | CleanCSSOptions;
+    /**
+     * Default includePaths option to all entries and .sass/.scss files. An array of paths that style preprocessor can look in to attempt to resolve your @import declarations.
+     */
+    includePaths?: string[];
     /**
      * If true, automatically add `style` entry to package.json file. By default, the first entry will be added.
      */

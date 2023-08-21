@@ -1,6 +1,8 @@
 import * as path from 'path';
 
-import { findUp, pathExists } from '../utils/index.js';
+import { pathExists } from 'fs-extra';
+
+import { findUp } from '../utils';
 
 const cache = new Map<string, string>();
 

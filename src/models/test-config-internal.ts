@@ -1,6 +1,6 @@
-import { TestConfig } from './test-config.js';
+import { TestConfig } from './test-config';
 
-import { PackageJsonLike } from './package-json-like.js';
+import { PackageJsonLike } from './package-jon-like';
 
 export interface TestConfigInternal extends TestConfig {
     _workspaceRoot: string;

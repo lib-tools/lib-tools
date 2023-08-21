@@ -1,6 +1,6 @@
-import webpack from 'webpack';
+import * as webpack from 'webpack';
 
-import { LoggerBase } from '../utils/logger.js';
+import { LoggerBase } from '../utils/logger';
 
 export async function runWebpack(
     wpConfig: webpack.Configuration | webpack.Configuration[],
@@ -23,10 +23,14 @@ export async function runWebpack(
     const webpackCompiler = webpack(wpConfig as webpack.Configuration);
 
     return new Promise((resolve, reject) => {
-        const cb = (err?: Error | null, stats?: webpack.Stats) => {
+        const cb = (err: Error | undefined, stats: webpack.Stats | undefined) => {
             if (err) {
                 reject(err);
 
+                return;
+            }
+
+            if (watch) {
                 return;
             }
 
@@ -36,22 +40,15 @@ export async function runWebpack(
                 reject();
 
                 return;
-            }
-
-            if (statsOptions && stats) {
-                const result = stats.toString(statsOptions);
-                if (result && result.trim()) {
-                    logger.info(result);
+            } else {
+                if (statsOptions && stats) {
+                    const result = stats.toString(statsOptions);
+                    if (result && result.trim()) {
+                        logger.info(result);
+                    }
                 }
-            }
-
-            if (watch) {
-                return;
-            }
-
-            webpackCompiler.close(() => {
                 resolve(null);
-            });
+            }
         };
 
         if (watch) {

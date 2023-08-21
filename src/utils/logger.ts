@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { colorize } from './colorize';
 
 // eslint-disable-next-line no-shadow
 export enum LogLevel {
@@ -62,9 +62,9 @@ export class Logger implements LoggerBase {
         let logMsg = `${prefix}${message.trimLeft()}`;
 
         if (this.loggerOptions.color !== false && logLevel === LogLevel.Warn) {
-            logMsg = chalk.yellow(logMsg);
+            logMsg = colorize(logMsg, 'yellow');
         } else if (this.loggerOptions.color !== false && (logLevel === LogLevel.Error || logLevel === LogLevel.Fatal)) {
-            logMsg = chalk.red(logMsg);
+            logMsg = colorize(logMsg, 'red');
         }
 
         if (optionalParams) {
